@@ -295,6 +295,77 @@
       font-size: 0.9rem;
     }
 
+    /* ── TABELLEN-BAR ── */
+    .tabellen-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .tabelle-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px 6px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+
+    .tabelle-tab:hover { border-color: var(--primary); color: var(--primary); }
+
+    .tabelle-tab.active {
+      border-color: var(--primary);
+      background: #eff6ff;
+      color: var(--primary);
+    }
+
+    .tabelle-tab-actions {
+      display: inline-flex;
+      gap: 1px;
+      margin-left: 2px;
+    }
+
+    .tabelle-tab-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 2px 3px;
+      border-radius: 3px;
+      line-height: 0;
+      color: #9ca3af;
+      transition: color 0.12s, background 0.12s;
+    }
+
+    .tabelle-tab-btn:hover { color: var(--primary); background: #dbeafe; }
+    .tabelle-tab-btn.del:hover { color: var(--danger); background: #fee2e2; }
+
+    .btn-new-tabelle {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border: 1.5px dashed var(--border);
+      border-radius: 20px;
+      background: transparent;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-new-tabelle:hover { border-color: var(--primary); color: var(--primary); }
+
     /* ── DICHTE LAYOUT ── */
     .dichte-layout {
       display: grid;
@@ -448,6 +519,16 @@
 
   <!-- TAB: DICHTE -->
   <div id="tab-dichte" class="tab-content active">
+
+    <!-- Tabellen-Auswahl -->
+    <div class="tabellen-bar" id="tabellen-bar">
+      <!-- wird per JS befüllt -->
+      <button class="btn-new-tabelle" id="btn-new-tabelle">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Neue Tabelle
+      </button>
+    </div>
+
     <div class="dichte-layout">
 
       <!-- Linke Seite: Eingabe -->
@@ -594,6 +675,9 @@ function showLogin() {
   $("login-screen").style.display = "flex";
   $("app").style.display          = "none";
   unsubscribeTodos();
+  if (unsubscribeErgebnisseFunc) { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
+  if (unsubscribeTabellenFunc)   { unsubscribeTabellenFunc();   unsubscribeTabellenFunc   = null; }
+  currentTabelleId = null;
 }
 
 // ══════════════════════════════════════
@@ -634,12 +718,16 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 // ══════════════════════════════════════
 let dichteDebounce = null;
 let unsubscribeErgebnisseFunc = null;
+let unsubscribeTabellenFunc   = null;
+let currentTabelleId          = null;
+let currentUserId             = null;
 
 function initDichte(userId) {
+  currentUserId = userId;
   const settingsRef  = db.doc(`users/${userId}/settings/dichte`);
-  const ergebnisseRef = db.collection(`users/${userId}/dichteErgebnisse`).orderBy("createdAt", "asc");
+  const tabellenRef  = db.collection(`users/${userId}/dichteTabellen`).orderBy("createdAt", "asc");
 
-  // Letzte Eingabewerte wiederherstellen
+  // Eingabefelder wiederherstellen
   settingsRef.get().then(snap => {
     if (snap.exists) {
       const d = snap.data();
@@ -650,7 +738,7 @@ function initDichte(userId) {
     }
   });
 
-  // Debounced Auto-Save der Eingabefelder
+  // Debounced Auto-Save Eingabefelder
   ["d-laenge", "d-breite", "d-dicke", "d-masse"].forEach(id => {
     $(id).addEventListener("input", () => {
       clearTimeout(dichteDebounce);
@@ -668,26 +756,21 @@ function initDichte(userId) {
     });
   });
 
-  // Berechnen & in Tabelle speichern
+  // Berechnen & in aktuelle Tabelle speichern
   $("btn-berechnen").addEventListener("click", () => {
+    if (!currentTabelleId) { alert("Bitte zuerst eine Tabelle auswählen oder erstellen."); return; }
     const L = parseFloat($("d-laenge").value);
     const B = parseFloat($("d-breite").value);
     const D = parseFloat($("d-dicke").value);
     const M = parseFloat($("d-masse").value);
-
     if ([L, B, D, M].some(v => isNaN(v) || v <= 0)) {
       alert("Bitte alle Felder mit positiven Zahlen ausfüllen.");
       return;
     }
-
-    const volumen_cm3 = (L * B * D) / 1000;
-    const dichte_kgm3 = (M / volumen_cm3) * 1000;
-
+    const dichte_kgm3 = (M / ((L * B * D) / 1000)) * 1000;
     zeigeDichte(dichte_kgm3);
     $("dichte-save-hint").textContent = "Wird gespeichert …";
-
-    // Ergebnis in Tabellen-Collection speichern
-    db.collection(`users/${userId}/dichteErgebnisse`).add({
+    db.collection(`users/${userId}/dichteTabellen/${currentTabelleId}/ergebnisse`).add({
       laenge: L, breite: B, dicke: D, masse: M,
       dichte: dichte_kgm3,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -698,12 +781,125 @@ function initDichte(userId) {
     });
   });
 
-  // Echtzeit-Listener für Ergebnistabelle
-  if (unsubscribeErgebnisseFunc) unsubscribeErgebnisseFunc();
+  // Neue Tabelle erstellen
+  $("btn-new-tabelle").addEventListener("click", () => createTabelle(userId));
+
+  // Echtzeit-Listener für Tabellenliste
+  if (unsubscribeTabellenFunc) unsubscribeTabellenFunc();
+  unsubscribeTabellenFunc = tabellenRef.onSnapshot(snapshot => {
+    const tabellen = [];
+    snapshot.forEach(doc => tabellen.push({ id: doc.id, ...doc.data() }));
+
+    // Beim ersten Laden: Default-Tabelle anlegen wenn keine vorhanden
+    if (tabellen.length === 0) {
+      createTabelle(userId, "Tabelle 1");
+      return;
+    }
+
+    renderTabellenBar(tabellen, userId);
+
+    // Aktuelle Tabelle beibehalten oder erste wählen
+    if (!currentTabelleId || !tabellen.find(t => t.id === currentTabelleId)) {
+      selectTabelle(tabellen[0].id, tabellen[0].name, userId);
+    }
+  });
+}
+
+function createTabelle(userId, defaultName) {
+  const name = defaultName || prompt("Name der neuen Tabelle:", `Tabelle`);
+  if (!name || !name.trim()) return;
+  db.collection(`users/${userId}/dichteTabellen`).add({
+    name: name.trim(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(ref => {
+    selectTabelle(ref.id, name.trim(), userId);
+  });
+}
+
+function selectTabelle(id, name, userId) {
+  currentTabelleId = id;
+
+  // Ergebnis-Header aktualisieren
+  const h2 = document.querySelector(".ergebnis-card-header h2");
+  if (h2) h2.textContent = name;
+
+  // Tab-Markierung aktualisieren
+  document.querySelectorAll(".tabelle-tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.id === id);
+  });
+
+  // Alten Listener aufräumen
+  if (unsubscribeErgebnisseFunc) { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
+
+  // Echtzeit-Listener für Ergebnisse dieser Tabelle
+  const ergebnisseRef = db.collection(`users/${userId}/dichteTabellen/${id}/ergebnisse`).orderBy("createdAt", "asc");
   unsubscribeErgebnisseFunc = ergebnisseRef.onSnapshot(snapshot => {
     const rows = [];
     snapshot.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
-    renderErgebnisse(rows, userId);
+    renderErgebnisse(rows, userId, id, name);
+  });
+}
+
+function renderTabellenBar(tabellen, userId) {
+  const bar = $("tabellen-bar");
+  const newBtn = $("btn-new-tabelle");
+
+  // Alle Tabs entfernen (außer "+ Neue Tabelle")
+  Array.from(bar.children).forEach(c => { if (c !== newBtn) bar.removeChild(c); });
+
+  tabellen.forEach(t => {
+    const tab = document.createElement("div");
+    tab.className = "tabelle-tab" + (t.id === currentTabelleId ? " active" : "");
+    tab.dataset.id = t.id;
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = t.name;
+
+    const actions = document.createElement("span");
+    actions.className = "tabelle-tab-actions";
+
+    // Umbenennen
+    const renameBtn = document.createElement("button");
+    renameBtn.className = "tabelle-tab-btn";
+    renameBtn.title = "Umbenennen";
+    renameBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    renameBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const neu = prompt("Neuer Name:", t.name);
+      if (neu && neu.trim()) {
+        db.collection(`users/${userId}/dichteTabellen`).doc(t.id).update({ name: neu.trim() })
+          .then(() => {
+            if (currentTabelleId === t.id) {
+              const h2 = document.querySelector(".ergebnis-card-header h2");
+              if (h2) h2.textContent = neu.trim();
+            }
+          });
+      }
+    });
+
+    // Löschen
+    const delBtn = document.createElement("button");
+    delBtn.className = "tabelle-tab-btn del";
+    delBtn.title = "Tabelle löschen";
+    delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    delBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      if (!confirm(`Tabelle "${t.name}" und alle Einträge löschen?`)) return;
+      // Erst alle Ergebnisse löschen, dann die Tabelle
+      db.collection(`users/${userId}/dichteTabellen/${t.id}/ergebnisse`).get().then(snap => {
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        batch.delete(db.doc(`users/${userId}/dichteTabellen/${t.id}`));
+        return batch.commit();
+      });
+    });
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(delBtn);
+    tab.appendChild(nameSpan);
+    tab.appendChild(actions);
+    tab.addEventListener("click", () => selectTabelle(t.id, t.name, userId));
+    bar.insertBefore(tab, newBtn);
   });
 }
 
@@ -721,7 +917,7 @@ function fmt(n) {
     : "—";
 }
 
-function renderErgebnisse(rows, userId) {
+function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
   const tbody = $("ergebnis-tbody");
   const emptyRow = $("ergebnis-empty-row");
   const avgRow = $("avg-row");
@@ -758,7 +954,7 @@ function renderErgebnisse(rows, userId) {
     delBtn.title = "Eintrag löschen";
     delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
     delBtn.addEventListener("click", () => {
-      db.collection(`users/${userId}/dichteErgebnisse`).doc(row.id).delete();
+      db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id).delete();
     });
     tr.lastElementChild.appendChild(delBtn);
     tbody.appendChild(tr);
@@ -771,10 +967,10 @@ function renderErgebnisse(rows, userId) {
 
   // Export-Button aktivieren
   $("btn-export").disabled = false;
-  $("btn-export").onclick = () => exportExcel(rows, avg);
+  $("btn-export").onclick = () => exportExcel(rows, avg, tabelleName);
 }
 
-function exportExcel(rows, avg) {
+function exportExcel(rows, avg, tabelleName) {
   const data = rows.map((r, i) => {
     const d = r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt)) : null;
     return {
@@ -800,12 +996,14 @@ function exportExcel(rows, avg) {
     "Dichte (kg/m³)": parseFloat(avg.toFixed(2))
   });
 
+  const sheetName = (tabelleName || "Dichte").slice(0, 31); // Excel max 31 Zeichen
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Dichte");
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
   const datum = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `Dichte_${datum}.xlsx`);
+  const safeName = (tabelleName || "Dichte").replace(/[\\/:*?"<>|]/g, "_");
+  XLSX.writeFile(wb, `${safeName}_${datum}.xlsx`);
 }
 
 // ══════════════════════════════════════
