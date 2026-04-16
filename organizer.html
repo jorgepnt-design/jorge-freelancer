@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arbeits-Organizer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --border: #e0e0e0;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --status-open: #9ca3af;
+      --status-progress: #3b82f6;
+      --status-done: #22c55e;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 24px;
+      padding: 24px;
+    }
+
+    #login-screen h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    #login-screen p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-google:hover {
+      background: #f9fafb;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    }
+
+    .btn-google svg { flex-shrink: 0; }
+
+    /* ── APP ── */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 { font-size: 1.1rem; font-weight: 700; }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--border);
+    }
+
+    .avatar-fallback {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .user-name { font-size: 0.85rem; color: var(--text-muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .btn-signout {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: background 0.15s;
+    }
+
+    .btn-signout:hover { background: #f3f4f6; color: var(--danger); border-color: var(--danger); }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px 0;
+      border: none;
+      background: transparent;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-bottom: 2.5px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-content { display: none; padding: 20px; max-width: 640px; margin: 0 auto; width: 100%; }
+    .tab-content.active { display: block; }
+
+    /* ── DICHTE ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    input[type="number"], input[type="text"], select {
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-size: 0.95rem;
+      background: var(--surface);
+      color: var(--text);
+      width: 100%;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .result-box {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .result-label { font-size: 0.85rem; color: var(--primary); font-weight: 500; }
+    .result-value { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+    .result-unit { font-size: 0.9rem; color: var(--primary); }
+    .result-box.hidden { display: none; }
+
+    .save-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: right; min-height: 16px; }
+
+    /* ── TODOS ── */
+    .add-todo {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .add-todo input { flex: 1; }
+
+    .todo-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .todo-item {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .todo-item.status-offen { border-left: 4px solid var(--status-open); }
+    .todo-item.status-progress { border-left: 4px solid var(--status-progress); }
+    .todo-item.status-erledigt { border-left: 4px solid var(--status-done); }
+
+    .todo-text {
+      flex: 1;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .todo-item.status-erledigt .todo-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .todo-meta { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+
+    .todo-status select {
+      padding: 5px 8px;
+      font-size: 0.8rem;
+      border-radius: 5px;
+      min-width: 120px;
+    }
+
+    .btn-delete {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: #d1d5db;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+      line-height: 0;
+    }
+
+    .btn-delete:hover { color: var(--danger); background: #fee2e2; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── UTILS ── */
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .todo-item { flex-wrap: wrap; }
+      .user-name { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN
+══════════════════════════════════════ -->
+<div id="login-screen">
+  <h1>Arbeits-Organizer</h1>
+  <p>Bitte melde dich an, um fortzufahren.</p>
+  <button class="btn-google" id="btn-google-signin">
+    <!-- Google "G" Logo -->
+    <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+    Mit Google anmelden
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP
+══════════════════════════════════════ -->
+<div id="app">
+  <header>
+    <h1>Organizer</h1>
+    <div class="header-user">
+      <div id="user-avatar-wrap"></div>
+      <span class="user-name" id="user-name"></span>
+      <button class="btn-signout" id="btn-signout">Abmelden</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="dichte">Dichte berechnen</button>
+    <button class="tab-btn" data-tab="todos">To-dos</button>
+  </div>
+
+  <!-- TAB: DICHTE -->
+  <div id="tab-dichte" class="tab-content active">
+    <div class="card">
+      <h2>Abmessungen &amp; Masse</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label>Länge (mm)</label>
+          <input type="number" id="d-laenge" placeholder="z. B. 100" min="0" step="any" />
+        </div>
+        <div class="field">
+          <label>Breite (mm)</label>
+          <input type="number" id="d-breite" placeholder="z. B. 50" min="0" step="any" />
+        </div>
+        <div class="field">
+          <label>Dicke (mm)</label>
+          <input type="number" id="d-dicke" placeholder="z. B. 10" min="0" step="any" />
+        </div>
+        <div class="field">
+          <label>Masse (g)</label>
+          <input type="number" id="d-masse" placeholder="z. B. 250" min="0" step="any" />
+        </div>
+      </div>
+
+      <div style="margin-top: 16px; display: flex; gap: 10px; align-items: center;">
+        <button class="btn-primary" id="btn-berechnen">Berechnen</button>
+      </div>
+      <p class="save-hint" id="dichte-save-hint"></p>
+    </div>
+
+    <div id="dichte-result" class="result-box hidden">
+      <span class="result-label">Dichte:</span>
+      <span class="result-value" id="dichte-wert">—</span>
+      <span class="result-unit">kg/m³</span>
+    </div>
+  </div>
+
+  <!-- TAB: TODOS -->
+  <div id="tab-todos" class="tab-content">
+    <div class="add-todo">
+      <input type="text" id="todo-input" placeholder="Neue Aufgabe hinzufügen …" />
+      <button class="btn-primary" id="btn-todo-add">Hinzufügen</button>
+    </div>
+    <div id="todo-list" class="todo-list">
+      <div class="empty-state" id="todo-empty">Noch keine Aufgaben vorhanden.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     FIREBASE SDK (compat)
+══════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ══════════════════════════════════════
+// FIREBASE KONFIGURATION
+// Ersetze diese Werte mit deiner Firebase-Projektkonfiguration
+// (Firebase Console → Projekteinstellungen → Deine Apps)
+// ══════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyBBMU-KPmSzu0F9iFGV_AF049Aivtnx0S4",
+  authDomain:        "arbeitsapp-3364c.firebaseapp.com",
+  projectId:         "arbeitsapp-3364c",
+  storageBucket:     "arbeitsapp-3364c.firebasestorage.app",
+  messagingSenderId: "202291981896",
+  appId:             "1:202291981896:web:0294b473eaff98a454b27d",
+  measurementId:     "G-7ZJCVC7TRZ"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ══════════════════════════════════════
+// HILFSFUNKTIONEN
+// ══════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+
+function showApp(user) {
+  $("login-screen").style.display = "none";
+  $("app").style.display = "flex";
+
+  // Avatar
+  const wrap = $("user-avatar-wrap");
+  wrap.innerHTML = "";
+  if (user.photoURL) {
+    const img = document.createElement("img");
+    img.src = user.photoURL;
+    img.className = "avatar";
+    img.alt = user.displayName || "Avatar";
+    wrap.appendChild(img);
+  } else {
+    const div = document.createElement("div");
+    div.className = "avatar-fallback";
+    div.textContent = (user.displayName || user.email || "?")[0].toUpperCase();
+    wrap.appendChild(div);
+  }
+  $("user-name").textContent = user.displayName || user.email || "";
+}
+
+function showLogin() {
+  $("login-screen").style.display = "flex";
+  $("app").style.display          = "none";
+  unsubscribeTodos();
+}
+
+// ══════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════
+const provider = new firebase.auth.GoogleAuthProvider();
+
+$("btn-google-signin").addEventListener("click", () => {
+  auth.signInWithPopup(provider).catch(err => alert("Anmeldung fehlgeschlagen: " + err.message));
+});
+
+$("btn-signout").addEventListener("click", () => auth.signOut());
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    showApp(user);
+    initDichte(user.uid);
+    initTodos(user.uid);
+  } else {
+    showLogin();
+  }
+});
+
+// ══════════════════════════════════════
+// TABS
+// ══════════════════════════════════════
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    $("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+// ══════════════════════════════════════
+// TAB 1: DICHTE
+// ══════════════════════════════════════
+let dichteDebounce = null;
+
+function initDichte(userId) {
+  const docRef = db.doc(`users/${userId}/settings/dichte`);
+
+  // Gespeicherte Werte laden
+  docRef.get().then(snap => {
+    if (snap.exists) {
+      const d = snap.data();
+      if (d.laenge !== undefined) $("d-laenge").value = d.laenge;
+      if (d.breite !== undefined) $("d-breite").value = d.breite;
+      if (d.dicke  !== undefined) $("d-dicke").value  = d.dicke;
+      if (d.masse  !== undefined) $("d-masse").value  = d.masse;
+      if (d.ergebnis !== undefined && d.ergebnis !== null) {
+        zeigeDichte(d.ergebnis);
+      }
+    }
+  });
+
+  // Debounced Auto-Save bei Eingabe
+  ["d-laenge", "d-breite", "d-dicke", "d-masse"].forEach(id => {
+    $(id).addEventListener("input", () => {
+      clearTimeout(dichteDebounce);
+      $("dichte-save-hint").textContent = "Wird gespeichert …";
+      dichteDebounce = setTimeout(() => saveDichte(docRef), 1000);
+    });
+  });
+
+  // Berechnen-Button
+  $("btn-berechnen").addEventListener("click", () => {
+    const L = parseFloat($("d-laenge").value);
+    const B = parseFloat($("d-breite").value);
+    const D = parseFloat($("d-dicke").value);
+    const M = parseFloat($("d-masse").value);
+
+    if ([L, B, D, M].some(v => isNaN(v) || v <= 0)) {
+      alert("Bitte alle Felder mit positiven Zahlen ausfüllen.");
+      return;
+    }
+
+    // Volumen in cm³: (mm³ ÷ 1000)
+    const volumen_cm3 = (L * B * D) / 1000;
+    // Dichte in g/cm³ → kg/m³ (*1000)
+    const dichte_kgm3 = (M / volumen_cm3) * 1000;
+
+    zeigeDichte(dichte_kgm3);
+
+    // Sofort speichern
+    clearTimeout(dichteDebounce);
+    saveDichte(docRef, dichte_kgm3);
+  });
+
+  function saveDichte(docRef, ergebnis) {
+    const data = {
+      laenge: $("d-laenge").value !== "" ? parseFloat($("d-laenge").value) : null,
+      breite: $("d-breite").value !== "" ? parseFloat($("d-breite").value) : null,
+      dicke:  $("d-dicke").value  !== "" ? parseFloat($("d-dicke").value)  : null,
+      masse:  $("d-masse").value  !== "" ? parseFloat($("d-masse").value)  : null,
+    };
+    if (ergebnis !== undefined) data.ergebnis = ergebnis;
+    docRef.set(data, { merge: true })
+      .then(() => { $("dichte-save-hint").textContent = "Gespeichert ✓"; })
+      .catch(() => { $("dichte-save-hint").textContent = "Fehler beim Speichern"; });
+  }
+}
+
+function zeigeDichte(wert) {
+  $("dichte-wert").textContent = wert.toLocaleString("de-DE", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2
+  });
+  $("dichte-result").classList.remove("hidden");
+}
+
+// ══════════════════════════════════════
+// TAB 2: TODOS
+// ══════════════════════════════════════
+let unsubscribeTodosFunc = null;
+
+function unsubscribeTodos() {
+  if (unsubscribeTodosFunc) {
+    unsubscribeTodosFunc();
+    unsubscribeTodosFunc = null;
+  }
+}
+
+function initTodos(userId) {
+  unsubscribeTodos();
+  const colRef = db.collection(`users/${userId}/todos`).orderBy("createdAt", "asc");
+
+  // Echtzeit-Listener
+  unsubscribeTodosFunc = colRef.onSnapshot(snapshot => {
+    const todos = [];
+    snapshot.forEach(doc => todos.push({ id: doc.id, ...doc.data() }));
+    renderTodos(todos, userId);
+  });
+
+  // Todo hinzufügen
+  function addTodo() {
+    const text = $("todo-input").value.trim();
+    if (!text) return;
+    db.collection(`users/${userId}/todos`).add({
+      text,
+      status: "offen",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    $("todo-input").value = "";
+  }
+
+  $("btn-todo-add").addEventListener("click", addTodo);
+  $("todo-input").addEventListener("keydown", e => { if (e.key === "Enter") addTodo(); });
+}
+
+function renderTodos(todos, userId) {
+  const list = $("todo-list");
+  const empty = $("todo-empty");
+
+  // Alle Items (außer empty-state) entfernen
+  Array.from(list.children).forEach(child => {
+    if (child !== empty) list.removeChild(child);
+  });
+
+  if (todos.length === 0) {
+    empty.style.display = "block";
+    return;
+  }
+
+  empty.style.display = "none";
+
+  todos.forEach(todo => {
+    const item = document.createElement("div");
+    item.className = `todo-item status-${todo.status}`;
+
+    // Text
+    const textEl = document.createElement("div");
+    textEl.className = "todo-text";
+    textEl.textContent = todo.text;
+
+    // Datum
+    const meta = document.createElement("div");
+    meta.className = "todo-meta";
+    if (todo.createdAt) {
+      const d = todo.createdAt.toDate ? todo.createdAt.toDate() : new Date(todo.createdAt);
+      meta.textContent = d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+    }
+
+    // Status-Dropdown
+    const statusWrap = document.createElement("div");
+    statusWrap.className = "todo-status";
+    const sel = document.createElement("select");
+    const statusOptions = [
+      { value: "offen",    label: "Offen" },
+      { value: "progress", label: "In Bearbeitung" },
+      { value: "erledigt", label: "Erledigt" }
+    ];
+    statusOptions.forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.label;
+      if (opt.value === todo.status) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener("change", () => {
+      db.collection(`users/${auth.currentUser.uid}/todos`).doc(todo.id)
+        .update({ status: sel.value });
+    });
+    statusWrap.appendChild(sel);
+
+    // Löschen-Button
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-delete";
+    delBtn.title = "Aufgabe löschen";
+    delBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+    delBtn.addEventListener("click", () => {
+      if (confirm("Aufgabe wirklich löschen?")) {
+        db.collection(`users/${auth.currentUser.uid}/todos`).doc(todo.id).delete();
+      }
+    });
+
+    item.appendChild(textEl);
+    item.appendChild(meta);
+    item.appendChild(statusWrap);
+    item.appendChild(delBtn);
+    list.appendChild(item);
+  });
+}
+</script>
+</body>
+</html>
