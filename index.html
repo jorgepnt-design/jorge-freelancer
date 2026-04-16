@@ -631,13 +631,27 @@ footer{background:#141414;border-top:1px solid var(--border);padding:3rem 1.5rem
     if (valid) {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Wird gesendet …';
-      setTimeout(() => {
-        form.reset();
+      fetch('https://formspree.io/f/xvzdkann', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(form)
+      })
+      .then(res => {
+        if (res.ok) {
+          form.reset();
+          formSuccess.classList.add('show');
+          setTimeout(() => formSuccess.classList.remove('show'), 6000);
+        } else {
+          alert('Fehler beim Senden. Bitte versuchen Sie es erneut oder schreiben Sie direkt an jorgepnt@gmail.com');
+        }
+      })
+      .catch(() => {
+        alert('Fehler beim Senden. Bitte versuchen Sie es erneut oder schreiben Sie direkt an jorgepnt@gmail.com');
+      })
+      .finally(() => {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Anfrage senden';
-        formSuccess.classList.add('show');
-        setTimeout(() => formSuccess.classList.remove('show'), 6000);
-      }, 900);
+      });
     }
   });
 })();
