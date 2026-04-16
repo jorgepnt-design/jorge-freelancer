@@ -311,12 +311,37 @@
       overflow: hidden;
     }
 
-    .ergebnis-card h2 {
-      font-size: 1rem;
-      font-weight: 600;
+    .ergebnis-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
     }
+
+    .ergebnis-card-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .btn-export {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #16a34a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-export:hover { background: #15803d; }
+    .btn-export:disabled { background: #9ca3af; cursor: default; }
 
     .ergebnis-table-wrap { overflow-x: auto; }
 
@@ -462,7 +487,13 @@
 
       <!-- Rechte Seite: Ergebnistabelle -->
       <div class="ergebnis-card">
-        <h2>Ergebnisse</h2>
+        <div class="ergebnis-card-header">
+          <h2>Ergebnisse</h2>
+          <button class="btn-export" id="btn-export" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Excel
+          </button>
+        </div>
         <div class="ergebnis-table-wrap">
           <table id="ergebnis-table">
             <thead>
@@ -507,6 +538,7 @@
 <!-- ══════════════════════════════════════
      FIREBASE SDK (compat)
 ══════════════════════════════════════ -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -736,6 +768,44 @@ function renderErgebnisse(rows, userId) {
   const avg = rows.reduce((sum, r) => sum + (r.dichte || 0), 0) / rows.length;
   $("avg-wert").textContent = fmt(avg);
   avgRow.style.display = "flex";
+
+  // Export-Button aktivieren
+  $("btn-export").disabled = false;
+  $("btn-export").onclick = () => exportExcel(rows, avg);
+}
+
+function exportExcel(rows, avg) {
+  const data = rows.map((r, i) => {
+    const d = r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt)) : null;
+    return {
+      "Nr.": i + 1,
+      "Datum": d ? d.toLocaleDateString("de-DE") : "",
+      "Länge (mm)": r.laenge,
+      "Breite (mm)": r.breite,
+      "Dicke (mm)": r.dicke,
+      "Masse (g)": r.masse,
+      "Dichte (kg/m³)": parseFloat(r.dichte.toFixed(2))
+    };
+  });
+
+  // Durchschnittszeile anhängen
+  data.push({});
+  data.push({
+    "Nr.": "",
+    "Datum": "Durchschnitt",
+    "Länge (mm)": "",
+    "Breite (mm)": "",
+    "Dicke (mm)": "",
+    "Masse (g)": "",
+    "Dichte (kg/m³)": parseFloat(avg.toFixed(2))
+  });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Dichte");
+
+  const datum = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `Dichte_${datum}.xlsx`);
 }
 
 // ══════════════════════════════════════
