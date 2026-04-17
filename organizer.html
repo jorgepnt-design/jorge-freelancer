@@ -606,12 +606,23 @@
 
   <!-- TAB: TODOS -->
   <div id="tab-todos" class="tab-content">
+
+    <!-- Ordner-Leiste -->
+    <div class="tabellen-bar" id="ordner-bar">
+      <button class="btn-new-tabelle" id="btn-new-ordner">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Neuer Ordner
+      </button>
+    </div>
+
+    <!-- Ordner-Titel + Hinzufügen -->
     <div class="add-todo">
       <input type="text" id="todo-input" placeholder="Neue Aufgabe hinzufügen …" />
       <button class="btn-primary" id="btn-todo-add">Hinzufügen</button>
     </div>
+
     <div id="todo-list" class="todo-list">
-      <div class="empty-state" id="todo-empty">Noch keine Aufgaben vorhanden.</div>
+      <div class="empty-state" id="todo-empty">Noch keine Aufgaben in diesem Ordner.</div>
     </div>
   </div>
 </div>
@@ -677,7 +688,9 @@ function showLogin() {
   unsubscribeTodos();
   if (unsubscribeErgebnisseFunc) { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
   if (unsubscribeTabellenFunc)   { unsubscribeTabellenFunc();   unsubscribeTabellenFunc   = null; }
+  if (unsubscribeOrdnerFunc)     { unsubscribeOrdnerFunc();     unsubscribeOrdnerFunc     = null; }
   currentTabelleId = null;
+  currentOrdnerId  = null;
 }
 
 // ══════════════════════════════════════
@@ -1009,31 +1022,32 @@ function exportExcel(rows, avg, tabelleName) {
 // ══════════════════════════════════════
 // TAB 2: TODOS
 // ══════════════════════════════════════
-let unsubscribeTodosFunc = null;
+let unsubscribeTodosFunc    = null;
+let unsubscribeOrdnerFunc   = null;
+let currentOrdnerId         = null;
+let currentOrdnerUserId     = null;
 
 function unsubscribeTodos() {
-  if (unsubscribeTodosFunc) {
-    unsubscribeTodosFunc();
-    unsubscribeTodosFunc = null;
-  }
+  if (unsubscribeTodosFunc)  { unsubscribeTodosFunc();  unsubscribeTodosFunc  = null; }
+  if (unsubscribeOrdnerFunc) { unsubscribeOrdnerFunc(); unsubscribeOrdnerFunc = null; }
+  currentOrdnerId = null;
 }
 
 function initTodos(userId) {
   unsubscribeTodos();
-  const colRef = db.collection(`users/${userId}/todos`).orderBy("createdAt", "asc");
+  currentOrdnerUserId = userId;
 
-  // Echtzeit-Listener
-  unsubscribeTodosFunc = colRef.onSnapshot(snapshot => {
-    const todos = [];
-    snapshot.forEach(doc => todos.push({ id: doc.id, ...doc.data() }));
-    renderTodos(todos, userId);
-  });
+  const ordnerRef = db.collection(`users/${userId}/todoOrdner`).orderBy("createdAt", "asc");
+
+  // Neuer Ordner
+  $("btn-new-ordner").addEventListener("click", () => createOrdner(userId));
 
   // Todo hinzufügen
   function addTodo() {
+    if (!currentOrdnerId) { alert("Bitte zuerst einen Ordner auswählen."); return; }
     const text = $("todo-input").value.trim();
     if (!text) return;
-    db.collection(`users/${userId}/todos`).add({
+    db.collection(`users/${userId}/todoOrdner/${currentOrdnerId}/todos`).add({
       text,
       status: "offen",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1043,9 +1057,110 @@ function initTodos(userId) {
 
   $("btn-todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key === "Enter") addTodo(); });
+
+  // Echtzeit-Listener für Ordnerliste
+  unsubscribeOrdnerFunc = ordnerRef.onSnapshot(snapshot => {
+    const ordner = [];
+    snapshot.forEach(doc => ordner.push({ id: doc.id, ...doc.data() }));
+
+    if (ordner.length === 0) {
+      createOrdner(userId, "Allgemein");
+      return;
+    }
+
+    renderOrdnerBar(ordner, userId);
+
+    if (!currentOrdnerId || !ordner.find(o => o.id === currentOrdnerId)) {
+      selectOrdner(ordner[0].id, ordner[0].name, userId);
+    }
+  });
 }
 
-function renderTodos(todos, userId) {
+function createOrdner(userId, defaultName) {
+  const name = defaultName || prompt("Name des Ordners:", "Ordner");
+  if (!name || !name.trim()) return;
+  db.collection(`users/${userId}/todoOrdner`).add({
+    name: name.trim(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(ref => selectOrdner(ref.id, name.trim(), userId));
+}
+
+function selectOrdner(id, name, userId) {
+  currentOrdnerId = id;
+
+  // Tab-Markierung
+  document.querySelectorAll("#ordner-bar .tabelle-tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.id === id);
+  });
+
+  // Alten Todo-Listener aufräumen
+  if (unsubscribeTodosFunc) { unsubscribeTodosFunc(); unsubscribeTodosFunc = null; }
+
+  // Echtzeit-Listener für Todos dieses Ordners
+  const colRef = db.collection(`users/${userId}/todoOrdner/${id}/todos`).orderBy("createdAt", "asc");
+  unsubscribeTodosFunc = colRef.onSnapshot(snapshot => {
+    const todos = [];
+    snapshot.forEach(doc => todos.push({ id: doc.id, ...doc.data() }));
+    renderTodos(todos, userId, id);
+  });
+}
+
+function renderOrdnerBar(ordner, userId) {
+  const bar = $("ordner-bar");
+  const newBtn = $("btn-new-ordner");
+
+  Array.from(bar.children).forEach(c => { if (c !== newBtn) bar.removeChild(c); });
+
+  ordner.forEach(o => {
+    const tab = document.createElement("div");
+    tab.className = "tabelle-tab" + (o.id === currentOrdnerId ? " active" : "");
+    tab.dataset.id = o.id;
+
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = o.name;
+
+    const actions = document.createElement("span");
+    actions.className = "tabelle-tab-actions";
+
+    // Umbenennen
+    const renameBtn = document.createElement("button");
+    renameBtn.className = "tabelle-tab-btn";
+    renameBtn.title = "Umbenennen";
+    renameBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    renameBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const neu = prompt("Neuer Name:", o.name);
+      if (neu && neu.trim()) {
+        db.collection(`users/${userId}/todoOrdner`).doc(o.id).update({ name: neu.trim() });
+      }
+    });
+
+    // Löschen
+    const delBtn = document.createElement("button");
+    delBtn.className = "tabelle-tab-btn del";
+    delBtn.title = "Ordner löschen";
+    delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    delBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      if (!confirm(`Ordner "${o.name}" und alle Aufgaben löschen?`)) return;
+      db.collection(`users/${userId}/todoOrdner/${o.id}/todos`).get().then(snap => {
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        batch.delete(db.doc(`users/${userId}/todoOrdner/${o.id}`));
+        return batch.commit();
+      });
+    });
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(delBtn);
+    tab.appendChild(nameSpan);
+    tab.appendChild(actions);
+    tab.addEventListener("click", () => selectOrdner(o.id, o.name, userId));
+    bar.insertBefore(tab, newBtn);
+  });
+}
+
+function renderTodos(todos, userId, ordnerId) {
   const list = $("todo-list");
   const empty = $("todo-empty");
 
@@ -1095,7 +1210,7 @@ function renderTodos(todos, userId) {
       sel.appendChild(o);
     });
     sel.addEventListener("change", () => {
-      db.collection(`users/${auth.currentUser.uid}/todos`).doc(todo.id)
+      db.collection(`users/${auth.currentUser.uid}/todoOrdner/${ordnerId}/todos`).doc(todo.id)
         .update({ status: sel.value });
     });
     statusWrap.appendChild(sel);
@@ -1107,7 +1222,7 @@ function renderTodos(todos, userId) {
     delBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
     delBtn.addEventListener("click", () => {
       if (confirm("Aufgabe wirklich löschen?")) {
-        db.collection(`users/${auth.currentUser.uid}/todos`).doc(todo.id).delete();
+        db.collection(`users/${auth.currentUser.uid}/todoOrdner/${ordnerId}/todos`).doc(todo.id).delete();
       }
     });
 
