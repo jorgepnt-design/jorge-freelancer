@@ -1,26 +1,47 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arbeits-Organizer</title>
+  <title>Jorge Organizer</title>
+  <!-- PWA -->
+  <meta name="theme-color" id="meta-theme-color" content="#2563eb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Jorge Organizer" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="organizer-manifest.json" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── THEME VARS ── */
     :root {
       --bg: #f5f5f5;
       --surface: #ffffff;
+      --surface2: #f9fafb;
       --border: #e0e0e0;
       --text: #1a1a1a;
       --text-muted: #6b6b6b;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
       --danger: #dc2626;
-      --danger-hover: #b91c1c;
       --status-open: #9ca3af;
       --status-progress: #3b82f6;
       --status-done: #22c55e;
       --radius: 8px;
+      --shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    [data-theme="dark"] {
+      --bg: #111827;
+      --surface: #1f2937;
+      --surface2: #111827;
+      --border: #374151;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --primary-light: #1e3a5f;
+      --primary-border: #2563eb;
+      --shadow: 0 1px 4px rgba(0,0,0,0.4);
     }
 
     body {
@@ -28,612 +49,366 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
     }
 
     /* ── LOGIN ── */
     #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      gap: 24px;
-      padding: 24px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh; gap: 24px; padding: 24px;
     }
-
-    #login-screen h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    #login-screen p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
+    #login-screen h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px; }
+    #login-screen p  { color: var(--text-muted); font-size: 0.95rem; }
     .btn-google {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 24px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface);
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s, box-shadow 0.15s;
+      display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); font-size: 1rem; font-weight: 500;
+      cursor: pointer; transition: background 0.15s, box-shadow 0.15s; color: var(--text);
     }
-
-    .btn-google:hover {
-      background: #f9fafb;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
-    }
-
-    .btn-google svg { flex-shrink: 0; }
+    .btn-google:hover { background: var(--surface2); box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
 
     /* ── APP ── */
     #app { display: none; flex-direction: column; min-height: 100vh; }
-
     header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 16px; height: 56px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 10;
     }
-
     header h1 { font-size: 1.1rem; font-weight: 700; }
-
-    .header-user {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .btn-icon {
+      border: 1px solid var(--border); border-radius: 6px; background: transparent;
+      padding: 6px; cursor: pointer; color: var(--text-muted); line-height: 0;
+      transition: background 0.15s, color 0.15s;
     }
-
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1.5px solid var(--border);
-    }
-
+    .btn-icon:hover { background: var(--surface2); color: var(--text); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border); }
     .avatar-fallback {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-      font-weight: 600;
+      width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 600;
     }
-
-    .user-name { font-size: 0.85rem; color: var(--text-muted); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
+    .user-name { font-size: 0.82rem; color: var(--text-muted); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .btn-signout {
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: transparent;
-      font-size: 0.8rem;
-      cursor: pointer;
-      color: var(--text-muted);
+      padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px;
+      background: transparent; font-size: 0.78rem; cursor: pointer; color: var(--text-muted);
       transition: background 0.15s;
     }
+    .btn-signout:hover { background: var(--surface2); color: var(--danger); border-color: var(--danger); }
 
-    .btn-signout:hover { background: #f3f4f6; color: var(--danger); border-color: var(--danger); }
-
-    /* ── TABS ── */
-    .tabs {
-      display: flex;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-    }
-
+    /* ── MAIN TABS ── */
+    .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
     .tab-btn {
-      flex: 1;
-      padding: 14px 0;
-      border: none;
-      background: transparent;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      color: var(--text-muted);
-      border-bottom: 2.5px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
+      flex: 1; padding: 13px 0; border: none; background: transparent;
+      font-size: 0.88rem; font-weight: 500; cursor: pointer; color: var(--text-muted);
+      border-bottom: 2.5px solid transparent; transition: color 0.15s, border-color 0.15s;
     }
-
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    .tab-content { display: none; padding: 20px; max-width: 1100px; margin: 0 auto; width: 100%; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-content { display: none; padding: 16px; max-width: 1100px; margin: 0 auto; width: 100%; }
     .tab-content.active { display: block; }
 
-    /* ── DICHTE ── */
+    /* ── CARDS & FIELDS ── */
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
     }
-
-    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    .field label { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-
-    input[type="number"], input[type="text"], select {
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      padding: 9px 12px;
-      font-size: 0.95rem;
-      background: var(--surface);
-      color: var(--text);
-      width: 100%;
-      transition: border-color 0.15s;
-      -moz-appearance: textfield;
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.78rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    input[type="number"], input[type="text"], input[type="date"], textarea, select {
+      border: 1.5px solid var(--border); border-radius: 6px; padding: 8px 11px;
+      font-size: 0.92rem; background: var(--surface); color: var(--text);
+      width: 100%; transition: border-color 0.15s; -moz-appearance: textfield;
     }
-
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
-    input:focus, select:focus { outline: none; border-color: var(--primary); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+    textarea { resize: vertical; min-height: 80px; font-family: inherit; }
 
     .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 20px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 18px; background: var(--primary); color: #fff; border: none;
+      border-radius: 6px; font-size: 0.92rem; font-weight: 500; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
     }
-
     .btn-primary:hover { background: var(--primary-hover); }
+    .save-hint { font-size: 0.73rem; color: var(--text-muted); margin-top: 6px; text-align: right; min-height: 15px; }
 
+    /* ── DICHTE ── */
+    .dichte-layout { display: grid; grid-template-columns: 340px 1fr; gap: 14px; align-items: start; }
     .result-box {
-      background: #eff6ff;
-      border: 1.5px solid #bfdbfe;
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
+      background: var(--primary-light); border: 1.5px solid var(--primary-border);
+      border-radius: var(--radius); padding: 14px 18px; display: flex; align-items: baseline; gap: 8px;
     }
-
-    .result-label { font-size: 0.85rem; color: var(--primary); font-weight: 500; }
-    .result-value { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
-    .result-unit { font-size: 0.9rem; color: var(--primary); }
+    .result-label { font-size: 0.83rem; color: var(--primary); font-weight: 500; }
+    .result-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+    .result-unit  { font-size: 0.88rem; color: var(--primary); }
     .result-box.hidden { display: none; }
 
-    .save-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; text-align: right; min-height: 16px; }
-
-    /* ── TODOS ── */
-    .add-todo {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
+    /* ── TABELLEN-BAR (shared for Dichte + Todos + Notizen) ── */
+    .tabellen-bar {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
     }
+    .tabelle-tab {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 10px 6px 12px; border: 1.5px solid var(--border);
+      border-radius: 20px; background: var(--surface); font-size: 0.83rem;
+      font-weight: 500; cursor: pointer; color: var(--text-muted);
+      transition: border-color 0.15s, color 0.15s; white-space: nowrap;
+    }
+    .tabelle-tab:hover, .tabelle-tab.active {
+      border-color: var(--primary); color: var(--primary); background: var(--primary-light);
+    }
+    .tabelle-tab-actions { display: inline-flex; gap: 1px; margin-left: 2px; }
+    .tabelle-tab-btn {
+      border: none; background: transparent; cursor: pointer; padding: 2px 3px;
+      border-radius: 3px; line-height: 0; color: #9ca3af; transition: color 0.12s, background 0.12s;
+    }
+    .tabelle-tab-btn:hover     { color: var(--primary); background: #dbeafe; }
+    .tabelle-tab-btn.del:hover { color: var(--danger); background: #fee2e2; }
+    .btn-new-tabelle {
+      display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;
+      border: 1.5px dashed var(--border); border-radius: 20px; background: transparent;
+      font-size: 0.83rem; font-weight: 500; color: var(--text-muted);
+      cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap;
+    }
+    .btn-new-tabelle:hover { border-color: var(--primary); color: var(--primary); }
 
-    .add-todo input { flex: 1; }
+    /* ── ERGEBNIS-TABELLE ── */
+    .ergebnis-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .ergebnis-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid var(--border); gap: 8px; flex-wrap: wrap;
+    }
+    .ergebnis-card-header h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .ergebnis-card-header-btns { display: flex; gap: 6px; }
+    .btn-export {
+      display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px;
+      background: #16a34a; color: #fff; border: none; border-radius: 6px;
+      font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-export:hover { background: #15803d; }
+    .btn-export:disabled { background: #9ca3af; cursor: default; }
+    .ergebnis-table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    thead th {
+      background: var(--surface2); padding: 7px 9px; text-align: right;
+      font-weight: 600; color: var(--text-muted); font-size: 0.73rem;
+      text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    thead th:first-child { text-align: left; }
+    tbody td { padding: 7px 9px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text); }
+    tbody td:first-child { text-align: left; color: var(--text-muted); font-size: 0.76rem; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    td.dichte-val { font-weight: 600; color: var(--primary); }
+    td.notiz-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; text-align: left; color: var(--text-muted); font-size: 0.78rem; }
+    .avg-row {
+      padding: 9px 14px; border-top: 2px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; background: var(--surface2);
+    }
+    .avg-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .avg-value { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
+    .table-empty { padding: 28px 14px; text-align: center; color: var(--text-muted); font-size: 0.83rem; }
 
-    .todo-list { display: flex; flex-direction: column; gap: 8px; }
+    /* ── TODO FILTER BAR ── */
+    .todo-toolbar {
+      display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .todo-search {
+      flex: 1; min-width: 160px; padding: 7px 11px; border: 1.5px solid var(--border);
+      border-radius: 6px; font-size: 0.88rem; background: var(--surface); color: var(--text);
+    }
+    .todo-search:focus { outline: none; border-color: var(--primary); }
+    .btn-toggle {
+      display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px;
+      border: 1.5px solid var(--border); border-radius: 6px; background: var(--surface);
+      font-size: 0.82rem; font-weight: 500; cursor: pointer; color: var(--text-muted);
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-toggle.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .btn-toggle-export {
+      display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px;
+      background: #16a34a; color: #fff; border: none; border-radius: 6px;
+      font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-toggle-export:hover { background: #15803d; }
 
+    /* ── TODO STATS ── */
+    .todo-stats {
+      display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .stat-pill {
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+      border-radius: 12px; font-size: 0.78rem; font-weight: 600; border: 1.5px solid;
+    }
+    .stat-pill.offen    { color: #6b7280; border-color: #d1d5db; background: #f9fafb; }
+    .stat-pill.progress { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+    .stat-pill.erledigt { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
+    [data-theme="dark"] .stat-pill.offen    { background: #1f2937; }
+    [data-theme="dark"] .stat-pill.progress { background: #1e3a5f; }
+    [data-theme="dark"] .stat-pill.erledigt { background: #14532d; border-color: #166534; }
+
+    /* ── ADD TODO FORM ── */
+    .add-todo { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .add-todo input[type="text"] { flex: 1; min-width: 140px; }
+    .add-todo-extra { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .add-todo-extra select, .add-todo-extra input[type="date"] { flex: 1; min-width: 120px; padding: 7px 10px; font-size: 0.85rem; }
+
+    /* ── TODO LIST ── */
+    .todo-list { display: flex; flex-direction: column; gap: 7px; }
     .todo-item {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-left-width: 4px; border-radius: var(--radius);
+      padding: 10px 12px; display: flex; align-items: center; gap: 9px;
       transition: border-color 0.2s;
     }
-
-    .todo-item.status-offen { border-left: 4px solid var(--status-open); }
-    .todo-item.status-progress { border-left: 4px solid var(--status-progress); }
-    .todo-item.status-erledigt { border-left: 4px solid var(--status-done); }
+    .todo-item.status-offen    { border-left-color: var(--status-open); }
+    .todo-item.status-progress { border-left-color: var(--status-progress); }
+    .todo-item.status-erledigt { border-left-color: var(--status-done); }
+    /* Custom color labels override status border */
+    .todo-item[data-color="rot"]    { border-left-color: #ef4444; }
+    .todo-item[data-color="orange"] { border-left-color: #f97316; }
+    .todo-item[data-color="gelb"]   { border-left-color: #eab308; }
+    .todo-item[data-color="gruen"]  { border-left-color: #22c55e; }
+    .todo-item[data-color="blau"]   { border-left-color: #3b82f6; }
+    .todo-item[data-color="lila"]   { border-left-color: #a855f7; }
 
     .todo-text {
-      flex: 1;
-      font-size: 0.95rem;
-      line-height: 1.4;
-      word-break: break-word;
+      flex: 1; font-size: 0.92rem; line-height: 1.4;
+      word-break: break-word; color: var(--text);
+    }
+    .todo-item.status-erledigt .todo-text { text-decoration: line-through; color: var(--text-muted); }
+
+    .todo-controls { display: flex; align-items: center; gap: 5px; flex-shrink: 0; flex-wrap: wrap; }
+    .todo-meta { font-size: 0.71rem; color: var(--text-muted); white-space: nowrap; }
+    .todo-status select { padding: 4px 7px; font-size: 0.78rem; border-radius: 5px; min-width: 110px; }
+    .priority-badge {
+      font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap;
+    }
+    .priority-badge.hoch   { background: #fee2e2; color: #dc2626; }
+    .priority-badge.mittel { background: #ffedd5; color: #ea580c; }
+    .priority-badge.niedrig{ background: #dcfce7; color: #16a34a; }
+    [data-theme="dark"] .priority-badge.hoch    { background: #7f1d1d; color: #fca5a5; }
+    [data-theme="dark"] .priority-badge.mittel  { background: #7c2d12; color: #fed7aa; }
+    [data-theme="dark"] .priority-badge.niedrig { background: #14532d; color: #86efac; }
+    .due-badge {
+      font-size: 0.71rem; font-weight: 500; padding: 2px 7px; border-radius: 10px;
+      background: var(--surface2); color: var(--text-muted); white-space: nowrap; border: 1px solid var(--border);
+    }
+    .due-badge.overdue { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+    .due-badge.today   { background: #ffedd5; color: #ea580c; border-color: #fdba74; }
+    [data-theme="dark"] .due-badge.overdue { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
+    [data-theme="dark"] .due-badge.today   { background: #7c2d12; color: #fed7aa; border-color: #9a3412; }
+
+    /* Color picker */
+    .color-picker-wrap { position: relative; }
+    .color-dot {
+      width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
+      border: 2px solid var(--border); display: inline-block; flex-shrink: 0;
+    }
+    .color-popup {
+      position: absolute; bottom: 24px; right: 0; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px; padding: 6px;
+      display: flex; gap: 5px; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .color-popup button {
+      width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent;
+      cursor: pointer; transition: transform 0.1s; padding: 0;
+    }
+    .color-popup button:hover { transform: scale(1.2); }
+    .color-popup button.selected { border-color: var(--text); }
+
+    .ordner-badge {
+      font-size: 0.7rem; font-weight: 500; padding: 2px 7px; border-radius: 10px;
+      background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border);
+      white-space: nowrap; flex-shrink: 0;
     }
 
-    .todo-item.status-erledigt .todo-text {
-      text-decoration: line-through;
-      color: var(--text-muted);
+    .btn-delete, .btn-edit {
+      border: none; background: transparent; cursor: pointer; padding: 4px;
+      border-radius: 4px; transition: color 0.15s, background 0.15s;
+      flex-shrink: 0; line-height: 0; color: #d1d5db;
     }
-
-    .todo-meta { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
-
-    .todo-status select {
-      padding: 5px 8px;
-      font-size: 0.8rem;
-      border-radius: 5px;
-      min-width: 120px;
-    }
-
-    .btn-delete {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      color: #d1d5db;
-      padding: 4px;
-      border-radius: 4px;
-      transition: color 0.15s, background 0.15s;
-      flex-shrink: 0;
-      line-height: 0;
-    }
-
     .btn-delete:hover { color: var(--danger); background: #fee2e2; }
-
-    .btn-edit {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      color: #d1d5db;
-      padding: 4px;
-      border-radius: 4px;
-      transition: color 0.15s, background 0.15s;
-      flex-shrink: 0;
-      line-height: 0;
-    }
-
-    .btn-edit:hover { color: var(--primary); background: #dbeafe; }
-
+    .btn-edit:hover   { color: var(--primary); background: #dbeafe; }
     .todo-edit-input {
-      flex: 1;
-      border: 1.5px solid var(--primary);
-      border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 0.95rem;
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      min-width: 0;
+      flex: 1; border: 1.5px solid var(--primary); border-radius: 6px;
+      padding: 4px 9px; font-size: 0.92rem; background: var(--surface); color: var(--text); outline: none;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
-      font-size: 0.9rem;
+    .empty-state { text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 0.88rem; }
+
+    /* ── NOTIZEN ── */
+    .notiz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .notiz-card {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 14px; cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
+    .notiz-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+    .notiz-card-title {
+      font-size: 0.92rem; font-weight: 600; margin-bottom: 6px;
+      color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .notiz-card-preview { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .notiz-card-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; }
+    .notiz-add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px; border: 2px dashed var(--border); border-radius: var(--radius);
+      background: transparent; font-size: 0.88rem; color: var(--text-muted);
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .notiz-add-btn:hover { border-color: var(--primary); color: var(--primary); }
 
     /* ── MODAL ── */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
     }
-
     .modal {
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 480px;
-      width: 100%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      background: var(--surface); border-radius: 12px; padding: 22px;
+      max-width: 520px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; gap: 14px; max-height: 90vh; overflow-y: auto;
     }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .modal-status { font-size: 0.8rem; }
-
-    .modal-text {
-      font-size: 1rem;
-      line-height: 1.6;
-      color: var(--text);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .modal-meta { font-size: 0.78rem; color: var(--text-muted); }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .btn-modal-close {
-      padding: 8px 18px;
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      background: transparent;
-      font-size: 0.9rem;
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: background 0.15s;
-    }
-
-    .btn-modal-close:hover { background: #f3f4f6; }
-
-    .todo-text-preview {
-      cursor: pointer;
-      text-decoration: underline dotted;
-      text-underline-offset: 3px;
-    }
-
-    .todo-text-preview:hover { color: var(--primary); }
-
-    .ordner-badge {
-      font-size: 0.72rem;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 10px;
-      background: #eff6ff;
-      color: var(--primary);
-      border: 1px solid #bfdbfe;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    /* ── TABELLEN-BAR ── */
-    .tabellen-bar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .tabelle-tab {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 10px 6px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 20px;
-      background: var(--surface);
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: border-color 0.15s, color 0.15s, background 0.15s;
-      white-space: nowrap;
-    }
-
-    .tabelle-tab:hover { border-color: var(--primary); color: var(--primary); }
-
-    .tabelle-tab.active {
-      border-color: var(--primary);
-      background: #eff6ff;
-      color: var(--primary);
-    }
-
-    .tabelle-tab-actions {
-      display: inline-flex;
-      gap: 1px;
-      margin-left: 2px;
-    }
-
-    .tabelle-tab-btn {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      padding: 2px 3px;
-      border-radius: 3px;
-      line-height: 0;
-      color: #9ca3af;
-      transition: color 0.12s, background 0.12s;
-    }
-
-    .tabelle-tab-btn:hover { color: var(--primary); background: #dbeafe; }
-    .tabelle-tab-btn.del:hover { color: var(--danger); background: #fee2e2; }
-
-    .btn-new-tabelle {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 6px 12px;
-      border: 1.5px dashed var(--border);
-      border-radius: 20px;
-      background: transparent;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
-
-    .btn-new-tabelle:hover { border-color: var(--primary); color: var(--primary); }
-
-    /* ── DICHTE LAYOUT ── */
-    .dichte-layout {
-      display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-
-    /* ── ERGEBNIS-TABELLE ── */
-    .ergebnis-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    .ergebnis-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .ergebnis-card-header h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .btn-export {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: #16a34a;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .btn-export:hover { background: #15803d; }
-    .btn-export:disabled { background: #9ca3af; cursor: default; }
-
-    .ergebnis-table-wrap { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    thead th {
-      background: #f9fafb;
-      padding: 8px 10px;
-      text-align: right;
-      font-weight: 600;
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    thead th:first-child { text-align: left; }
-
-    tbody td {
-      padding: 8px 10px;
-      text-align: right;
-      border-bottom: 1px solid #f0f0f0;
-      white-space: nowrap;
-    }
-
-    tbody td:first-child { text-align: left; color: var(--text-muted); font-size: 0.78rem; }
-
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: #fafafa; }
-
-    td.dichte-val { font-weight: 600; color: var(--primary); }
-
-    .avg-row {
-      padding: 10px 16px;
-      border-top: 2px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f9fafb;
-    }
-
-    .avg-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-    .avg-value { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
-
-    .table-empty { padding: 32px 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 1rem; font-weight: 600; }
+    .modal input[type="text"] { font-size: 1rem; font-weight: 600; border: none; border-bottom: 2px solid var(--border); border-radius: 0; padding: 4px 0; }
+    .modal input[type="text"]:focus { border-bottom-color: var(--primary); }
+    .modal textarea { min-height: 200px; }
+    .modal-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .modal-save-hint { font-size: 0.73rem; color: var(--text-muted); }
 
     /* ── UTILS ── */
     .hidden { display: none !important; }
 
+    /* ── MOBILE TODO LAYOUT ── */
+    .todo-controls-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+
     @media (max-width: 700px) {
       .dichte-layout { grid-template-columns: 1fr; }
     }
-
-    /* ── TODO CONTROLS WRAPPER ── */
-    .todo-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
     @media (max-width: 600px) {
-      /* Todo-Item: Text oben, Controls unten */
-      .todo-item {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 10px 12px;
-      }
-
-      .todo-text {
-        font-size: 0.9rem;
-        line-height: 1.4;
-      }
-
-      .todo-controls {
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .todo-meta { font-size: 0.72rem; }
-
-      .todo-status select {
-        font-size: 0.78rem;
-        padding: 4px 6px;
-        min-width: 90px;
-      }
-
-      .ordner-badge { font-size: 0.7rem; padding: 2px 6px; }
+      .todo-item { flex-direction: column; align-items: stretch; gap: 7px; padding: 9px 11px; }
+      .todo-controls { flex-wrap: wrap; gap: 5px; }
+      .todo-status select { font-size: 0.76rem; padding: 4px 6px; min-width: 90px; }
+      .ordner-badge { font-size: 0.68rem; padding: 2px 5px; }
+      .notiz-grid { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 480px) {
       .grid-2 { grid-template-columns: 1fr; }
       .user-name { display: none; }
+      .tab-content { padding: 12px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════
-     LOGIN
-══════════════════════════════════════ -->
+<!-- LOGIN -->
 <div id="login-screen">
-  <h1>Arbeits-Organizer</h1>
+  <h1>Jorge Organizer</h1>
   <p>Bitte melde dich an, um fortzufahren.</p>
   <button class="btn-google" id="btn-google-signin">
-    <!-- Google "G" Logo -->
     <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
       <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -644,13 +419,15 @@
   </button>
 </div>
 
-<!-- ══════════════════════════════════════
-     APP
-══════════════════════════════════════ -->
+<!-- APP -->
 <div id="app">
   <header>
     <h1>Jorge Organizer</h1>
-    <div class="header-user">
+    <div class="header-right">
+      <button class="btn-icon" id="btn-darkmode" title="Dark Mode">
+        <svg id="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
       <div id="user-avatar-wrap"></div>
       <span class="user-name" id="user-name"></span>
       <button class="btn-signout" id="btn-signout">Abmelden</button>
@@ -658,85 +435,62 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="dichte">Dichte berechnen</button>
+    <button class="tab-btn active" data-tab="dichte">Dichte</button>
     <button class="tab-btn" data-tab="todos">To-dos</button>
+    <button class="tab-btn" data-tab="notizen">Notizen</button>
   </div>
 
-  <!-- TAB: DICHTE -->
+  <!-- ══ TAB: DICHTE ══ -->
   <div id="tab-dichte" class="tab-content active">
-
-    <!-- Tabellen-Auswahl -->
     <div class="tabellen-bar" id="tabellen-bar">
-      <!-- wird per JS befüllt -->
       <button class="btn-new-tabelle" id="btn-new-tabelle">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Neue Tabelle
       </button>
     </div>
-
     <div class="dichte-layout">
-
-      <!-- Linke Seite: Eingabe -->
       <div>
         <div class="card">
           <h2>Abmessungen &amp; Masse</h2>
           <div class="grid-2">
-            <div class="field">
-              <label>Länge (mm)</label>
-              <input type="number" id="d-laenge" placeholder="z. B. 100" min="0" step="any" />
-            </div>
-            <div class="field">
-              <label>Breite (mm)</label>
-              <input type="number" id="d-breite" placeholder="z. B. 50" min="0" step="any" />
-            </div>
-            <div class="field">
-              <label>Dicke (mm)</label>
-              <input type="number" id="d-dicke" placeholder="z. B. 10" min="0" step="any" />
-            </div>
-            <div class="field">
-              <label>Masse (g)</label>
-              <input type="number" id="d-masse" placeholder="z. B. 250" min="0" step="any" />
-            </div>
+            <div class="field"><label>Länge (mm)</label><input type="number" id="d-laenge" placeholder="z. B. 100" min="0" step="any" /></div>
+            <div class="field"><label>Breite (mm)</label><input type="number" id="d-breite" placeholder="z. B. 50"  min="0" step="any" /></div>
+            <div class="field"><label>Dicke (mm)</label> <input type="number" id="d-dicke"  placeholder="z. B. 10"  min="0" step="any" /></div>
+            <div class="field"><label>Masse (g)</label>  <input type="number" id="d-masse"  placeholder="z. B. 250" min="0" step="any" /></div>
           </div>
-          <div style="margin-top: 16px;">
+          <div class="field" style="margin-top:10px;">
+            <label>Notiz (optional)</label>
+            <input type="text" id="d-notiz" placeholder="z. B. Material, Charge …" />
+          </div>
+          <div style="margin-top:14px;">
             <button class="btn-primary" id="btn-berechnen">Berechnen &amp; Speichern</button>
           </div>
           <p class="save-hint" id="dichte-save-hint"></p>
         </div>
-
         <div id="dichte-result" class="result-box hidden">
           <span class="result-label">Dichte:</span>
           <span class="result-value" id="dichte-wert">—</span>
           <span class="result-unit">kg/m³</span>
         </div>
       </div>
-
-      <!-- Rechte Seite: Ergebnistabelle -->
       <div class="ergebnis-card">
         <div class="ergebnis-card-header">
-          <h2>Ergebnisse</h2>
-          <button class="btn-export" id="btn-export" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Excel
-          </button>
+          <h2 id="ergebnis-tabelle-name">Ergebnisse</h2>
+          <div class="ergebnis-card-header-btns">
+            <button class="btn-export" id="btn-export" disabled>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Excel
+            </button>
+          </div>
         </div>
         <div class="ergebnis-table-wrap">
-          <table id="ergebnis-table">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>L (mm)</th>
-                <th>B (mm)</th>
-                <th>D (mm)</th>
-                <th>Masse (g)</th>
-                <th>Dichte (kg/m³)</th>
-                <th></th>
-              </tr>
-            </thead>
+          <table>
+            <thead><tr>
+              <th>Datum</th><th>L (mm)</th><th>B (mm)</th><th>D (mm)</th>
+              <th>Masse (g)</th><th>Dichte (kg/m³)</th><th>Notiz</th><th></th>
+            </tr></thead>
             <tbody id="ergebnis-tbody">
-              <tr id="ergebnis-empty-row">
-                <td colspan="7" class="table-empty">Noch keine Ergebnisse.</td>
-              </tr>
+              <tr id="ergebnis-empty-row"><td colspan="8" class="table-empty">Noch keine Ergebnisse.</td></tr>
             </tbody>
           </table>
         </div>
@@ -745,48 +499,104 @@
           <span class="avg-value"><span id="avg-wert">—</span> kg/m³</span>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- TAB: TODOS -->
+  <!-- ══ TAB: TO-DOS ══ -->
   <div id="tab-todos" class="tab-content">
-
+    <!-- Toolbar: Suche + Filter + Export -->
+    <div class="todo-toolbar">
+      <input class="todo-search" id="todo-search" type="text" placeholder="🔍  Suchen …" />
+      <select id="filter-prio" class="btn-toggle" style="cursor:pointer; padding:7px 10px;">
+        <option value="">Alle Prioritäten</option>
+        <option value="hoch">↑ Hoch</option>
+        <option value="mittel">→ Mittel</option>
+        <option value="niedrig">↓ Niedrig</option>
+        <option value="none">Ohne</option>
+      </select>
+      <button class="btn-toggle" id="btn-hide-done">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Erledigte
+      </button>
+      <button class="btn-toggle-export" id="btn-todo-export">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Excel
+      </button>
+    </div>
+    <!-- Stats -->
+    <div class="todo-stats" id="todo-stats">
+      <span class="stat-pill offen">   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>    Offen: <b id="stat-offen">0</b></span>
+      <span class="stat-pill progress"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.09-5"/></svg> In Arbeit: <b id="stat-progress">0</b></span>
+      <span class="stat-pill erledigt"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Erledigt: <b id="stat-erledigt">0</b></span>
+    </div>
     <!-- Ordner-Leiste -->
     <div class="tabellen-bar" id="ordner-bar">
       <button class="btn-new-tabelle" id="btn-new-ordner">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Neuer Ordner
       </button>
     </div>
-
-    <!-- Hinzufügen -->
+    <!-- Neue Aufgabe -->
     <div class="add-todo">
-      <input type="text" id="todo-input" placeholder="Neue Aufgabe hinzufügen …" />
-      <select id="todo-ordner-select" style="display:none; max-width:140px;"></select>
+      <input type="text" id="todo-input" placeholder="Neue Aufgabe …" />
+      <select id="todo-ordner-select" style="display:none; max-width:130px;"></select>
       <button class="btn-primary" id="btn-todo-add">Hinzufügen</button>
     </div>
-
+    <div class="add-todo-extra">
+      <select id="todo-prio-input">
+        <option value="none">— Priorität</option>
+        <option value="hoch">↑ Hoch</option>
+        <option value="mittel">→ Mittel</option>
+        <option value="niedrig">↓ Niedrig</option>
+      </select>
+      <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" />
+    </div>
     <div id="todo-list" class="todo-list">
-      <div class="empty-state" id="todo-empty">Noch keine Aufgaben in diesem Ordner.</div>
+      <div class="empty-state" id="todo-empty">Noch keine Aufgaben.</div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: NOTIZEN ══ -->
+  <div id="tab-notizen" class="tab-content">
+    <div class="tabellen-bar" id="notiz-ordner-bar">
+      <button class="btn-new-tabelle" id="btn-new-notiz-ordner">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Neuer Ordner
+      </button>
+    </div>
+    <div id="notiz-list" class="notiz-grid">
+      <div class="empty-state" id="notiz-empty">Noch keine Notizen.</div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     FIREBASE SDK (compat)
-══════════════════════════════════════ -->
+<!-- Notizen-Modal -->
+<div class="modal-overlay hidden" id="notiz-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <input type="text" id="notiz-modal-title" placeholder="Titel …" style="flex:1; font-size:1rem; font-weight:600; border:none; border-bottom:2px solid var(--border); border-radius:0; padding:4px 0; background:transparent; color:var(--text);" />
+      <button class="btn-icon" id="notiz-modal-close" style="margin-left:10px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <textarea id="notiz-modal-text" placeholder="Notiz …"></textarea>
+    <div class="modal-footer">
+      <span class="modal-save-hint" id="notiz-save-hint"></span>
+      <button class="btn-delete" id="notiz-modal-delete" title="Notiz löschen" style="color:#d1d5db;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase + SheetJS -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// ══════════════════════════════════════
-// FIREBASE KONFIGURATION
-// Ersetze diese Werte mit deiner Firebase-Projektkonfiguration
-// (Firebase Console → Projekteinstellungen → Deine Apps)
-// ══════════════════════════════════════
+// ── FIREBASE CONFIG ──────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyBBMU-KPmSzu0F9iFGV_AF049Aivtnx0S4",
   authDomain:        "arbeitsapp-3364c.firebaseapp.com",
@@ -796,72 +606,62 @@ const firebaseConfig = {
   appId:             "1:202291981896:web:0294b473eaff98a454b27d",
   measurementId:     "G-7ZJCVC7TRZ"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// ══════════════════════════════════════
-// HILFSFUNKTIONEN
-// ══════════════════════════════════════
 function $(id) { return document.getElementById(id); }
 
-function showApp(user) {
-  $("login-screen").style.display = "none";
-  $("app").style.display = "flex";
-
-  // Avatar
-  const wrap = $("user-avatar-wrap");
-  wrap.innerHTML = "";
-  if (user.photoURL) {
-    const img = document.createElement("img");
-    img.src = user.photoURL;
-    img.className = "avatar";
-    img.alt = user.displayName || "Avatar";
-    wrap.appendChild(img);
-  } else {
-    const div = document.createElement("div");
-    div.className = "avatar-fallback";
-    div.textContent = (user.displayName || user.email || "?")[0].toUpperCase();
-    wrap.appendChild(div);
-  }
-  $("user-name").textContent = user.displayName || user.email || "";
+// ── DARK MODE ────────────────────────────────────────────────
+function applyTheme(dark) {
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  $("icon-sun").style.display  = dark ? "none"  : "";
+  $("icon-moon").style.display = dark ? ""      : "none";
+  $("meta-theme-color").content = dark ? "#1f2937" : "#2563eb";
 }
-
-function showLogin() {
-  $("login-screen").style.display = "flex";
-  $("app").style.display          = "none";
-  unsubscribeTodos();
-  if (unsubscribeErgebnisseFunc) { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
-  if (unsubscribeTabellenFunc)   { unsubscribeTabellenFunc();   unsubscribeTabellenFunc   = null; }
-  currentTabelleId = null;
-  unsubscribeTodos();
-}
-
-// ══════════════════════════════════════
-// AUTH
-// ══════════════════════════════════════
-const provider = new firebase.auth.GoogleAuthProvider();
-
-$("btn-google-signin").addEventListener("click", () => {
-  auth.signInWithPopup(provider).catch(err => alert("Anmeldung fehlgeschlagen: " + err.message));
+let darkMode = localStorage.getItem("darkMode") === "true";
+applyTheme(darkMode);
+$("btn-darkmode").addEventListener("click", () => {
+  darkMode = !darkMode;
+  localStorage.setItem("darkMode", darkMode);
+  applyTheme(darkMode);
 });
 
+// ── AUTH ─────────────────────────────────────────────────────
+const provider = new firebase.auth.GoogleAuthProvider();
+$("btn-google-signin").addEventListener("click", () =>
+  auth.signInWithPopup(provider).catch(err => alert("Anmeldung fehlgeschlagen: " + err.message))
+);
 $("btn-signout").addEventListener("click", () => auth.signOut());
 
 auth.onAuthStateChanged(user => {
   if (user) {
-    showApp(user);
+    $("login-screen").style.display = "none";
+    $("app").style.display = "flex";
+    const wrap = $("user-avatar-wrap");
+    wrap.innerHTML = "";
+    if (user.photoURL) {
+      const img = document.createElement("img");
+      img.src = user.photoURL; img.className = "avatar"; img.alt = "Avatar";
+      wrap.appendChild(img);
+    } else {
+      const div = document.createElement("div");
+      div.className = "avatar-fallback";
+      div.textContent = (user.displayName || user.email || "?")[0].toUpperCase();
+      wrap.appendChild(div);
+    }
+    $("user-name").textContent = user.displayName || user.email || "";
     initDichte(user.uid);
     initTodos(user.uid);
+    initNotizen(user.uid);
   } else {
-    showLogin();
+    $("login-screen").style.display = "flex";
+    $("app").style.display = "none";
+    cleanupAll();
   }
 });
 
-// ══════════════════════════════════════
-// TABS
-// ══════════════════════════════════════
+// ── MAIN TABS ────────────────────────────────────────────────
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -871,21 +671,23 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
-// ══════════════════════════════════════
+// ── PWA SERVICE WORKER ───────────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("organizer-sw.js").catch(() => {});
+}
+
+// ════════════════════════════════════════════════════════════
 // TAB 1: DICHTE
-// ══════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 let dichteDebounce = null;
 let unsubscribeErgebnisseFunc = null;
 let unsubscribeTabellenFunc   = null;
 let currentTabelleId          = null;
-let currentUserId             = null;
 
 function initDichte(userId) {
-  currentUserId = userId;
-  const settingsRef  = db.doc(`users/${userId}/settings/dichte`);
-  const tabellenRef  = db.collection(`users/${userId}/dichteTabellen`).orderBy("createdAt", "asc");
+  const settingsRef = db.doc(`users/${userId}/settings/dichte`);
+  const tabellenRef = db.collection(`users/${userId}/dichteTabellen`).orderBy("createdAt", "asc");
 
-  // Eingabefelder wiederherstellen
   settingsRef.get().then(snap => {
     if (snap.exists) {
       const d = snap.data();
@@ -896,590 +698,667 @@ function initDichte(userId) {
     }
   });
 
-  // Debounced Auto-Save Eingabefelder
-  ["d-laenge", "d-breite", "d-dicke", "d-masse"].forEach(id => {
+  ["d-laenge","d-breite","d-dicke","d-masse"].forEach(id => {
     $(id).addEventListener("input", () => {
       clearTimeout(dichteDebounce);
       $("dichte-save-hint").textContent = "Wird gespeichert …";
       dichteDebounce = setTimeout(() => {
         settingsRef.set({
-          laenge: parseFloat($("d-laenge").value) || null,
-          breite: parseFloat($("d-breite").value) || null,
-          dicke:  parseFloat($("d-dicke").value)  || null,
-          masse:  parseFloat($("d-masse").value)  || null,
+          laenge: parseFloat($("d-laenge").value)||null,
+          breite: parseFloat($("d-breite").value)||null,
+          dicke:  parseFloat($("d-dicke").value) ||null,
+          masse:  parseFloat($("d-masse").value) ||null,
         }, { merge: true })
           .then(() => { $("dichte-save-hint").textContent = "Gespeichert ✓"; })
-          .catch(() => { $("dichte-save-hint").textContent = "Fehler beim Speichern"; });
+          .catch(()=> { $("dichte-save-hint").textContent = "Fehler"; });
       }, 1000);
     });
   });
 
-  // Berechnen & in aktuelle Tabelle speichern
   $("btn-berechnen").addEventListener("click", () => {
-    if (!currentTabelleId) { alert("Bitte zuerst eine Tabelle auswählen oder erstellen."); return; }
+    if (!currentTabelleId) { alert("Bitte zuerst eine Tabelle auswählen."); return; }
     const L = parseFloat($("d-laenge").value);
     const B = parseFloat($("d-breite").value);
     const D = parseFloat($("d-dicke").value);
     const M = parseFloat($("d-masse").value);
-    if ([L, B, D, M].some(v => isNaN(v) || v <= 0)) {
-      alert("Bitte alle Felder mit positiven Zahlen ausfüllen.");
-      return;
-    }
-    const dichte_kgm3 = (M / ((L * B * D) / 1000)) * 1000;
-    zeigeDichte(dichte_kgm3);
+    const N = $("d-notiz").value.trim();
+    if ([L,B,D,M].some(v => isNaN(v)||v<=0)) { alert("Bitte alle Felder mit positiven Zahlen ausfüllen."); return; }
+    const dichte = (M / ((L*B*D)/1000)) * 1000;
+    zeigeDichte(dichte);
     $("dichte-save-hint").textContent = "Wird gespeichert …";
     db.collection(`users/${userId}/dichteTabellen/${currentTabelleId}/ergebnisse`).add({
-      laenge: L, breite: B, dicke: D, masse: M,
-      dichte: dichte_kgm3,
+      laenge:L, breite:B, dicke:D, masse:M, dichte, notiz: N||"",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      $("dichte-save-hint").textContent = "Gespeichert ✓";
-    }).catch(() => {
-      $("dichte-save-hint").textContent = "Fehler beim Speichern";
-    });
+    }).then(()=>{ $("dichte-save-hint").textContent = "Gespeichert ✓"; $("d-notiz").value=""; })
+      .catch(()=>{ $("dichte-save-hint").textContent = "Fehler"; });
   });
 
-  // Neue Tabelle erstellen
   $("btn-new-tabelle").addEventListener("click", () => createTabelle(userId));
 
-  // Echtzeit-Listener für Tabellenliste
   if (unsubscribeTabellenFunc) unsubscribeTabellenFunc();
   unsubscribeTabellenFunc = tabellenRef.onSnapshot(snapshot => {
     const tabellen = [];
     snapshot.forEach(doc => tabellen.push({ id: doc.id, ...doc.data() }));
-
-    // Beim ersten Laden: Default-Tabelle anlegen wenn keine vorhanden
-    if (tabellen.length === 0) {
-      createTabelle(userId, "Tabelle 1");
-      return;
-    }
-
+    if (tabellen.length === 0) { createTabelle(userId, "Tabelle 1"); return; }
     renderTabellenBar(tabellen, userId);
-
-    // Aktuelle Tabelle beibehalten oder erste wählen
-    if (!currentTabelleId || !tabellen.find(t => t.id === currentTabelleId)) {
+    if (!currentTabelleId || !tabellen.find(t => t.id === currentTabelleId))
       selectTabelle(tabellen[0].id, tabellen[0].name, userId);
-    }
   });
 }
 
 function createTabelle(userId, defaultName) {
-  const name = defaultName || prompt("Name der neuen Tabelle:", `Tabelle`);
-  if (!name || !name.trim()) return;
+  const name = defaultName || prompt("Name der Tabelle:", "Tabelle");
+  if (!name||!name.trim()) return;
   db.collection(`users/${userId}/dichteTabellen`).add({
-    name: name.trim(),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(ref => {
-    selectTabelle(ref.id, name.trim(), userId);
-  });
+    name: name.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(ref => selectTabelle(ref.id, name.trim(), userId));
 }
 
 function selectTabelle(id, name, userId) {
   currentTabelleId = id;
-
-  // Ergebnis-Header aktualisieren
-  const h2 = document.querySelector(".ergebnis-card-header h2");
-  if (h2) h2.textContent = name;
-
-  // Tab-Markierung aktualisieren
-  document.querySelectorAll(".tabelle-tab").forEach(t => {
-    t.classList.toggle("active", t.dataset.id === id);
-  });
-
-  // Alten Listener aufräumen
+  $("ergebnis-tabelle-name").textContent = name;
+  document.querySelectorAll("#tabellen-bar .tabelle-tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.id === id));
   if (unsubscribeErgebnisseFunc) { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
-
-  // Echtzeit-Listener für Ergebnisse dieser Tabelle
-  const ergebnisseRef = db.collection(`users/${userId}/dichteTabellen/${id}/ergebnisse`).orderBy("createdAt", "asc");
-  unsubscribeErgebnisseFunc = ergebnisseRef.onSnapshot(snapshot => {
+  const ref = db.collection(`users/${userId}/dichteTabellen/${id}/ergebnisse`).orderBy("createdAt","asc");
+  unsubscribeErgebnisseFunc = ref.onSnapshot(snap => {
     const rows = [];
-    snapshot.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
+    snap.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
     renderErgebnisse(rows, userId, id, name);
   });
 }
 
 function renderTabellenBar(tabellen, userId) {
-  const bar = $("tabellen-bar");
-  const newBtn = $("btn-new-tabelle");
-
-  // Alle Tabs entfernen (außer "+ Neue Tabelle")
+  const bar = $("tabellen-bar"), newBtn = $("btn-new-tabelle");
   Array.from(bar.children).forEach(c => { if (c !== newBtn) bar.removeChild(c); });
-
   tabellen.forEach(t => {
-    const tab = document.createElement("div");
-    tab.className = "tabelle-tab" + (t.id === currentTabelleId ? " active" : "");
-    tab.dataset.id = t.id;
-
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = t.name;
-
-    const actions = document.createElement("span");
-    actions.className = "tabelle-tab-actions";
-
-    // Umbenennen
-    const renameBtn = document.createElement("button");
-    renameBtn.className = "tabelle-tab-btn";
-    renameBtn.title = "Umbenennen";
-    renameBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-    renameBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      const neu = prompt("Neuer Name:", t.name);
-      if (neu && neu.trim()) {
-        db.collection(`users/${userId}/dichteTabellen`).doc(t.id).update({ name: neu.trim() })
-          .then(() => {
-            if (currentTabelleId === t.id) {
-              const h2 = document.querySelector(".ergebnis-card-header h2");
-              if (h2) h2.textContent = neu.trim();
-            }
-          });
-      }
-    });
-
-    // Löschen
-    const delBtn = document.createElement("button");
-    delBtn.className = "tabelle-tab-btn del";
-    delBtn.title = "Tabelle löschen";
-    delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-    delBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      if (!confirm(`Tabelle "${t.name}" und alle Einträge löschen?`)) return;
-      // Erst alle Ergebnisse löschen, dann die Tabelle
-      db.collection(`users/${userId}/dichteTabellen/${t.id}/ergebnisse`).get().then(snap => {
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        batch.delete(db.doc(`users/${userId}/dichteTabellen/${t.id}`));
-        return batch.commit();
-      });
-    });
-
-    actions.appendChild(renameBtn);
-    actions.appendChild(delBtn);
-    tab.appendChild(nameSpan);
-    tab.appendChild(actions);
-    tab.addEventListener("click", () => selectTabelle(t.id, t.name, userId));
+    const tab = makeFolderTab(t.id, t.name, currentTabelleId === t.id,
+      // rename
+      () => { const n = prompt("Neuer Name:", t.name); if (n&&n.trim()) db.collection(`users/${userId}/dichteTabellen`).doc(t.id).update({name:n.trim()}).then(()=>{ if(currentTabelleId===t.id) $("ergebnis-tabelle-name").textContent=n.trim(); }); },
+      // delete
+      () => { if (!confirm(`Tabelle "${t.name}" löschen?`)) return;
+        db.collection(`users/${userId}/dichteTabellen/${t.id}/ergebnisse`).get().then(snap => {
+          const b = db.batch(); snap.forEach(d => b.delete(d.ref));
+          b.delete(db.doc(`users/${userId}/dichteTabellen/${t.id}`)); return b.commit(); }); },
+      () => selectTabelle(t.id, t.name, userId));
     bar.insertBefore(tab, newBtn);
   });
 }
 
 function zeigeDichte(wert) {
-  $("dichte-wert").textContent = wert.toLocaleString("de-DE", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2
-  });
+  $("dichte-wert").textContent = wert.toLocaleString("de-DE",{minimumFractionDigits:1,maximumFractionDigits:2});
   $("dichte-result").classList.remove("hidden");
 }
 
 function fmt(n) {
   return typeof n === "number"
-    ? n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 })
-    : "—";
+    ? n.toLocaleString("de-DE",{minimumFractionDigits:1,maximumFractionDigits:2}) : "—";
 }
 
 function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
-  const tbody = $("ergebnis-tbody");
-  const emptyRow = $("ergebnis-empty-row");
-  const avgRow = $("avg-row");
-
-  // Alte Zeilen entfernen (außer empty-row)
+  const tbody = $("ergebnis-tbody"), emptyRow = $("ergebnis-empty-row"), avgRow = $("avg-row");
   Array.from(tbody.children).forEach(c => { if (c !== emptyRow) tbody.removeChild(c); });
-
-  if (rows.length === 0) {
-    emptyRow.style.display = "";
-    avgRow.style.display = "none";
-    return;
-  }
-
+  if (rows.length === 0) { emptyRow.style.display=""; avgRow.style.display="none"; $("btn-export").disabled=true; return; }
   emptyRow.style.display = "none";
-
-  rows.forEach((row, i) => {
+  rows.forEach(row => {
     const d = row.createdAt ? (row.createdAt.toDate ? row.createdAt.toDate() : new Date(row.createdAt)) : null;
-    const datum = d ? d.toLocaleDateString("de-DE", { day:"2-digit", month:"2-digit", year:"2-digit" }) : "—";
-
+    const datum = d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"}) : "—";
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${datum}</td>
-      <td>${fmt(row.laenge)}</td>
-      <td>${fmt(row.breite)}</td>
-      <td>${fmt(row.dicke)}</td>
-      <td>${fmt(row.masse)}</td>
-      <td class="dichte-val">${fmt(row.dichte)}</td>
-      <td></td>
-    `;
-
-    // Löschen-Button
+    tr.innerHTML = `<td>${datum}</td><td>${fmt(row.laenge)}</td><td>${fmt(row.breite)}</td><td>${fmt(row.dicke)}</td><td>${fmt(row.masse)}</td><td class="dichte-val">${fmt(row.dichte)}</td><td class="notiz-cell" title="${row.notiz||''}">${row.notiz||''}</td><td></td>`;
     const delBtn = document.createElement("button");
-    delBtn.className = "btn-delete";
-    delBtn.title = "Eintrag löschen";
-    delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
-    delBtn.addEventListener("click", () => {
-      db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id).delete();
-    });
+    delBtn.className = "btn-delete"; delBtn.title = "Löschen";
+    delBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+    delBtn.addEventListener("click", () =>
+      db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id).delete());
     tr.lastElementChild.appendChild(delBtn);
     tbody.appendChild(tr);
   });
-
-  // Durchschnitt
-  const avg = rows.reduce((sum, r) => sum + (r.dichte || 0), 0) / rows.length;
+  const avg = rows.reduce((s,r)=>s+(r.dichte||0),0)/rows.length;
   $("avg-wert").textContent = fmt(avg);
   avgRow.style.display = "flex";
-
-  // Export-Button aktivieren
   $("btn-export").disabled = false;
-  $("btn-export").onclick = () => exportExcel(rows, avg, tabelleName);
+  $("btn-export").onclick = () => exportDichteExcel(rows, avg, tabelleName);
 }
 
-function exportExcel(rows, avg, tabelleName) {
-  const data = rows.map((r, i) => {
+function exportDichteExcel(rows, avg, tabelleName) {
+  const data = rows.map((r,i) => {
     const d = r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt)) : null;
-    return {
-      "Nr.": i + 1,
-      "Datum": d ? d.toLocaleDateString("de-DE") : "",
-      "Länge (mm)": r.laenge,
-      "Breite (mm)": r.breite,
-      "Dicke (mm)": r.dicke,
-      "Masse (g)": r.masse,
-      "Dichte (kg/m³)": parseFloat(r.dichte.toFixed(2))
-    };
+    return {"Nr.":i+1,"Datum":d?d.toLocaleDateString("de-DE"):"","Länge (mm)":r.laenge,"Breite (mm)":r.breite,"Dicke (mm)":r.dicke,"Masse (g)":r.masse,"Dichte (kg/m³)":parseFloat(r.dichte.toFixed(2)),"Notiz":r.notiz||""};
   });
-
-  // Durchschnittszeile anhängen
-  data.push({});
-  data.push({
-    "Nr.": "",
-    "Datum": "Durchschnitt",
-    "Länge (mm)": "",
-    "Breite (mm)": "",
-    "Dicke (mm)": "",
-    "Masse (g)": "",
-    "Dichte (kg/m³)": parseFloat(avg.toFixed(2))
-  });
-
-  const sheetName = (tabelleName || "Dichte").slice(0, 31); // Excel max 31 Zeichen
+  data.push({}); data.push({"Nr.":"","Datum":"Durchschnitt","Länge (mm)":"","Breite (mm)":"","Dicke (mm)":"","Masse (g)":"","Dichte (kg/m³)":parseFloat(avg.toFixed(2)),"Notiz":""});
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-  const datum = new Date().toISOString().slice(0, 10);
-  const safeName = (tabelleName || "Dichte").replace(/[\\/:*?"<>|]/g, "_");
-  XLSX.writeFile(wb, `${safeName}_${datum}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, (tabelleName||"Dichte").slice(0,31));
+  XLSX.writeFile(wb, `${(tabelleName||"Dichte").replace(/[\\/:*?"<>|]/g,"_")}_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-// ══════════════════════════════════════
+// ════════════════════════════════════════════════════════════
 // TAB 2: TODOS
-// ══════════════════════════════════════
-// currentOrdnerId = 'alle' → Alle-Ansicht
-// currentOrdnerId = <id>   → Einzelordner
-let unsubscribeOrdnerFunc   = null;
-let currentOrdnerId         = "alle";
-let currentOrdnerUserId     = null;
-const ordnerCache           = new Map(); // id → { name, todos[] }
-const ordnerListeners       = new Map(); // id → unsubFn
+// ════════════════════════════════════════════════════════════
+let unsubscribeOrdnerFunc = null;
+let currentOrdnerId       = "alle";
+let hideDone              = false;
+const ordnerCache         = new Map();
+const ordnerListeners     = new Map();
 
-function unsubscribeTodos() {
-  if (unsubscribeOrdnerFunc) { unsubscribeOrdnerFunc(); unsubscribeOrdnerFunc = null; }
-  ordnerListeners.forEach(unsub => unsub());
-  ordnerListeners.clear();
-  ordnerCache.clear();
-  currentOrdnerId = "alle";
-}
+const FARBEN = [
+  {id:"none",hex:null},
+  {id:"rot",hex:"#ef4444"},{id:"orange",hex:"#f97316"},
+  {id:"gelb",hex:"#eab308"},{id:"gruen",hex:"#22c55e"},
+  {id:"blau",hex:"#3b82f6"},{id:"lila",hex:"#a855f7"},
+];
 
 function initTodos(userId) {
-  unsubscribeTodos();
-  currentOrdnerUserId = userId;
-
-  const ordnerRef = db.collection(`users/${userId}/todoOrdner`).orderBy("createdAt", "asc");
+  const ordnerRef = db.collection(`users/${userId}/todoOrdner`).orderBy("createdAt","asc");
 
   $("btn-new-ordner").addEventListener("click", () => createOrdner(userId));
+  $("btn-hide-done").addEventListener("click", () => {
+    hideDone = !hideDone;
+    $("btn-hide-done").classList.toggle("active", hideDone);
+    renderCurrentTodoView(userId);
+  });
+  $("todo-search").addEventListener("input", () => renderCurrentTodoView(userId));
+  $("filter-prio").addEventListener("change", () => renderCurrentTodoView(userId));
 
-  // Todo hinzufügen
   function addTodo() {
-    const text = $("todo-input").value.trim();
-    if (!text) return;
-    // Ziel-Ordner bestimmen
-    let zielOrdnerId = currentOrdnerId === "alle"
-      ? $("todo-ordner-select").value
-      : currentOrdnerId;
-    if (!zielOrdnerId) { alert("Bitte zuerst einen Ordner auswählen."); return; }
-    db.collection(`users/${userId}/todoOrdner/${zielOrdnerId}/todos`).add({
-      text,
-      status: "offen",
+    const text = $("todo-input").value.trim(); if (!text) return;
+    const zielId = currentOrdnerId === "alle" ? $("todo-ordner-select").value : currentOrdnerId;
+    if (!zielId) { alert("Bitte einen Ordner auswählen."); return; }
+    const prio   = $("todo-prio-input").value;
+    const faellig= $("todo-faellig-input").value;
+    db.collection(`users/${userId}/todoOrdner/${zielId}/todos`).add({
+      text, status:"offen",
+      prioritaet: prio !== "none" ? prio : "",
+      faellig: faellig || "",
+      farbe: "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    $("todo-input").value = "";
+    $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value="";
   }
-
   $("btn-todo-add").addEventListener("click", addTodo);
-  $("todo-input").addEventListener("keydown", e => { if (e.key === "Enter") addTodo(); });
+  $("todo-input").addEventListener("keydown", e => { if (e.key==="Enter") addTodo(); });
 
-  // Ordner-Listener: überwacht Ordner-Liste und richtet pro Ordner einen Todo-Listener ein
+  $("btn-todo-export").addEventListener("click", () => exportTodosExcel(userId));
+
+  if (unsubscribeOrdnerFunc) unsubscribeOrdnerFunc();
   unsubscribeOrdnerFunc = ordnerRef.onSnapshot(snapshot => {
     const ordner = [];
     snapshot.forEach(doc => ordner.push({ id: doc.id, ...doc.data() }));
+    if (ordner.length === 0) { createOrdner(userId, "Allgemein"); return; }
 
-    if (ordner.length === 0) {
-      createOrdner(userId, "Allgemein");
-      return;
-    }
-
-    // Neue Ordner: Listener starten
     ordner.forEach(o => {
       if (!ordnerListeners.has(o.id)) {
-        const colRef = db.collection(`users/${userId}/todoOrdner/${o.id}/todos`).orderBy("createdAt", "asc");
-        const unsub = colRef.onSnapshot(snap => {
-          const todos = [];
-          snap.forEach(d => todos.push({ id: d.id, ...d.data() }));
-          ordnerCache.set(o.id, { name: o.name, todos });
-          renderCurrentView(userId);
-        });
+        const unsub = db.collection(`users/${userId}/todoOrdner/${o.id}/todos`)
+          .orderBy("createdAt","asc").onSnapshot(snap => {
+            const todos = []; snap.forEach(d => todos.push({id:d.id,...d.data()}));
+            ordnerCache.set(o.id, { name: o.name, todos });
+            renderCurrentTodoView(userId);
+          });
         ordnerListeners.set(o.id, unsub);
       }
-      // Name aktualisieren (falls umbenannt)
       const cached = ordnerCache.get(o.id);
       if (cached) cached.name = o.name;
     });
 
-    // Gelöschte Ordner: Listener entfernen
-    const aktuelleIds = new Set(ordner.map(o => o.id));
-    ordnerListeners.forEach((unsub, id) => {
-      if (!aktuelleIds.has(id)) { unsub(); ordnerListeners.delete(id); ordnerCache.delete(id); }
+    const ids = new Set(ordner.map(o => o.id));
+    ordnerListeners.forEach((unsub,id) => {
+      if (!ids.has(id)) { unsub(); ordnerListeners.delete(id); ordnerCache.delete(id); }
     });
 
     renderOrdnerBar(ordner, userId);
     updateOrdnerSelect(ordner);
-    renderCurrentView(userId);
+    renderCurrentTodoView(userId);
   });
 }
 
 function createOrdner(userId, defaultName) {
   const name = defaultName || prompt("Name des Ordners:", "Ordner");
-  if (!name || !name.trim()) return;
+  if (!name||!name.trim()) return;
   db.collection(`users/${userId}/todoOrdner`).add({
-    name: name.trim(),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    name: name.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 }
 
 function selectOrdner(id, userId) {
   currentOrdnerId = id;
-  // Ordner-Select ein-/ausblenden
   $("todo-ordner-select").style.display = id === "alle" ? "block" : "none";
-  // Tab-Markierung
-  document.querySelectorAll("#ordner-bar .tabelle-tab, #ordner-bar .alle-tab").forEach(t => {
-    t.classList.toggle("active", t.dataset.id === id);
-  });
-  renderCurrentView(userId);
+  document.querySelectorAll("#ordner-bar .tabelle-tab, #ordner-bar .alle-tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.id === id));
+  renderCurrentTodoView(userId);
 }
 
-function renderCurrentView(userId) {
+function renderCurrentTodoView(userId) {
+  const search   = ($("todo-search").value||"").toLowerCase().trim();
+  const filterP  = $("filter-prio").value;
+
+  let allTodos = [];
   if (currentOrdnerId === "alle") {
-    // Alle Todos aus allen Ordnern zusammenführen
-    const allTodos = [];
-    ordnerCache.forEach(({ name, todos }) => {
-      todos.forEach(t => allTodos.push({ ...t, _ordnerName: name }));
-    });
-    // Nach createdAt sortieren (Firestore Timestamp oder null)
-    allTodos.sort((a, b) => {
-      const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-      const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-      return ta - tb;
-    });
-    renderTodos(allTodos, userId, null, true);
+    ordnerCache.forEach(({ name, todos }) =>
+      todos.forEach(t => allTodos.push({ ...t, _ordnerName: name })));
   } else {
     const cached = ordnerCache.get(currentOrdnerId);
-    renderTodos(cached ? cached.todos : [], userId, currentOrdnerId, false);
+    allTodos = cached ? cached.todos.map(t => ({ ...t, _ordnerName: cached.name })) : [];
   }
+
+  // Sortieren
+  allTodos.sort((a,b) => {
+    const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+    const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+    return ta - tb;
+  });
+
+  // Filter
+  if (hideDone)     allTodos = allTodos.filter(t => t.status !== "erledigt");
+  if (search)       allTodos = allTodos.filter(t => t.text.toLowerCase().includes(search));
+  if (filterP)      allTodos = allTodos.filter(t => filterP === "none" ? !t.prioritaet : t.prioritaet === filterP);
+
+  // Stats (ungefiltert nach Ordner, aber nach Suche/Prio)
+  let statBase = [];
+  ordnerCache.forEach(({ name, todos }) => {
+    if (currentOrdnerId === "alle" || ordnerCache.get(currentOrdnerId)?.name === name || currentOrdnerId === name)
+      todos.forEach(t => statBase.push(t));
+  });
+  if (currentOrdnerId !== "alle") {
+    const cached = ordnerCache.get(currentOrdnerId);
+    statBase = cached ? cached.todos : [];
+  } else {
+    statBase = [];
+    ordnerCache.forEach(({todos}) => statBase.push(...todos));
+  }
+  $("stat-offen").textContent    = statBase.filter(t => t.status==="offen").length;
+  $("stat-progress").textContent = statBase.filter(t => t.status==="progress").length;
+  $("stat-erledigt").textContent = statBase.filter(t => t.status==="erledigt").length;
+
+  renderTodos(allTodos, userId, currentOrdnerId === "alle" ? null : currentOrdnerId, currentOrdnerId === "alle");
 }
 
 function updateOrdnerSelect(ordner) {
-  const sel = $("todo-ordner-select");
-  const prev = sel.value;
+  const sel = $("todo-ordner-select"), prev = sel.value;
   sel.innerHTML = "";
-  ordner.forEach(o => {
-    const opt = document.createElement("option");
-    opt.value = o.id;
-    opt.textContent = o.name;
-    sel.appendChild(opt);
-  });
-  if (prev && ordner.find(o => o.id === prev)) sel.value = prev;
+  ordner.forEach(o => { const opt=document.createElement("option"); opt.value=o.id; opt.textContent=o.name; sel.appendChild(opt); });
+  if (prev && ordner.find(o=>o.id===prev)) sel.value = prev;
 }
 
 function renderOrdnerBar(ordner, userId) {
-  const bar = $("ordner-bar");
-  const newBtn = $("btn-new-ordner");
+  const bar = $("ordner-bar"), newBtn = $("btn-new-ordner");
   Array.from(bar.children).forEach(c => { if (c !== newBtn) bar.removeChild(c); });
 
-  // "Alle"-Tab (immer an erster Stelle)
   const alleTab = document.createElement("div");
-  alleTab.className = "tabelle-tab alle-tab" + (currentOrdnerId === "alle" ? " active" : "");
-  alleTab.dataset.id = "alle";
-  alleTab.textContent = "Alle";
+  alleTab.className = "tabelle-tab alle-tab" + (currentOrdnerId==="alle" ? " active" : "");
+  alleTab.dataset.id = "alle"; alleTab.textContent = "Alle";
   alleTab.addEventListener("click", () => selectOrdner("alle", userId));
   bar.insertBefore(alleTab, newBtn);
 
   ordner.forEach(o => {
-    const tab = document.createElement("div");
-    tab.className = "tabelle-tab" + (o.id === currentOrdnerId ? " active" : "");
-    tab.dataset.id = o.id;
-
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = o.name;
-
-    const actions = document.createElement("span");
-    actions.className = "tabelle-tab-actions";
-
-    const renameBtn = document.createElement("button");
-    renameBtn.className = "tabelle-tab-btn";
-    renameBtn.title = "Umbenennen";
-    renameBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-    renameBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      const neu = prompt("Neuer Name:", o.name);
-      if (neu && neu.trim()) {
-        db.collection(`users/${userId}/todoOrdner`).doc(o.id).update({ name: neu.trim() });
-      }
-    });
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "tabelle-tab-btn del";
-    delBtn.title = "Ordner löschen";
-    delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-    delBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      if (!confirm(`Ordner "${o.name}" und alle Aufgaben löschen?`)) return;
-      db.collection(`users/${userId}/todoOrdner/${o.id}/todos`).get().then(snap => {
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        batch.delete(db.doc(`users/${userId}/todoOrdner/${o.id}`));
-        return batch.commit();
-      });
-    });
-
-    actions.appendChild(renameBtn);
-    actions.appendChild(delBtn);
-    tab.appendChild(nameSpan);
-    tab.appendChild(actions);
-    tab.addEventListener("click", () => selectOrdner(o.id, userId));
+    const tab = makeFolderTab(o.id, o.name, o.id === currentOrdnerId,
+      () => { const n=prompt("Neuer Name:",o.name); if(n&&n.trim()) db.collection(`users/${userId}/todoOrdner`).doc(o.id).update({name:n.trim()}); },
+      () => { if(!confirm(`Ordner "${o.name}" löschen?`)) return;
+        db.collection(`users/${userId}/todoOrdner/${o.id}/todos`).get().then(snap => {
+          const b=db.batch(); snap.forEach(d=>b.delete(d.ref));
+          b.delete(db.doc(`users/${userId}/todoOrdner/${o.id}`)); return b.commit(); }); },
+      () => selectOrdner(o.id, userId));
     bar.insertBefore(tab, newBtn);
   });
 }
 
 function renderTodos(todos, userId, ordnerId, zeigeBadge) {
-  const list = $("todo-list");
-  const empty = $("todo-empty");
-
-  Array.from(list.children).forEach(child => { if (child !== empty) list.removeChild(child); });
-
-  if (todos.length === 0) {
-    empty.style.display = "block";
-    return;
-  }
+  const list = $("todo-list"), empty = $("todo-empty");
+  Array.from(list.children).forEach(c => { if (c !== empty) list.removeChild(c); });
+  if (todos.length === 0) { empty.style.display="block"; return; }
   empty.style.display = "none";
 
   todos.forEach(todo => {
-    const effOrdnerId = ordnerId || (zeigeBadge ? todo._ordnerName : null);
+    const todoOrdnerId = ordnerId || findOrdnerIdForTodo(todo.id);
     const item = document.createElement("div");
     item.className = `todo-item status-${todo.status}`;
+    if (todo.farbe) item.dataset.color = todo.farbe;
 
+    // Text
     const textEl = document.createElement("div");
     textEl.className = "todo-text";
     textEl.textContent = todo.text;
+    item.appendChild(textEl);
 
+    // Controls
+    const controls = document.createElement("div");
+    controls.className = "todo-controls";
+
+    // Ordner-Badge
+    if (zeigeBadge && todo._ordnerName) {
+      const badge = document.createElement("span");
+      badge.className = "ordner-badge"; badge.textContent = todo._ordnerName;
+      controls.appendChild(badge);
+    }
+
+    // Fälligkeits-Badge
+    if (todo.faellig) {
+      const today = new Date().toISOString().slice(0,10);
+      const badge = document.createElement("span");
+      badge.className = "due-badge";
+      badge.textContent = "📅 " + todo.faellig.split("-").reverse().join(".");
+      if (todo.faellig < today)      badge.classList.add("overdue");
+      else if (todo.faellig === today) badge.classList.add("today");
+      controls.appendChild(badge);
+    }
+
+    // Priorität-Badge
+    if (todo.prioritaet && todo.prioritaet !== "none") {
+      const icons = { hoch:"↑", mittel:"→", niedrig:"↓" };
+      const labels = { hoch:"Hoch", mittel:"Mittel", niedrig:"Niedrig" };
+      const badge = document.createElement("span");
+      badge.className = `priority-badge ${todo.prioritaet}`;
+      badge.textContent = `${icons[todo.prioritaet]} ${labels[todo.prioritaet]}`;
+      controls.appendChild(badge);
+    }
+
+    // Datum
     const meta = document.createElement("div");
     meta.className = "todo-meta";
     if (todo.createdAt) {
       const d = todo.createdAt.toDate ? todo.createdAt.toDate() : new Date(todo.createdAt);
-      meta.textContent = d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+      meta.textContent = d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"});
     }
-
-    // Controls-Wrapper (Badge + Datum + Status + Buttons)
-    const controls = document.createElement("div");
-    controls.className = "todo-controls";
-
-    // Ordner-Badge (nur in Alle-Ansicht)
-    if (zeigeBadge && todo._ordnerName) {
-      const badge = document.createElement("span");
-      badge.className = "ordner-badge";
-      badge.textContent = todo._ordnerName;
-      controls.appendChild(badge);
-    }
-
     controls.appendChild(meta);
 
+    // Status
     const statusWrap = document.createElement("div");
     statusWrap.className = "todo-status";
     const sel = document.createElement("select");
-    ["offen","progress","erledigt"].forEach((val, i) => {
-      const opt = document.createElement("option");
-      opt.value = val;
-      opt.textContent = ["Offen","In Bearbeitung","Erledigt"][i];
-      if (val === todo.status) opt.selected = true;
-      sel.appendChild(opt);
+    ["offen","progress","erledigt"].forEach((val,i) => {
+      const opt=document.createElement("option"); opt.value=val;
+      opt.textContent=["Offen","In Bearbeitung","Erledigt"][i];
+      if (val===todo.status) opt.selected=true; sel.appendChild(opt);
     });
-    const todoOrdnerId = ordnerId || findOrdnerIdForTodo(todo.id);
     sel.addEventListener("change", () => {
-      if (todoOrdnerId) {
-        db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id)
-          .update({ status: sel.value });
-      }
+      if (todoOrdnerId)
+        db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({status:sel.value});
     });
     statusWrap.appendChild(sel);
     controls.appendChild(statusWrap);
 
-    // Bearbeiten-Button
+    // Farb-Picker
+    const colorWrap = document.createElement("div");
+    colorWrap.className = "color-picker-wrap";
+    const colorDot = document.createElement("span");
+    colorDot.className = "color-dot";
+    colorDot.style.background = FARBEN.find(f=>f.id===(todo.farbe||"none"))?.hex || "transparent";
+    if (!todo.farbe) colorDot.style.background = "var(--surface2)";
+
+    const popup = document.createElement("div");
+    popup.className = "color-popup"; popup.style.display = "none";
+    FARBEN.forEach(f => {
+      const btn = document.createElement("button");
+      btn.style.background = f.hex || "transparent";
+      if (!f.hex) btn.style.border = "2px solid #ccc";
+      if ((todo.farbe||"none") === f.id) btn.classList.add("selected");
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        if (todoOrdnerId)
+          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({farbe:f.id==="none"?"":f.id});
+        popup.style.display = "none";
+      });
+      popup.appendChild(btn);
+    });
+    colorDot.addEventListener("click", e => {
+      e.stopPropagation();
+      popup.style.display = popup.style.display==="none" ? "flex" : "none";
+    });
+    document.addEventListener("click", () => { popup.style.display="none"; }, {once:false});
+    colorWrap.appendChild(colorDot);
+    colorWrap.appendChild(popup);
+    controls.appendChild(colorWrap);
+
+    // Bearbeiten
     const editBtn = document.createElement("button");
-    editBtn.className = "btn-edit";
-    editBtn.title = "Aufgabe bearbeiten";
-    editBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    editBtn.className = "btn-edit"; editBtn.title = "Bearbeiten";
+    editBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
     editBtn.addEventListener("click", () => {
       const input = document.createElement("input");
-      input.type = "text";
-      input.className = "todo-edit-input";
-      input.value = todo.text;
-      textEl.replaceWith(input);
-      editBtn.style.display = "none";
-      input.focus();
-      input.select();
-      function saveEdit() {
-        const neu = input.value.trim();
-        if (neu && neu !== todo.text && todoOrdnerId) {
-          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
-            .doc(todo.id).update({ text: neu });
-        } else {
-          input.replaceWith(textEl);
-          editBtn.style.display = "";
-        }
+      input.type="text"; input.className="todo-edit-input"; input.value=todo.text;
+      textEl.replaceWith(input); editBtn.style.display="none"; input.focus(); input.select();
+      function save() {
+        const n=input.value.trim();
+        if (n&&n!==todo.text&&todoOrdnerId)
+          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({text:n});
+        else { input.replaceWith(textEl); editBtn.style.display=""; }
       }
-      input.addEventListener("keydown", e => {
-        if (e.key === "Enter")  { e.preventDefault(); saveEdit(); }
-        if (e.key === "Escape") { input.replaceWith(textEl); editBtn.style.display = ""; }
-      });
-      input.addEventListener("blur", saveEdit);
+      input.addEventListener("keydown", e => { if(e.key==="Enter"){e.preventDefault();save();} if(e.key==="Escape"){input.replaceWith(textEl);editBtn.style.display="";} });
+      input.addEventListener("blur", save);
     });
     controls.appendChild(editBtn);
 
-    // Löschen-Button
+    // Löschen
     const delBtn = document.createElement("button");
-    delBtn.className = "btn-delete";
-    delBtn.title = "Aufgabe löschen";
-    delBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+    delBtn.className = "btn-delete"; delBtn.title = "Löschen";
+    delBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
     delBtn.addEventListener("click", () => {
-      if (confirm("Aufgabe wirklich löschen?") && todoOrdnerId) {
+      if (confirm("Aufgabe löschen?")&&todoOrdnerId)
         db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).delete();
-      }
     });
     controls.appendChild(delBtn);
 
-    item.appendChild(textEl);
     item.appendChild(controls);
     list.appendChild(item);
   });
 }
 
 function findOrdnerIdForTodo(todoId) {
-  for (const [oid, { todos }] of ordnerCache) {
-    if (todos.find(t => t.id === todoId)) return oid;
-  }
+  for (const [oid,{todos}] of ordnerCache)
+    if (todos.find(t=>t.id===todoId)) return oid;
   return null;
+}
+
+function exportTodosExcel(userId) {
+  const search  = ($("todo-search").value||"").toLowerCase().trim();
+  const filterP = $("filter-prio").value;
+  let allTodos  = [];
+  ordnerCache.forEach(({name,todos}) => todos.forEach(t => allTodos.push({...t,_ordnerName:name})));
+  if (currentOrdnerId !== "alle") {
+    const cached = ordnerCache.get(currentOrdnerId);
+    allTodos = cached ? cached.todos.map(t=>({...t,_ordnerName:cached.name})) : [];
+  }
+  if (hideDone)  allTodos = allTodos.filter(t=>t.status!=="erledigt");
+  if (search)    allTodos = allTodos.filter(t=>t.text.toLowerCase().includes(search));
+  if (filterP)   allTodos = allTodos.filter(t=>filterP==="none"?!t.prioritaet:t.prioritaet===filterP);
+
+  const data = allTodos.map((t,i) => {
+    const d = t.createdAt ? (t.createdAt.toDate ? t.createdAt.toDate() : new Date(t.createdAt)) : null;
+    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Priorität":t.prioritaet||"","Fälligkeit":t.faellig||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Aufgaben");
+  XLSX.writeFile(wb, `Aufgaben_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 3: NOTIZEN
+// ════════════════════════════════════════════════════════════
+let unsubscribeNotizenOrdnerFunc = null;
+let currentNotizenOrdnerId       = null;
+let notizenOrdnerCache           = new Map(); // id → {name, notizen[]}
+let notizenListeners             = new Map();
+let currentNotizId               = null;
+let notizDebounce                = null;
+
+function initNotizen(userId) {
+  const ordnerRef = db.collection(`users/${userId}/notizenOrdner`).orderBy("createdAt","asc");
+
+  $("btn-new-notiz-ordner").addEventListener("click", () => {
+    const name = prompt("Name des Ordners:", "Ordner");
+    if (!name||!name.trim()) return;
+    db.collection(`users/${userId}/notizenOrdner`).add({
+      name: name.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+
+  $("notiz-modal-close").addEventListener("click", closeNotizModal);
+  $("notiz-modal").addEventListener("click", e => { if (e.target===$("notiz-modal")) closeNotizModal(); });
+  $("notiz-modal-delete").addEventListener("click", () => {
+    if (!currentNotizId||!currentNotizenOrdnerId) return;
+    if (!confirm("Notiz löschen?")) return;
+    db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).doc(currentNotizId).delete();
+    closeNotizModal();
+  });
+
+  function autoSaveNotiz() {
+    if (!currentNotizId||!currentNotizenOrdnerId) return;
+    clearTimeout(notizDebounce);
+    $("notiz-save-hint").textContent = "Speichert …";
+    notizDebounce = setTimeout(() => {
+      db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).doc(currentNotizId).update({
+        titel: $("notiz-modal-title").value.trim() || "Ohne Titel",
+        text:  $("notiz-modal-text").value,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(()=>{ $("notiz-save-hint").textContent="Gespeichert ✓"; })
+        .catch(()=>{ $("notiz-save-hint").textContent="Fehler"; });
+    }, 800);
+  }
+  $("notiz-modal-title").addEventListener("input", autoSaveNotiz);
+  $("notiz-modal-text").addEventListener("input", autoSaveNotiz);
+
+  if (unsubscribeNotizenOrdnerFunc) unsubscribeNotizenOrdnerFunc();
+  unsubscribeNotizenOrdnerFunc = ordnerRef.onSnapshot(snapshot => {
+    const ordner = [];
+    snapshot.forEach(doc => ordner.push({ id: doc.id, ...doc.data() }));
+
+    if (ordner.length === 0) {
+      db.collection(`users/${userId}/notizenOrdner`).add({
+        name:"Allgemein", createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return;
+    }
+
+    ordner.forEach(o => {
+      if (!notizenListeners.has(o.id)) {
+        const unsub = db.collection(`users/${userId}/notizenOrdner/${o.id}/notizen`)
+          .orderBy("updatedAt","desc").onSnapshot(snap => {
+            const notizen=[]; snap.forEach(d=>notizen.push({id:d.id,...d.data()}));
+            notizenOrdnerCache.set(o.id,{name:o.name,notizen});
+            if (currentNotizenOrdnerId) renderNotizenList(userId);
+          });
+        notizenListeners.set(o.id, unsub);
+      }
+      const cached = notizenOrdnerCache.get(o.id);
+      if (cached) cached.name = o.name;
+    });
+
+    const ids = new Set(ordner.map(o=>o.id));
+    notizenListeners.forEach((unsub,id) => {
+      if (!ids.has(id)) { unsub(); notizenListeners.delete(id); notizenOrdnerCache.delete(id); }
+    });
+
+    renderNotizenOrdnerBar(ordner, userId);
+    if (!currentNotizenOrdnerId||!ordner.find(o=>o.id===currentNotizenOrdnerId))
+      selectNotizenOrdner(ordner[0].id, userId);
+  });
+}
+
+function selectNotizenOrdner(id, userId) {
+  currentNotizenOrdnerId = id;
+  document.querySelectorAll("#notiz-ordner-bar .tabelle-tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.id===id));
+  renderNotizenList(userId);
+}
+
+function renderNotizenOrdnerBar(ordner, userId) {
+  const bar = $("notiz-ordner-bar"), newBtn = $("btn-new-notiz-ordner");
+  Array.from(bar.children).forEach(c => { if (c!==newBtn) bar.removeChild(c); });
+  ordner.forEach(o => {
+    const tab = makeFolderTab(o.id, o.name, o.id===currentNotizenOrdnerId,
+      () => { const n=prompt("Neuer Name:",o.name); if(n&&n.trim()) db.collection(`users/${userId}/notizenOrdner`).doc(o.id).update({name:n.trim()}); },
+      () => { if(!confirm(`Ordner "${o.name}" löschen?`)) return;
+        db.collection(`users/${userId}/notizenOrdner/${o.id}/notizen`).get().then(snap=>{
+          const b=db.batch(); snap.forEach(d=>b.delete(d.ref));
+          b.delete(db.doc(`users/${userId}/notizenOrdner/${o.id}`)); return b.commit(); }); },
+      () => selectNotizenOrdner(o.id, userId));
+    bar.insertBefore(tab, newBtn);
+  });
+}
+
+function renderNotizenList(userId) {
+  const list = $("notiz-list"), empty = $("notiz-empty");
+  Array.from(list.children).forEach(c => { if (c!==empty) list.removeChild(c); });
+  const cached = notizenOrdnerCache.get(currentNotizenOrdnerId);
+  const notizen = cached ? cached.notizen : [];
+
+  // "+ Neue Notiz" Karte
+  const addCard = document.createElement("button");
+  addCard.className = "notiz-add-btn";
+  addCard.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Neue Notiz`;
+  addCard.addEventListener("click", () => {
+    db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).add({
+      titel:"Neue Notiz", text:"",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(ref => openNotizModal(ref.id, "Neue Notiz", ""));
+  });
+  list.appendChild(addCard);
+
+  if (notizen.length === 0) { empty.style.display="block"; return; }
+  empty.style.display = "none";
+
+  notizen.forEach(n => {
+    const card = document.createElement("div");
+    card.className = "notiz-card";
+    const d = n.updatedAt ? (n.updatedAt.toDate ? n.updatedAt.toDate() : new Date(n.updatedAt)) : null;
+    card.innerHTML = `
+      <div class="notiz-card-title">${n.titel||"Ohne Titel"}</div>
+      <div class="notiz-card-preview">${n.text||"<em style='color:var(--text-muted)'>Leer</em>"}</div>
+      <div class="notiz-card-meta">${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""}</div>
+    `;
+    card.addEventListener("click", () => openNotizModal(n.id, n.titel, n.text));
+    list.appendChild(card);
+  });
+}
+
+function openNotizModal(id, titel, text) {
+  currentNotizId = id;
+  $("notiz-modal-title").value = titel||"";
+  $("notiz-modal-text").value  = text||"";
+  $("notiz-save-hint").textContent = "";
+  $("notiz-modal").classList.remove("hidden");
+  $("notiz-modal-text").focus();
+}
+
+function closeNotizModal() {
+  $("notiz-modal").classList.add("hidden");
+  currentNotizId = null;
+}
+
+// ════════════════════════════════════════════════════════════
+// SHARED HELPERS
+// ════════════════════════════════════════════════════════════
+function makeFolderTab(id, name, isActive, onRename, onDelete, onClick) {
+  const tab = document.createElement("div");
+  tab.className = "tabelle-tab" + (isActive ? " active" : "");
+  tab.dataset.id = id;
+  const nameSpan = document.createElement("span");
+  nameSpan.textContent = name;
+  const actions = document.createElement("span");
+  actions.className = "tabelle-tab-actions";
+  const renameBtn = document.createElement("button");
+  renameBtn.className = "tabelle-tab-btn"; renameBtn.title = "Umbenennen";
+  renameBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  renameBtn.addEventListener("click", e => { e.stopPropagation(); onRename(); });
+  const delBtn = document.createElement("button");
+  delBtn.className = "tabelle-tab-btn del"; delBtn.title = "Löschen";
+  delBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+  delBtn.addEventListener("click", e => { e.stopPropagation(); onDelete(); });
+  actions.appendChild(renameBtn); actions.appendChild(delBtn);
+  tab.appendChild(nameSpan); tab.appendChild(actions);
+  tab.addEventListener("click", onClick);
+  return tab;
+}
+
+function cleanupAll() {
+  if (unsubscribeTabellenFunc)       { unsubscribeTabellenFunc(); unsubscribeTabellenFunc = null; }
+  if (unsubscribeErgebnisseFunc)     { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
+  if (unsubscribeOrdnerFunc)         { unsubscribeOrdnerFunc(); unsubscribeOrdnerFunc = null; }
+  if (unsubscribeNotizenOrdnerFunc)  { unsubscribeNotizenOrdnerFunc(); unsubscribeNotizenOrdnerFunc = null; }
+  ordnerListeners.forEach(u=>u()); ordnerListeners.clear(); ordnerCache.clear();
+  notizenListeners.forEach(u=>u()); notizenListeners.clear(); notizenOrdnerCache.clear();
+  currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId=null;
 }
 </script>
 </body>
