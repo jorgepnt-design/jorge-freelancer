@@ -308,16 +308,29 @@
       border: 2px solid var(--border); display: inline-block; flex-shrink: 0;
     }
     .color-popup {
-      position: absolute; bottom: 24px; right: 0; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 8px; padding: 6px;
-      display: flex; gap: 5px; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: absolute; bottom: 28px; right: 0; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px; padding: 8px;
+      z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      display: flex; flex-wrap: wrap; gap: 4px; width: 154px;
     }
-    .color-popup button {
-      width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent;
-      cursor: pointer; transition: transform 0.1s; padding: 0;
+    .color-swatch {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px; width: 30px; padding: 4px 2px; border-radius: 6px;
+      cursor: pointer; transition: background 0.12s;
     }
-    .color-popup button:hover { transform: scale(1.2); }
-    .color-popup button.selected { border-color: var(--text); }
+    .color-swatch:hover { background: var(--surface2); }
+    .color-swatch-btn {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid transparent; padding: 0; cursor: pointer;
+      display: block; flex-shrink: 0; transition: transform 0.1s;
+    }
+    .color-swatch-btn:hover { transform: scale(1.15); }
+    .color-swatch-btn.selected { border-color: var(--text) !important; box-shadow: 0 0 0 1px var(--text); }
+    .color-swatch-label {
+      font-size: 0.58rem; color: var(--text-muted); text-align: center;
+      width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      line-height: 1.2;
+    }
 
     .ordner-badge {
       font-size: 0.7rem; font-weight: 500; padding: 2px 7px; border-radius: 10px;
@@ -1437,11 +1450,25 @@ function saveColorLabels(userId) {
   const data = {};
   FARBEN.filter(f => f.id !== "none").forEach(f => {
     const inp = $(`cl-input-${f.id}`);
-    data[f.id] = inp ? inp.value.trim() || f.id : f.id;
+    data[f.id] = inp ? (inp.value.trim() || f.id) : f.id;
   });
+  const saveBtn = $("btn-color-labels-save");
+  saveBtn.textContent = "Speichert …";
+  saveBtn.disabled = true;
   db.doc(`users/${userId}/settings/colorLabels`).set(data)
-    .then(() => { $("color-labels-modal").classList.add("hidden"); })
-    .catch(() => alert("Fehler beim Speichern."));
+    .then(() => {
+      Object.assign(colorLabels, data);
+      $("color-labels-modal").classList.add("hidden");
+      saveBtn.textContent = "Speichern";
+      saveBtn.disabled = false;
+      // Ansicht neu rendern damit neue Label-Namen sofort sichtbar sind
+      renderCurrentTodoView(userId);
+    })
+    .catch(err => {
+      alert("Fehler beim Speichern: " + err.message);
+      saveBtn.textContent = "Speichern";
+      saveBtn.disabled = false;
+    });
 }
 
 function initTodos(userId) {
@@ -1771,33 +1798,33 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
 
     const popup = document.createElement("div");
     popup.className = "color-popup"; popup.style.display = "none";
+
     FARBEN.forEach(f => {
+      const swatch = document.createElement("div");
+      swatch.className = "color-swatch";
+
       const btn = document.createElement("button");
+      btn.className = "color-swatch-btn";
       btn.style.background = f.hex || "transparent";
-      if (!f.hex) btn.style.border = "2px solid #ccc";
+      if (!f.hex) btn.style.border = "2px solid #9ca3af";
       if ((todo.farbe||"none") === f.id) btn.classList.add("selected");
-      // Label-Name anzeigen
-      const labelName = f.id === "none" ? "Keine" : (colorLabels[f.id] || f.id);
-      btn.title = labelName;
-      // Tooltip-Text unter dem Button (kleines Label)
-      btn.style.position = "relative";
+
+      const lbl = document.createElement("span");
+      lbl.className = "color-swatch-label";
+      lbl.textContent = f.id === "none" ? "Keine" : (colorLabels[f.id] || f.id);
+
       btn.addEventListener("click", e => {
         e.stopPropagation();
         if (todoOrdnerId)
-          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({farbe:f.id==="none"?"":f.id});
+          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
+            .doc(todo.id).update({farbe: f.id === "none" ? "" : f.id});
         popup.style.display = "none";
       });
-      popup.appendChild(btn);
+
+      swatch.appendChild(btn);
+      swatch.appendChild(lbl);
+      popup.appendChild(swatch);
     });
-    // Label-Namen als Legende unter Picker
-    const legend = document.createElement("div");
-    legend.id = "color-popup-legend";
-    legend.style.cssText = "width:100%;font-size:0.65rem;color:var(--text-muted);text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-    popup.appendChild(legend);
-    popup.addEventListener("mouseover", e => {
-      if (e.target.tagName === "BUTTON" && e.target.title) legend.textContent = e.target.title;
-    });
-    popup.addEventListener("mouseleave", () => { legend.textContent = ""; });
     colorDot.addEventListener("click", e => {
       e.stopPropagation();
       popup.style.display = popup.style.display==="none" ? "flex" : "none";
