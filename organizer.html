@@ -726,6 +726,12 @@
 <div id="login-screen">
   <h1>Jorge Organizer</h1>
   <p>Bitte melde dich an, um fortzufahren.</p>
+  <div id="auth-error-box" style="display:none; background:#fee2e2; border:1.5px solid #dc2626; border-radius:10px; padding:14px 16px; margin-bottom:14px; max-width:340px; text-align:left;">
+    <strong style="color:#dc2626; font-size:0.9rem;">Login-Fehler:</strong>
+    <p id="auth-error-text" style="color:#7f1d1d; font-size:0.85rem; margin-top:6px; word-break:break-word;"></p>
+    <p id="auth-error-code" style="color:#9ca3af; font-size:0.75rem; margin-top:4px;"></p>
+    <button onclick="clearAuthCache()" style="margin-top:10px; background:#dc2626; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:0.82rem; cursor:pointer;">🔄 Auth-Cache leeren &amp; neu laden</button>
+  </div>
   <button class="btn-google" id="btn-google-signin">
     <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -1220,40 +1226,43 @@ $("btn-darkmode").addEventListener("click", () => {
 // ── AUTH ─────────────────────────────────────────────────────
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// Erkennt PWA-Modus (Homescreen-App oder Chrome-Desktop-App)
-// In Standalone-Modus sind Popups blockiert → Redirect verwenden
+function showAuthError(err) {
+  const box  = $("auth-error-box");
+  const text = $("auth-error-text");
+  const code = $("auth-error-code");
+  if (!box) return;
+  text.textContent = err.message || String(err);
+  code.textContent = "Code: " + (err.code || "unbekannt") + " | URL: " + window.location.hostname;
+  box.style.display = "block";
+}
+
+function clearAuthCache() {
+  // Alle Firebase-Auth-Keys aus localStorage/sessionStorage entfernen
+  const toDelete = Object.keys(localStorage).filter(k =>
+    k.startsWith("firebase:") || k.startsWith("firebaseui:"));
+  toDelete.forEach(k => localStorage.removeItem(k));
+  const sToDelete = Object.keys(sessionStorage).filter(k =>
+    k.startsWith("firebase:") || k.startsWith("firebaseui:"));
+  sToDelete.forEach(k => sessionStorage.removeItem(k));
+  window.location.reload();
+}
+
+// PWA-Erkennung (Homescreen-App / Chrome-Desktop-App → Popups blockiert)
 const _isPWA = window.matchMedia("(display-mode: standalone)").matches
             || window.navigator.standalone === true;
 
 $("btn-google-signin").addEventListener("click", () => {
+  $("auth-error-box").style.display = "none";
   if (_isPWA) {
-    // PWA-Modus: Seite verlässt zu Google, kommt dann zurück
-    auth.signInWithRedirect(provider).catch(err => {
-      showToast("Login-Fehler: " + err.message, "error");
-    });
+    auth.signInWithRedirect(provider).catch(showAuthError);
   } else {
-    // Normaler Browser: Popup-Fenster
     auth.signInWithPopup(provider).catch(err => {
       if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user") {
-        // Fallback auf Redirect wenn Popup blockiert
-        auth.signInWithRedirect(provider).catch(e2 =>
-          showToast("Login-Fehler: " + e2.message, "error"));
+        auth.signInWithRedirect(provider).catch(showAuthError);
       } else {
-        showToast("Anmeldung fehlgeschlagen: " + err.message, "error");
+        showAuthError(err);
       }
     });
-  }
-});
-
-// Redirect-Ergebnis verarbeiten (nach Rückkehr vom Google-Login im PWA-Modus)
-auth.getRedirectResult().then(result => {
-  if (result && result.user) {
-    // Erfolgreich eingeloggt über Redirect — onAuthStateChanged kümmert sich um den Rest
-    console.log("Redirect-Login erfolgreich:", result.user.email);
-  }
-}).catch(err => {
-  if (err && err.code && err.code !== "auth/no-auth-event") {
-    showToast("Login-Fehler: " + err.message, "error");
   }
 });
 
