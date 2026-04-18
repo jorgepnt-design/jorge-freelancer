@@ -1,4 +1,4 @@
-const CACHE_NAME = "jorge-organizer-v9";
+const CACHE_NAME = "jorge-organizer-v10";
 const ASSETS = [
   "/organizer.html",
   "/organizer-manifest.json"

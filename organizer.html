@@ -2212,9 +2212,10 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         saved = true;
         const val = inp.value || "";
         todo.faellig = val;
-        if (todoOrdnerId)
+        if (todoOrdnerId && todo.id)
           db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
-            .doc(todo.id).update({ faellig: val });
+            .doc(todo.id).update({ faellig: val })
+            .catch(err => console.warn("saveDate:", err));
         renderDateBadge();
       }
       inp.addEventListener("change", saveDate);
@@ -2261,9 +2262,10 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       function savePrio() {
         const val = sel.value;
         todo.prioritaet = val;
-        if (todoOrdnerId)
+        if (todoOrdnerId && todo.id)
           db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
-            .doc(todo.id).update({ prioritaet: val });
+            .doc(todo.id).update({ prioritaet: val })
+            .catch(err => console.warn("savePrio:", err));
         renderPrioBadge();
       }
       sel.addEventListener("change", savePrio);
@@ -2684,11 +2686,17 @@ function insertFmt(wrap, prefix) {
 }
 
 (function initNotizToolbar() {
-  $("nfmt-bold").addEventListener("click",   () => insertFmt("**", null));
-  $("nfmt-italic").addEventListener("click", () => insertFmt("*",  null));
-  $("nfmt-bullet").addEventListener("click", () => insertFmt(null, "-"));
+  // Use mousedown + preventDefault to keep textarea focused & preserve cursor position in Chrome
+  function fmtBtn(id, fn) {
+    $( id).addEventListener("mousedown", e => { e.preventDefault(); fn(); });
+    $(id).addEventListener("click",     e => { e.preventDefault(); });
+  }
+  fmtBtn("nfmt-bold",   () => insertFmt("**", null));
+  fmtBtn("nfmt-italic", () => insertFmt("*",  null));
+  fmtBtn("nfmt-bullet", () => insertFmt(null, "-"));
 
   let previewing = false;
+  $("nfmt-preview").addEventListener("mousedown", e => e.preventDefault());
   $("nfmt-preview").addEventListener("click", () => {
     previewing = !previewing;
     $("notiz-modal-text").classList.toggle("hidden", previewing);
