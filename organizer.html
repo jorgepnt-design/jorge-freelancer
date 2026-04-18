@@ -1219,11 +1219,44 @@ $("btn-darkmode").addEventListener("click", () => {
 
 // ── AUTH ─────────────────────────────────────────────────────
 const provider = new firebase.auth.GoogleAuthProvider();
+
+// Erkennt PWA-Modus (Homescreen-App oder Chrome-Desktop-App)
+// In Standalone-Modus sind Popups blockiert → Redirect verwenden
+const _isPWA = window.matchMedia("(display-mode: standalone)").matches
+            || window.navigator.standalone === true;
+
 $("btn-google-signin").addEventListener("click", () => {
-  auth.signInWithPopup(provider).catch(err => {
-    showToast("Anmeldung fehlgeschlagen: " + err.message, "error");
-  });
+  if (_isPWA) {
+    // PWA-Modus: Seite verlässt zu Google, kommt dann zurück
+    auth.signInWithRedirect(provider).catch(err => {
+      showToast("Login-Fehler: " + err.message, "error");
+    });
+  } else {
+    // Normaler Browser: Popup-Fenster
+    auth.signInWithPopup(provider).catch(err => {
+      if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user") {
+        // Fallback auf Redirect wenn Popup blockiert
+        auth.signInWithRedirect(provider).catch(e2 =>
+          showToast("Login-Fehler: " + e2.message, "error"));
+      } else {
+        showToast("Anmeldung fehlgeschlagen: " + err.message, "error");
+      }
+    });
+  }
 });
+
+// Redirect-Ergebnis verarbeiten (nach Rückkehr vom Google-Login im PWA-Modus)
+auth.getRedirectResult().then(result => {
+  if (result && result.user) {
+    // Erfolgreich eingeloggt über Redirect — onAuthStateChanged kümmert sich um den Rest
+    console.log("Redirect-Login erfolgreich:", result.user.email);
+  }
+}).catch(err => {
+  if (err && err.code && err.code !== "auth/no-auth-event") {
+    showToast("Login-Fehler: " + err.message, "error");
+  }
+});
+
 $("btn-signout").addEventListener("click", () => auth.signOut());
 
 auth.onAuthStateChanged(user => {
