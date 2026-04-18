@@ -4,19 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jorge Organizer</title>
-  <script>
-    // Globaler Fehler-Catcher – zeigt JS-Fehler direkt auf dem Screen
-    window.addEventListener('error', function(e) {
-      var d = document.getElementById('js-error-banner');
-      if (!d) { d = document.createElement('div'); d.id='js-error-banner'; d.style.cssText='position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:12px 16px;font-size:13px;z-index:99999;word-break:break-all;'; document.body && document.body.appendChild(d); }
-      d.textContent = '❌ JS-Fehler: ' + e.message + ' (Zeile ' + e.lineno + ')';
-    });
-    window.addEventListener('unhandledrejection', function(e) {
-      var d = document.getElementById('js-error-banner');
-      if (!d) { d = document.createElement('div'); d.id='js-error-banner'; d.style.cssText='position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:12px 16px;font-size:13px;z-index:99999;word-break:break-all;'; document.body && document.body.appendChild(d); }
-      d.textContent = '❌ Promise-Fehler: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));
-    });
-  </script>
   <!-- PWA -->
   <meta name="theme-color" id="meta-theme-color" content="#2563eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -640,6 +627,40 @@
     .katalog-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
     .katalog-chip.already-in-list { opacity: 0.4; cursor: default; }
     .katalog-chip.already-in-list:hover { border-color: var(--border); color: var(--text-muted); background: var(--surface); }
+    .katalog-chip-del {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 0.75rem; padding: 0; line-height: 1;
+      transition: background 0.15s, color 0.15s; flex-shrink: 0;
+    }
+    .katalog-chip:hover .katalog-chip-del { color: var(--danger); }
+    .katalog-chip-del:hover { background: #fee2e2 !important; color: var(--danger) !important; }
+
+    /* ── PDF / PRINT ── */
+    .btn-pdf {
+      display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;
+      background: #dc2626; color: #fff; border: none; border-radius: 7px;
+      font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-pdf:hover { background: #b91c1c; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area {
+        position: absolute; left: 0; top: 0; width: 100%;
+        font-family: -apple-system, sans-serif; color: #111;
+      }
+      #print-area h2 { font-size: 1.2rem; margin-bottom: 8px; }
+      #print-area .print-item {
+        padding: 5px 0; border-bottom: 1px solid #e5e7eb;
+        display: flex; align-items: center; gap: 8px; font-size: 0.9rem;
+      }
+      #print-area .print-item.checked { text-decoration: line-through; color: #9ca3af; }
+      #print-area .print-meta { font-size: 0.75rem; color: #6b7280; margin-left: auto; }
+      #print-area .print-date { font-size: 0.72rem; color: #9ca3af; margin-bottom: 14px; }
+    }
 
     .einkauf-list { display: flex; flex-direction: column; gap: 0; }
     .einkauf-item {
@@ -753,9 +774,6 @@
     <strong style="color:#1d4ed8; font-size:0.9rem;">🔄 Weiterleitung zu Google…</strong>
     <p style="color:#1e40af; font-size:0.82rem; margin-top:6px;">Du wirst gleich zur Google-Anmeldeseite weitergeleitet. Bitte warte kurz.</p>
   </div>
-
-  <!-- Version (zum Debuggen) -->
-  <p style="font-size:0.7rem; color:#9ca3af; margin-bottom:10px;">v2025-04-18.6</p>
 
   <button class="btn-google" id="btn-google-signin">
     <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -927,6 +945,10 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Excel
       </button>
+      <button class="btn-pdf" id="btn-todo-pdf" title="Todos als PDF drucken / speichern">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        PDF
+      </button>
     </div>
     <!-- Stats -->
     <div class="todo-stats" id="todo-stats">
@@ -1008,6 +1030,10 @@
     <!-- Footer -->
     <div class="einkauf-footer">
       <span class="einkauf-count" id="einkauf-count"></span>
+      <button class="btn-pdf" id="btn-einkauf-pdf" title="Als PDF drucken / speichern">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        PDF
+      </button>
       <button class="btn-clear-checked" id="btn-clear-checked">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         Erledigte entfernen
@@ -1172,6 +1198,43 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 function $(id) { return document.getElementById(id); }
+
+// ── PDF EXPORT ───────────────────────────────────────────────
+function printArea(html, title) {
+  const area = $("print-area");
+  area.style.display = "block";
+  area.innerHTML = `<h2>${title}</h2><p class="print-date">Erstellt am ${new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}</p>${html}`;
+  window.print();
+  setTimeout(() => { area.style.display = "none"; area.innerHTML = ""; }, 500);
+}
+
+function printEinkauf() {
+  const undone = einkaufItems.filter(i => !i.checked);
+  const done   = einkaufItems.filter(i =>  i.checked);
+  const rows   = [...undone, ...done].map(i =>
+    `<div class="print-item${i.checked ? " checked" : ""}">
+      <span>${i.checked ? "☑" : "☐"}</span>
+      <span>${i.name}</span>
+    </div>`).join("");
+  printArea(rows, "🛒 Einkaufsliste");
+}
+
+function printTodos(ordnerName) {
+  // Sichtbare Todos aus dem DOM lesen (bereits gefiltert)
+  const items = Array.from(document.querySelectorAll(".todo-item")).map(el => {
+    const text   = el.querySelector(".todo-text")?.textContent || "";
+    const status = el.querySelector(".todo-status")?.value || "";
+    const faellig = el.dataset.faellig || "";
+    const done   = status === "erledigt";
+    return `<div class="print-item${done ? " checked" : ""}">
+      <span>${done ? "☑" : "☐"}</span>
+      <span>${text}</span>
+      ${faellig ? `<span class="print-meta">Fällig: ${faellig}</span>` : ""}
+    </div>`;
+  }).join("");
+  const title = ordnerName ? `✅ Todos – ${ordnerName}` : "✅ Alle Todos";
+  printArea(items || "<p>Keine Todos vorhanden.</p>", title);
+}
 
 // ── TOAST ────────────────────────────────────────────────────
 function showToast(msg, type = "") {
@@ -1831,6 +1894,11 @@ function initTodos(userId) {
   loadAutocomplete();
 
   $("btn-todo-export").addEventListener("click", () => exportTodosExcel(userId));
+  $("btn-todo-pdf").addEventListener("click", () => {
+    const aktOrdner = document.querySelector("#ordner-bar .tabelle-tab.active");
+    const name = aktOrdner ? aktOrdner.querySelector(".tabelle-tab-name")?.textContent : null;
+    printTodos(name);
+  });
 
   if (unsubscribeOrdnerFunc) unsubscribeOrdnerFunc();
   unsubscribeOrdnerFunc = ordnerRef.onSnapshot(snapshot => {
@@ -2683,6 +2751,7 @@ function initEinkauf(userId) {
 
   $("btn-einkauf-add").addEventListener("click", addArtikel);
   $("einkauf-input").addEventListener("keydown", e => { if (e.key === "Enter") addArtikel(); });
+  $("btn-einkauf-pdf").addEventListener("click", printEinkauf);
 
   // Erledigte entfernen
   $("btn-clear-checked").addEventListener("click", () => {
@@ -2764,19 +2833,33 @@ function renderKatalogChips(userId) {
   const chips = $("katalog-chips");
   chips.innerHTML = "";
 
-  einkaufKatalog.slice(0, 20).forEach(k => {
+  einkaufKatalog.slice(0, 30).forEach(k => {
     const chip = document.createElement("span");
-    chip.className = "katalog-chip" + (aktiveNamen.has(k.name.toLowerCase()) ? " already-in-list" : "");
-    chip.textContent = k.name;
-    chip.title = aktiveNamen.has(k.name.toLowerCase()) ? "Bereits auf der Liste" : "Zur Liste hinzufügen";
+    const already = aktiveNamen.has(k.name.toLowerCase());
+    chip.className = "katalog-chip" + (already ? " already-in-list" : "");
+    chip.title = already ? "Bereits auf der Liste" : "Zur Liste hinzufügen";
 
-    if (!aktiveNamen.has(k.name.toLowerCase())) {
+    // Name-Text
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = k.name;
+    chip.appendChild(nameSpan);
+
+    // × Löschen-Button
+    const delBtn = document.createElement("button");
+    delBtn.className = "katalog-chip-del";
+    delBtn.title = "Aus früheren Artikeln entfernen";
+    delBtn.textContent = "×";
+    delBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      db.collection(`users/${userId}/einkaufsKatalog`).doc(k.id).delete();
+    });
+    chip.appendChild(delBtn);
+
+    if (!already) {
       chip.addEventListener("click", () => {
         db.collection(`users/${userId}/einkaufsliste`).add({
-          name: k.name, checked: false,
-          createdAt: Date.now()
+          name: k.name, checked: false, createdAt: Date.now()
         });
-        // Zähler erhöhen
         const katalogId = k.name.toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
         db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId)
           .set({ count: firebase.firestore.FieldValue.increment(1),
@@ -2813,6 +2896,9 @@ function cleanupAll() {
 
 <!-- Toast -->
 <div id="toast-container"></div>
+
+<!-- Print-Bereich (für PDF-Export) -->
+<div id="print-area" style="display:none;"></div>
 
 <!-- Custom Confirm (iOS PWA compat) -->
 <div id="safe-confirm-overlay" class="hidden">
