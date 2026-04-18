@@ -414,7 +414,31 @@
       color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .notiz-card-preview { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .notiz-card-preview ul { margin: 2px 0 2px 14px; padding: 0; }
+    .notiz-card-preview li { list-style: disc; }
     .notiz-card-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; }
+    /* Markdown toolbar */
+    .notiz-toolbar {
+      display: flex; gap: 4px; padding: 6px 0 4px;
+      border-bottom: 1px solid var(--border); margin-bottom: 6px;
+    }
+    .notiz-fmt-btn {
+      padding: 3px 9px; border: 1.5px solid var(--border); border-radius: 6px;
+      background: var(--surface2); color: var(--text); font-size: 0.82rem;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s; line-height: 1.4;
+    }
+    .notiz-fmt-btn:hover { border-color: var(--primary); background: var(--surface); }
+    /* Rendered markdown inside modal textarea area */
+    #notiz-modal-text { font-family: inherit; font-size: 0.9rem; }
+    .notiz-md-preview {
+      flex: 1; overflow-y: auto; padding: 10px 4px;
+      font-size: 0.9rem; line-height: 1.6; color: var(--text);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .notiz-md-preview strong { font-weight: 700; }
+    .notiz-md-preview em { font-style: italic; }
+    .notiz-md-preview ul { margin: 4px 0 4px 18px; padding: 0; }
+    .notiz-md-preview li { list-style: disc; margin-bottom: 2px; }
     .notiz-add-btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       padding: 14px; border: 2px dashed var(--border); border-radius: var(--radius);
@@ -1066,7 +1090,14 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <textarea id="notiz-modal-text" placeholder="Notiz …"></textarea>
+    <div class="notiz-toolbar">
+      <button type="button" class="notiz-fmt-btn" id="nfmt-bold" title="Fett (Ctrl+B)"><strong>B</strong></button>
+      <button type="button" class="notiz-fmt-btn" id="nfmt-italic" title="Kursiv (Ctrl+I)"><em>I</em></button>
+      <button type="button" class="notiz-fmt-btn" id="nfmt-bullet" title="Aufzählung">• Liste</button>
+      <button type="button" class="notiz-fmt-btn" id="nfmt-preview" title="Vorschau" style="margin-left:auto;">👁 Vorschau</button>
+    </div>
+    <textarea id="notiz-modal-text" placeholder="Notiz schreiben … (**fett**, *kursiv*, - Liste)"></textarea>
+    <div class="notiz-md-preview hidden" id="notiz-md-preview"></div>
     <div class="modal-footer">
       <span class="modal-save-hint" id="notiz-save-hint"></span>
       <button class="btn-delete" id="notiz-modal-delete" title="Notiz löschen" style="color:#d1d5db;">
@@ -2590,7 +2621,7 @@ function renderNotizenList(userId) {
 
     card.appendChild(top);
     card.insertAdjacentHTML("beforeend", `
-      <div class="notiz-card-preview">${n.text||"<em style='color:var(--text-muted)'>Leer</em>"}</div>
+      <div class="notiz-card-preview">${n.text ? mdToHtml(n.text) : "<em style='color:var(--text-muted)'>Leer</em>"}</div>
       <div class="notiz-card-meta">${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""}</div>
     `);
     card.addEventListener("click", () => openNotizModal(n.id, n.titel, n.text));
@@ -2598,11 +2629,96 @@ function renderNotizenList(userId) {
   });
 }
 
+// ── Markdown helpers ──────────────────────────────────────────
+function mdInline(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,     "<em>$1</em>");
+}
+function mdToHtml(raw) {
+  if (!raw) return "";
+  const escaped = raw
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const lines = escaped.split("\n");
+  const out = []; let inList = false;
+  for (const line of lines) {
+    const li = line.match(/^[-*] (.+)/);
+    if (li) {
+      if (!inList) { out.push("<ul>"); inList = true; }
+      out.push(`<li>${mdInline(li[1])}</li>`);
+    } else {
+      if (inList) { out.push("</ul>"); inList = false; }
+      if (line.trim() === "") out.push("<br>");
+      else out.push(mdInline(line) + "<br>");
+    }
+  }
+  if (inList) out.push("</ul>");
+  return out.join("");
+}
+
+// ── Toolbar + keyboard shortcuts ─────────────────────────────
+function insertFmt(wrap, prefix) {
+  const ta = $("notiz-modal-text");
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const sel = ta.value.slice(start, end);
+  let insert, cursor;
+  if (wrap) {
+    insert = sel ? `${wrap}${sel}${wrap}` : `${wrap}Text${wrap}`;
+    cursor = sel ? start + insert.length : start + wrap.length;
+  } else {
+    // bullet: prepend "- " to each selected line, or insert new line
+    if (sel) {
+      insert = sel.split("\n").map(l => (l.startsWith("- ") ? l : "- " + l)).join("\n");
+      cursor = start + insert.length;
+    } else {
+      const before = ta.value.slice(0, start);
+      const needsNewline = before.length > 0 && !before.endsWith("\n");
+      insert = (needsNewline ? "\n" : "") + "- ";
+      cursor = start + insert.length;
+    }
+  }
+  ta.setRangeText(insert, start, end, "end");
+  ta.selectionStart = ta.selectionEnd = cursor;
+  ta.focus();
+  ta.dispatchEvent(new Event("input"));
+}
+
+(function initNotizToolbar() {
+  $("nfmt-bold").addEventListener("click",   () => insertFmt("**", null));
+  $("nfmt-italic").addEventListener("click", () => insertFmt("*",  null));
+  $("nfmt-bullet").addEventListener("click", () => insertFmt(null, "-"));
+
+  let previewing = false;
+  $("nfmt-preview").addEventListener("click", () => {
+    previewing = !previewing;
+    $("notiz-modal-text").classList.toggle("hidden", previewing);
+    const prev = $("notiz-md-preview");
+    if (previewing) {
+      prev.innerHTML = mdToHtml($("notiz-modal-text").value) || "<em style='color:var(--text-muted)'>Leer</em>";
+      prev.classList.remove("hidden");
+      $("nfmt-preview").textContent = "✏️ Bearbeiten";
+    } else {
+      prev.classList.add("hidden");
+      $("nfmt-preview").textContent = "👁 Vorschau";
+      $("notiz-modal-text").focus();
+    }
+  });
+
+  $("notiz-modal-text").addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); insertFmt("**", null); }
+    if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); insertFmt("*",  null); }
+  });
+})();
+
 function openNotizModal(id, titel, text) {
   currentNotizId = id;
   $("notiz-modal-title").value = titel||"";
   $("notiz-modal-text").value  = text||"";
   $("notiz-save-hint").textContent = "";
+  // reset preview mode
+  $("notiz-modal-text").classList.remove("hidden");
+  $("notiz-md-preview").classList.add("hidden");
+  $("nfmt-preview").textContent = "👁 Vorschau";
   $("notiz-modal").classList.remove("hidden");
   $("notiz-modal-text").focus();
 }
