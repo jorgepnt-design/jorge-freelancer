@@ -727,6 +727,10 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
         Erledigte
       </button>
+      <button class="btn-toggle" id="btn-color-labels" title="Farb-Labels benennen">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Labels
+      </button>
       <button class="btn-toggle-export" id="btn-todo-export">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Excel
@@ -798,6 +802,48 @@
       <button class="btn-delete" id="notiz-modal-delete" title="Notiz löschen" style="color:#d1d5db;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Color-Labels-Modal -->
+<div class="modal-overlay hidden" id="color-labels-modal">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <h3>Farb-Labels benennen</h3>
+      <button class="btn-icon" id="color-labels-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">Gib jeder Farbe einen Namen – er erscheint im Picker und als Tooltip.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:18px;height:18px;border-radius:50%;background:#ef4444;flex-shrink:0;display:inline-block;"></span>
+        <input type="text" id="cl-input-rot"    placeholder="z. B. Dringend" style="flex:1;" />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:18px;height:18px;border-radius:50%;background:#f97316;flex-shrink:0;display:inline-block;"></span>
+        <input type="text" id="cl-input-orange" placeholder="z. B. Wichtig" style="flex:1;" />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:18px;height:18px;border-radius:50%;background:#eab308;flex-shrink:0;display:inline-block;"></span>
+        <input type="text" id="cl-input-gelb"   placeholder="z. B. Hinweis" style="flex:1;" />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:18px;height:18px;border-radius:50%;background:#22c55e;flex-shrink:0;display:inline-block;"></span>
+        <input type="text" id="cl-input-gruen"  placeholder="z. B. OK" style="flex:1;" />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:18px;height:18px;border-radius:50%;background:#3b82f6;flex-shrink:0;display:inline-block;"></span>
+        <input type="text" id="cl-input-blau"   placeholder="z. B. Info" style="flex:1;" />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="width:18px;height:18px;border-radius:50%;background:#a855f7;flex-shrink:0;display:inline-block;"></span>
+        <input type="text" id="cl-input-lila"   placeholder="z. B. Idee" style="flex:1;" />
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      <button class="btn-primary" id="btn-color-labels-save">Speichern</button>
     </div>
   </div>
 </div>
@@ -940,6 +986,7 @@ auth.onAuthStateChanged(user => {
     initTodos(user.uid);
     initNotizen(user.uid);
     initNotifications(user.uid);
+    initColorLabels(user.uid);
   } else {
     $("login-screen").style.display = "flex";
     $("app").style.display = "none";
@@ -1360,6 +1407,43 @@ const FARBEN = [
   {id:"blau",hex:"#3b82f6"},{id:"lila",hex:"#a855f7"},
 ];
 
+// Farb-Labels: Standard-Namen, werden aus Firestore überschrieben
+let colorLabels = {
+  rot:"Dringend", orange:"Wichtig", gelb:"Hinweis",
+  gruen:"OK", blau:"Info", lila:"Idee"
+};
+
+function initColorLabels(userId) {
+  db.doc(`users/${userId}/settings/colorLabels`).onSnapshot(snap => {
+    if (snap.exists) Object.assign(colorLabels, snap.data());
+  });
+  $("btn-color-labels").addEventListener("click", () => openColorLabelsModal(userId));
+  $("color-labels-close").addEventListener("click", () => $("color-labels-modal").classList.add("hidden"));
+  $("color-labels-modal").addEventListener("click", e => {
+    if (e.target === $("color-labels-modal")) $("color-labels-modal").classList.add("hidden");
+  });
+  $("btn-color-labels-save").addEventListener("click", () => saveColorLabels(userId));
+}
+
+function openColorLabelsModal(userId) {
+  FARBEN.filter(f => f.id !== "none").forEach(f => {
+    const inp = $(`cl-input-${f.id}`);
+    if (inp) inp.value = colorLabels[f.id] || "";
+  });
+  $("color-labels-modal").classList.remove("hidden");
+}
+
+function saveColorLabels(userId) {
+  const data = {};
+  FARBEN.filter(f => f.id !== "none").forEach(f => {
+    const inp = $(`cl-input-${f.id}`);
+    data[f.id] = inp ? inp.value.trim() || f.id : f.id;
+  });
+  db.doc(`users/${userId}/settings/colorLabels`).set(data)
+    .then(() => { $("color-labels-modal").classList.add("hidden"); })
+    .catch(() => alert("Fehler beim Speichern."));
+}
+
 function initTodos(userId) {
   const ordnerRef = db.collection(`users/${userId}/todoOrdner`).orderBy("createdAt","asc");
 
@@ -1681,8 +1765,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     colorWrap.className = "color-picker-wrap";
     const colorDot = document.createElement("span");
     colorDot.className = "color-dot";
-    colorDot.style.background = FARBEN.find(f=>f.id===(todo.farbe||"none"))?.hex || "transparent";
-    if (!todo.farbe) colorDot.style.background = "var(--surface2)";
+    const activeFarbe = FARBEN.find(f => f.id === (todo.farbe||"none"));
+    colorDot.style.background = activeFarbe?.hex || "var(--surface2)";
+    colorDot.title = todo.farbe ? (colorLabels[todo.farbe] || todo.farbe) : "Farbe wählen";
 
     const popup = document.createElement("div");
     popup.className = "color-popup"; popup.style.display = "none";
@@ -1691,6 +1776,11 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       btn.style.background = f.hex || "transparent";
       if (!f.hex) btn.style.border = "2px solid #ccc";
       if ((todo.farbe||"none") === f.id) btn.classList.add("selected");
+      // Label-Name anzeigen
+      const labelName = f.id === "none" ? "Keine" : (colorLabels[f.id] || f.id);
+      btn.title = labelName;
+      // Tooltip-Text unter dem Button (kleines Label)
+      btn.style.position = "relative";
       btn.addEventListener("click", e => {
         e.stopPropagation();
         if (todoOrdnerId)
@@ -1699,6 +1789,15 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       });
       popup.appendChild(btn);
     });
+    // Label-Namen als Legende unter Picker
+    const legend = document.createElement("div");
+    legend.id = "color-popup-legend";
+    legend.style.cssText = "width:100%;font-size:0.65rem;color:var(--text-muted);text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+    popup.appendChild(legend);
+    popup.addEventListener("mouseover", e => {
+      if (e.target.tagName === "BUTTON" && e.target.title) legend.textContent = e.target.title;
+    });
+    popup.addEventListener("mouseleave", () => { legend.textContent = ""; });
     colorDot.addEventListener("click", e => {
       e.stopPropagation();
       popup.style.display = popup.style.display==="none" ? "flex" : "none";
