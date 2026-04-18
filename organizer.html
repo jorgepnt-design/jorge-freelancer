@@ -400,6 +400,164 @@
       .user-name { display: none; }
       .tab-content { padding: 12px; }
     }
+
+    /* ── NOTIFICATION BELL ── */
+    .notif-wrap { position: relative; }
+    .notif-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #ef4444; color: #fff; border-radius: 50%;
+      width: 15px; height: 15px; font-size: 0.58rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; pointer-events: none;
+    }
+
+    /* ── DASHBOARD ── */
+    .dash-stat-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px;
+    }
+    .dash-stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .dash-stat-label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .dash-stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .dash-stat-card.s-offen    .dash-stat-value { color: #6b7280; }
+    .dash-stat-card.s-progress .dash-stat-value { color: #2563eb; }
+    .dash-stat-card.s-done     .dash-stat-value { color: #16a34a; }
+    .dash-stat-card.s-overdue  .dash-stat-value { color: #dc2626; }
+    .dash-stat-card.s-overdue  { border-color: #fca5a5; }
+
+    .dash-lower { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .dash-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+    }
+    .dash-panel-title {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;
+    }
+    .dash-todo-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem; gap: 8px;
+    }
+    .dash-todo-row:last-child { border-bottom: none; }
+    .dash-todo-row-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dash-due { font-size: 0.72rem; white-space: nowrap; color: var(--text-muted); }
+    .dash-due.overdue { color: #dc2626; font-weight: 600; }
+    .dash-due.today   { color: #ea580c; font-weight: 600; }
+    .dash-note-row {
+      padding: 6px 0; border-bottom: 1px solid var(--border);
+      font-size: 0.84rem; cursor: pointer;
+    }
+    .dash-note-row:last-child { border-bottom: none; }
+    .dash-note-row:hover .dash-note-title { color: var(--primary); }
+    .dash-note-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dash-note-meta  { font-size: 0.71rem; color: var(--text-muted); margin-top: 1px; }
+    .dash-empty { font-size: 0.82rem; color: var(--text-muted); padding: 6px 0; }
+
+    /* ── CALENDAR ── */
+    .cal-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+    }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+    .cal-title { font-size: 0.95rem; font-weight: 600; }
+    .cal-nav {
+      border: 1px solid var(--border); background: transparent;
+      border-radius: 6px; padding: 3px 9px; cursor: pointer;
+      color: var(--text-muted); font-size: 0.88rem; transition: background 0.12s;
+    }
+    .cal-nav:hover { background: var(--surface2); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-weekday {
+      text-align: center; font-size: 0.68rem; font-weight: 700;
+      color: var(--text-muted); padding: 3px 0; letter-spacing: 0.03em;
+    }
+    .cal-day {
+      aspect-ratio: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; border-radius: 6px;
+      font-size: 0.78rem; padding: 1px; position: relative; cursor: default;
+    }
+    .cal-day.other-month { color: var(--text-muted); opacity: 0.35; }
+    .cal-day.is-today { background: var(--primary); color: #fff; font-weight: 700; border-radius: 50%; }
+    .cal-day.has-todos:not(.is-today) { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .cal-day.has-overdue:not(.is-today) { background: #fee2e2; color: #dc2626; }
+    .cal-dots { display: flex; gap: 2px; justify-content: center; margin-top: 1px; }
+    .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+    .cal-dot.done    { background: #22c55e; }
+    .cal-dot.overdue { background: #dc2626; }
+
+    /* ── DRAG & DROP ── */
+    .drag-handle {
+      cursor: grab; color: var(--border); flex-shrink: 0;
+      line-height: 0; padding: 2px 3px; border-radius: 3px;
+      transition: color 0.12s; user-select: none;
+    }
+    .drag-handle:hover { color: var(--text-muted); }
+    .todo-item.is-dragging { opacity: 0.35; }
+    .todo-item.drag-target { outline: 2px dashed var(--primary); outline-offset: 1px; }
+
+    /* ── PIN NOTIZEN ── */
+    .notiz-card-top {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 6px;
+    }
+    .notiz-card.is-pinned {
+      border-color: #f59e0b;
+      background: linear-gradient(160deg, var(--surface) 70%, #fffbeb 100%);
+    }
+    [data-theme="dark"] .notiz-card.is-pinned {
+      border-color: #92400e;
+      background: linear-gradient(160deg, var(--surface) 70%, #1c1207 100%);
+    }
+    .btn-pin {
+      border: none; background: transparent; cursor: pointer;
+      font-size: 0.85rem; line-height: 1; padding: 1px 3px;
+      color: #d1d5db; flex-shrink: 0; transition: color 0.12s;
+    }
+    .btn-pin:hover  { color: #f59e0b; }
+    .btn-pin.active { color: #f59e0b; }
+
+    /* ── SHARE MODAL ── */
+    .share-code {
+      background: var(--surface2); border: 1.5px solid var(--primary-border);
+      border-radius: 6px; padding: 10px 14px; font-family: monospace;
+      font-size: 0.82rem; word-break: break-all; color: var(--primary);
+      user-select: all; margin-bottom: 8px;
+    }
+    .btn-copy {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 14px; background: var(--primary); color: #fff;
+      border: none; border-radius: 6px; font-size: 0.82rem;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-copy:hover { background: var(--primary-hover); }
+    .share-sep {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--text-muted); font-size: 0.78rem; margin: 12px 0;
+    }
+    .share-sep::before,.share-sep::after { content:''; flex:1; height:1px; background:var(--border); }
+    .share-rules {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px; font-family: monospace;
+      font-size: 0.7rem; color: var(--text-muted); white-space: pre; overflow-x: auto;
+      max-height: 160px; overflow-y: auto;
+    }
+
+    /* ── AUTOCOMPLETE ── */
+    input[list]::-webkit-calendar-picker-indicator { display: none !important; }
+
+    @media (max-width: 900px) {
+      .dash-stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .dash-lower     { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .dash-stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
   </style>
 </head>
 <body>
@@ -424,6 +582,12 @@
   <header>
     <h1>Jorge Organizer</h1>
     <div class="header-right">
+      <div class="notif-wrap">
+        <button class="btn-icon" id="btn-notif" title="Benachrichtigungen erlauben">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <span class="notif-badge hidden" id="notif-badge">0</span>
+      </div>
       <button class="btn-icon" id="btn-darkmode" title="Dark Mode">
         <svg id="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -435,13 +599,58 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="dichte">Dichte</button>
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="dichte">Dichte</button>
     <button class="tab-btn" data-tab="todos">To-dos</button>
     <button class="tab-btn" data-tab="notizen">Notizen</button>
   </div>
 
+  <!-- ══ TAB: DASHBOARD ══ -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div class="dash-stat-grid">
+      <div class="dash-stat-card s-offen">
+        <div class="dash-stat-label">Offen</div>
+        <div class="dash-stat-value" id="d-stat-offen">–</div>
+      </div>
+      <div class="dash-stat-card s-progress">
+        <div class="dash-stat-label">In Arbeit</div>
+        <div class="dash-stat-value" id="d-stat-progress">–</div>
+      </div>
+      <div class="dash-stat-card s-done">
+        <div class="dash-stat-label">Erledigt</div>
+        <div class="dash-stat-value" id="d-stat-done">–</div>
+      </div>
+      <div class="dash-stat-card s-overdue">
+        <div class="dash-stat-label">Überfällig</div>
+        <div class="dash-stat-value" id="d-stat-overdue">–</div>
+      </div>
+    </div>
+
+    <!-- Kalender -->
+    <div class="cal-wrap">
+      <div class="cal-header">
+        <button class="cal-nav" id="cal-prev">&#8249;</button>
+        <span class="cal-title" id="cal-title"></span>
+        <button class="cal-nav" id="cal-next">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- Untere zwei Panels -->
+    <div class="dash-lower">
+      <div class="dash-panel">
+        <div class="dash-panel-title">Demnächst fällig</div>
+        <div id="dash-upcoming"></div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-title">Letzte Notizen</div>
+        <div id="dash-notes"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ TAB: DICHTE ══ -->
-  <div id="tab-dichte" class="tab-content active">
+  <div id="tab-dichte" class="tab-content">
     <div class="tabellen-bar" id="tabellen-bar">
       <button class="btn-new-tabelle" id="btn-new-tabelle">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -535,10 +744,14 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Neuer Ordner
       </button>
+      <button class="btn-new-tabelle" id="btn-join-ordner" title="Geteilten Ordner beitreten">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Beitreten
+      </button>
     </div>
     <!-- Neue Aufgabe -->
     <div class="add-todo">
-      <input type="text" id="todo-input" placeholder="Neue Aufgabe …" />
+      <input type="text" id="todo-input" placeholder="Neue Aufgabe …" list="todo-suggestions" autocomplete="off" />
       <select id="todo-ordner-select" style="display:none; max-width:130px;"></select>
       <button class="btn-primary" id="btn-todo-add">Hinzufügen</button>
     </div>
@@ -586,6 +799,77 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Autocomplete datalist -->
+<datalist id="todo-suggestions"></datalist>
+
+<!-- Share-Modal -->
+<div class="modal-overlay hidden" id="share-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3>Ordner teilen</h3>
+      <button class="btn-icon" id="share-modal-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div>
+      <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:8px;">Dein Join-Code für diesen Ordner:</p>
+      <div class="share-code" id="share-code-box">–</div>
+      <button class="btn-copy" id="btn-copy-code">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Code kopieren
+      </button>
+    </div>
+    <div class="share-sep">E-Mail des Empfängers hinzufügen</div>
+    <div style="display:flex;gap:8px;">
+      <input type="email" id="share-email-input" placeholder="name@example.com" class="todo-search" style="flex:1;" />
+      <button class="btn-primary" id="btn-share-add">Hinzufügen</button>
+    </div>
+    <div id="share-email-list" style="font-size:0.8rem;color:var(--text-muted);min-height:18px;"></div>
+    <details style="margin-top:4px;">
+      <summary style="font-size:0.78rem;color:var(--text-muted);cursor:pointer;margin-bottom:6px;">⚙️ Einmalig: Firestore-Regeln aktualisieren</summary>
+      <p style="font-size:0.76rem;color:var(--text-muted);margin-bottom:6px;">Kopiere diese Regeln in <b>Firebase Console → Firestore → Regeln</b>:</p>
+      <div class="share-rules">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    match /users/{userId}/todoOrdner/{folderId} {
+      allow read: if request.auth != null
+        && 'sharedWithEmails' in resource.data
+        && resource.data.sharedWithEmails
+             .hasAny([request.auth.token.email]);
+    }
+    match /users/{userId}/todoOrdner/{folderId}/todos/{id} {
+      allow read, write: if request.auth != null
+        && 'sharedWithEmails' in get(/databases/$(database)/documents/users/$(userId)/todoOrdner/$(folderId)).data
+        && get(/databases/$(database)/documents/users/$(userId)/todoOrdner/$(folderId)).data.sharedWithEmails
+             .hasAny([request.auth.token.email]);
+    }
+  }
+}</div>
+    </details>
+  </div>
+</div>
+
+<!-- Join-Modal -->
+<div class="modal-overlay hidden" id="join-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>Ordner beitreten</h3>
+      <button class="btn-icon" id="join-modal-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p style="font-size:0.83rem;color:var(--text-muted);">Gib den Join-Code ein, den dir der Ordner-Inhaber geschickt hat:</p>
+    <input type="text" id="join-code-input" placeholder="ownerUid::folderId" style="width:100%;margin-top:8px;" />
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn-primary" id="btn-join-confirm">Beitreten</button>
+    </div>
+    <p id="join-error" style="font-size:0.78rem;color:#dc2626;margin-top:6px;min-height:16px;"></p>
   </div>
 </div>
 
@@ -651,9 +935,11 @@ auth.onAuthStateChanged(user => {
       wrap.appendChild(div);
     }
     $("user-name").textContent = user.displayName || user.email || "";
+    initDashboard();
     initDichte(user.uid);
     initTodos(user.uid);
     initNotizen(user.uid);
+    initNotifications(user.uid);
   } else {
     $("login-screen").style.display = "flex";
     $("app").style.display = "none";
@@ -674,6 +960,232 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 // ── PWA SERVICE WORKER ───────────────────────────────────────
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("organizer-sw.js").catch(() => {});
+}
+
+// ════════════════════════════════════════════════════════════
+// DASHBOARD + KALENDER
+// ════════════════════════════════════════════════════════════
+const MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const WOCHENTAGE = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+let calYear, calMonth;
+
+function initDashboard() {
+  const now = new Date();
+  calYear  = now.getFullYear();
+  calMonth = now.getMonth();
+
+  $("cal-prev").addEventListener("click", () => {
+    if (--calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  $("cal-next").addEventListener("click", () => {
+    if (++calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+}
+
+function renderDashboard() {
+  const today = new Date().toISOString().slice(0,10);
+  let all = [];
+  ordnerCache.forEach(({name, todos}) => todos.forEach(t => all.push({...t, _ordnerName: name})));
+
+  // Stats
+  const nOffen    = all.filter(t => t.status === "offen").length;
+  const nProgress = all.filter(t => t.status === "progress").length;
+  const nDone     = all.filter(t => t.status === "erledigt").length;
+  const nOverdue  = all.filter(t => t.faellig && t.faellig < today && t.status !== "erledigt").length;
+  $("d-stat-offen").textContent   = nOffen;
+  $("d-stat-progress").textContent= nProgress;
+  $("d-stat-done").textContent    = nDone;
+  $("d-stat-overdue").textContent = nOverdue;
+
+  // Calendar
+  renderCalendar();
+
+  // Upcoming (nächste 14 Tage, nicht erledigt, mit faellig)
+  const upcoming = all
+    .filter(t => t.faellig && t.status !== "erledigt")
+    .sort((a,b) => a.faellig.localeCompare(b.faellig))
+    .slice(0, 8);
+
+  const upEl = $("dash-upcoming");
+  upEl.innerHTML = "";
+  if (upcoming.length === 0) {
+    upEl.innerHTML = '<div class="dash-empty">Keine offenen Fälligkeiten</div>';
+  } else {
+    upcoming.forEach(t => {
+      const row = document.createElement("div");
+      row.className = "dash-todo-row";
+      const isOverdue = t.faellig < today;
+      const isToday   = t.faellig === today;
+      const dateLabel = t.faellig.split("-").reverse().join(".");
+      row.innerHTML = `
+        <div class="dash-todo-row-text">${t.text}</div>
+        <div class="dash-due ${isOverdue?"overdue":isToday?"today":""}">${isOverdue?"⚠️ ":""}${dateLabel}</div>`;
+      upEl.appendChild(row);
+    });
+  }
+
+  // Letzte Notizen
+  let notes = [];
+  notizenOrdnerCache.forEach(({name, notizen}) =>
+    notizen.forEach(n => notes.push({...n, _ordnerName: name})));
+  notes.sort((a,b) => {
+    const ta = a.updatedAt?.toMillis?.() ?? 0;
+    const tb = b.updatedAt?.toMillis?.() ?? 0;
+    return tb - ta;
+  });
+  const notesEl = $("dash-notes");
+  notesEl.innerHTML = "";
+  if (notes.length === 0) {
+    notesEl.innerHTML = '<div class="dash-empty">Keine Notizen vorhanden</div>';
+  } else {
+    notes.slice(0,5).forEach(n => {
+      const row = document.createElement("div");
+      row.className = "dash-note-row";
+      const d = n.updatedAt ? (n.updatedAt.toDate ? n.updatedAt.toDate() : new Date(n.updatedAt)) : null;
+      row.innerHTML = `
+        <div class="dash-note-title">${n.titel || "Ohne Titel"}</div>
+        <div class="dash-note-meta">${n._ordnerName} · ${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"}) : ""}</div>`;
+      notesEl.appendChild(row);
+    });
+  }
+}
+
+function renderCalendar() {
+  $("cal-title").textContent = `${MONATE[calMonth]} ${calYear}`;
+  const grid  = $("cal-grid");
+  grid.innerHTML = "";
+
+  // Wochentag-Header
+  WOCHENTAGE.forEach(tag => {
+    const h = document.createElement("div");
+    h.className = "cal-weekday"; h.textContent = tag;
+    grid.appendChild(h);
+  });
+
+  // Todos nach Datum gruppieren
+  const today = new Date().toISOString().slice(0,10);
+  const byDate = {};
+  ordnerCache.forEach(({todos}) => todos.forEach(t => {
+    if (!t.faellig) return;
+    if (!byDate[t.faellig]) byDate[t.faellig] = [];
+    byDate[t.faellig].push(t);
+  }));
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay  = new Date(calYear, calMonth+1, 0);
+  let startDow = firstDay.getDay() - 1; // Mo=0
+  if (startDow < 0) startDow = 6;
+
+  // Vormonat-Füller
+  for (let i = 0; i < startDow; i++) {
+    const prev = new Date(calYear, calMonth, i - startDow + 1);
+    const d = document.createElement("div");
+    d.className = "cal-day other-month";
+    d.innerHTML = `<span>${prev.getDate()}</span>`;
+    grid.appendChild(d);
+  }
+
+  // Aktueller Monat
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    const dayTodos = byDate[dateStr] || [];
+    const d = document.createElement("div");
+    d.className = "cal-day";
+    if (dateStr === today)                                              d.classList.add("is-today");
+    else if (dayTodos.some(t => t.status !== "erledigt") && dateStr < today) d.classList.add("has-overdue");
+    else if (dayTodos.length > 0)                                      d.classList.add("has-todos");
+
+    d.innerHTML = `<span>${day}</span>`;
+    if (dayTodos.length > 0) {
+      const dots = document.createElement("div");
+      dots.className = "cal-dots";
+      dayTodos.slice(0,3).forEach(t => {
+        const dot = document.createElement("span");
+        dot.className = "cal-dot" + (t.status==="erledigt"?" done": dateStr<today?" overdue":"");
+        dots.appendChild(dot);
+      });
+      d.appendChild(dots);
+    }
+    grid.appendChild(d);
+  }
+
+  // Nachmonat-Füller
+  const total = startDow + lastDay.getDate();
+  const rest  = (7 - (total % 7)) % 7;
+  for (let i = 1; i <= rest; i++) {
+    const d = document.createElement("div");
+    d.className = "cal-day other-month";
+    d.innerHTML = `<span>${i}</span>`;
+    grid.appendChild(d);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ════════════════════════════════════════════════════════════
+let notifCheckInterval = null;
+
+function initNotifications(userId) {
+  $("btn-notif").addEventListener("click", () => {
+    if (!("Notification" in window)) { alert("Dein Browser unterstützt keine Benachrichtigungen."); return; }
+    Notification.requestPermission().then(p => {
+      if (p === "granted") {
+        $("btn-notif").title = "Benachrichtigungen aktiv ✓";
+        $("btn-notif").style.color = "#22c55e";
+        checkNotifications();
+      }
+    });
+  });
+
+  // Auto-Permission falls bereits erteilt
+  if (Notification.permission === "granted") {
+    $("btn-notif").style.color = "#22c55e";
+    $("btn-notif").title = "Benachrichtigungen aktiv ✓";
+  }
+
+  // Alle 5 Minuten prüfen
+  if (notifCheckInterval) clearInterval(notifCheckInterval);
+  notifCheckInterval = setInterval(checkNotifications, 5 * 60 * 1000);
+
+  // Sofort beim Login prüfen
+  setTimeout(checkNotifications, 3000);
+}
+
+function checkNotifications() {
+  if (Notification.permission !== "granted") return;
+
+  const today = new Date().toISOString().slice(0,10);
+  const storageKey = `notified_${today}`;
+  const notified   = new Set(JSON.parse(localStorage.getItem(storageKey) || "[]"));
+
+  let dueCount = 0;
+  ordnerCache.forEach(({name, todos}) => {
+    todos.forEach(t => {
+      if (t.faellig !== today || t.status === "erledigt" || notified.has(t.id)) return;
+      new Notification("📅 Fällig heute – Jorge Organizer", {
+        body: `${t.text}  (${name})`,
+        icon: "/organizer-manifest.json"
+      });
+      notified.add(t.id);
+      dueCount++;
+    });
+  });
+
+  localStorage.setItem(storageKey, JSON.stringify([...notified]));
+
+  // Badge aktualisieren
+  const badge = $("notif-badge");
+  const overdue = [];
+  ordnerCache.forEach(({todos}) =>
+    todos.forEach(t => { if (t.faellig && t.faellig <= today && t.status !== "erledigt") overdue.push(t); }));
+  if (overdue.length > 0) {
+    badge.textContent = overdue.length > 9 ? "9+" : overdue.length;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -852,6 +1364,7 @@ function initTodos(userId) {
   const ordnerRef = db.collection(`users/${userId}/todoOrdner`).orderBy("createdAt","asc");
 
   $("btn-new-ordner").addEventListener("click", () => createOrdner(userId));
+  initSharing(userId);
   $("btn-hide-done").addEventListener("click", () => {
     hideDone = !hideDone;
     $("btn-hide-done").classList.toggle("active", hideDone);
@@ -873,10 +1386,12 @@ function initTodos(userId) {
       farbe: "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    saveAutocomplete(text);
     $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value="";
   }
   $("btn-todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key==="Enter") addTodo(); });
+  loadAutocomplete();
 
   $("btn-todo-export").addEventListener("click", () => exportTodosExcel(userId));
 
@@ -940,12 +1455,8 @@ function renderCurrentTodoView(userId) {
     allTodos = cached ? cached.todos.map(t => ({ ...t, _ordnerName: cached.name })) : [];
   }
 
-  // Sortieren
-  allTodos.sort((a,b) => {
-    const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
-    const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
-    return ta - tb;
-  });
+  // Sortieren (berücksichtigt drag&drop order-Feld)
+  allTodos = sortTodos(allTodos);
 
   // Filter
   if (hideDone)     allTodos = allTodos.filter(t => t.status !== "erledigt");
@@ -970,6 +1481,8 @@ function renderCurrentTodoView(userId) {
   $("stat-erledigt").textContent = statBase.filter(t => t.status==="erledigt").length;
 
   renderTodos(allTodos, userId, currentOrdnerId === "alle" ? null : currentOrdnerId, currentOrdnerId === "alle");
+  renderDashboard();
+  checkNotifications();
 }
 
 function updateOrdnerSelect(ordner) {
@@ -979,9 +1492,11 @@ function updateOrdnerSelect(ordner) {
   if (prev && ordner.find(o=>o.id===prev)) sel.value = prev;
 }
 
+function renderOrdnerBarFull(ordner, userId) { renderOrdnerBar(ordner, userId); }
+
 function renderOrdnerBar(ordner, userId) {
-  const bar = $("ordner-bar"), newBtn = $("btn-new-ordner");
-  Array.from(bar.children).forEach(c => { if (c !== newBtn) bar.removeChild(c); });
+  const bar = $("ordner-bar"), newBtn = $("btn-new-ordner"), joinBtn = $("btn-join-ordner");
+  Array.from(bar.children).forEach(c => { if (c !== newBtn && c !== joinBtn) bar.removeChild(c); });
 
   const alleTab = document.createElement("div");
   alleTab.className = "tabelle-tab alle-tab" + (currentOrdnerId==="alle" ? " active" : "");
@@ -989,7 +1504,8 @@ function renderOrdnerBar(ordner, userId) {
   alleTab.addEventListener("click", () => selectOrdner("alle", userId));
   bar.insertBefore(alleTab, newBtn);
 
-  ordner.forEach(o => {
+  // Eigene Ordner
+  ordner.filter(o => !o.id.startsWith("shared::")).forEach(o => {
     const tab = makeFolderTab(o.id, o.name, o.id === currentOrdnerId,
       () => { const n=prompt("Neuer Name:",o.name); if(n&&n.trim()) db.collection(`users/${userId}/todoOrdner`).doc(o.id).update({name:n.trim()}); },
       () => { if(!confirm(`Ordner "${o.name}" löschen?`)) return;
@@ -997,8 +1513,49 @@ function renderOrdnerBar(ordner, userId) {
           const b=db.batch(); snap.forEach(d=>b.delete(d.ref));
           b.delete(db.doc(`users/${userId}/todoOrdner/${o.id}`)); return b.commit(); }); },
       () => selectOrdner(o.id, userId));
-    bar.insertBefore(tab, newBtn);
+    // Share-Button anhängen
+    const shareBtn = document.createElement("button");
+    shareBtn.className = "tabelle-tab-btn"; shareBtn.title = "Teilen";
+    shareBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+    shareBtn.addEventListener("click", e => { e.stopPropagation(); openShareModal(o.id, o.name, userId); });
+    tab.querySelector(".tabelle-tab-actions").appendChild(shareBtn);
+    bar.insertBefore(tab, joinBtn);
   });
+
+  // Geteilte Ordner (aus ordnerCache)
+  ordnerCache.forEach((v, k) => {
+    if (!k.startsWith("shared::")) return;
+    const tab = document.createElement("div");
+    tab.className = "tabelle-tab" + (k === currentOrdnerId ? " active" : "");
+    tab.dataset.id = k;
+    tab.textContent = v.name;
+    tab.addEventListener("click", () => selectOrdner(k, userId));
+    bar.insertBefore(tab, joinBtn);
+  });
+}
+
+let dragSrcId = null;
+let dragSrcOrdnerId = null;
+
+function sortTodos(todos) {
+  const hasOrder = todos.some(t => typeof t.order === "number");
+  if (hasOrder) return [...todos].sort((a,b) => (a.order??999999) - (b.order??999999));
+  return [...todos].sort((a,b) => {
+    const ta = a.createdAt?.toMillis?.() ?? new Date(a.createdAt||0).getTime();
+    const tb = b.createdAt?.toMillis?.() ?? new Date(b.createdAt||0).getTime();
+    return ta - tb;
+  });
+}
+
+function saveTodoOrder(ordnerId, userId, todos) {
+  const batch = db.batch();
+  todos.forEach((t, i) => {
+    batch.update(
+      db.doc(`users/${userId}/todoOrdner/${ordnerId}/todos/${t.id}`),
+      { order: i }
+    );
+  });
+  batch.commit().catch(console.error);
 }
 
 function renderTodos(todos, userId, ordnerId, zeigeBadge) {
@@ -1012,6 +1569,49 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     const item = document.createElement("div");
     item.className = `todo-item status-${todo.status}`;
     if (todo.farbe) item.dataset.color = todo.farbe;
+
+    // Drag-Handle (nur im Ordner-View, nicht in "Alle")
+    if (!zeigeBadge) {
+      item.draggable = true;
+      const handle = document.createElement("span");
+      handle.className = "drag-handle";
+      handle.title = "Ziehen zum Sortieren";
+      handle.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>`;
+      handle.addEventListener("mousedown", () => { item.draggable = true; });
+      item.appendChild(handle);
+
+      item.addEventListener("dragstart", e => {
+        dragSrcId = todo.id;
+        dragSrcOrdnerId = todoOrdnerId;
+        e.dataTransfer.effectAllowed = "move";
+        setTimeout(() => item.classList.add("is-dragging"), 0);
+      });
+      item.addEventListener("dragend", () => {
+        item.classList.remove("is-dragging");
+        document.querySelectorAll(".todo-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+      });
+      item.addEventListener("dragover", e => {
+        e.preventDefault();
+        if (dragSrcOrdnerId !== todoOrdnerId) return;
+        document.querySelectorAll(".todo-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+        if (dragSrcId !== todo.id) item.classList.add("drag-target");
+      });
+      item.addEventListener("drop", e => {
+        e.preventDefault();
+        item.classList.remove("drag-target");
+        if (!dragSrcId || dragSrcId === todo.id || dragSrcOrdnerId !== todoOrdnerId) return;
+        const cached = ordnerCache.get(todoOrdnerId);
+        if (!cached) return;
+        const sorted = sortTodos(cached.todos);
+        const fromIdx = sorted.findIndex(t => t.id === dragSrcId);
+        const toIdx   = sorted.findIndex(t => t.id === todo.id);
+        if (fromIdx === -1 || toIdx === -1) return;
+        const [moved] = sorted.splice(fromIdx, 1);
+        sorted.splice(toIdx, 0, moved);
+        saveTodoOrder(todoOrdnerId, userId, sorted);
+        dragSrcId = null;
+      });
+    }
 
     // Text
     const textEl = document.createElement("div");
@@ -1236,6 +1836,7 @@ function initNotizen(userId) {
             const notizen=[]; snap.forEach(d=>notizen.push({id:d.id,...d.data()}));
             notizenOrdnerCache.set(o.id,{name:o.name,notizen});
             if (currentNotizenOrdnerId) renderNotizenList(userId);
+            renderDashboard();
           });
         notizenListeners.set(o.id, unsub);
       }
@@ -1298,15 +1899,44 @@ function renderNotizenList(userId) {
   if (notizen.length === 0) { empty.style.display="block"; return; }
   empty.style.display = "none";
 
-  notizen.forEach(n => {
+  // Pinnierte zuerst, dann nach updatedAt
+  const sorted = [...notizen].sort((a,b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return  1;
+    const ta = a.updatedAt?.toMillis?.() ?? 0;
+    const tb = b.updatedAt?.toMillis?.() ?? 0;
+    return tb - ta;
+  });
+
+  sorted.forEach(n => {
     const card = document.createElement("div");
-    card.className = "notiz-card";
+    card.className = "notiz-card" + (n.pinned ? " is-pinned" : "");
     const d = n.updatedAt ? (n.updatedAt.toDate ? n.updatedAt.toDate() : new Date(n.updatedAt)) : null;
-    card.innerHTML = `
-      <div class="notiz-card-title">${n.titel||"Ohne Titel"}</div>
+
+    // Pin-Button
+    const pinBtn = document.createElement("button");
+    pinBtn.className = "btn-pin" + (n.pinned ? " active" : "");
+    pinBtn.title = n.pinned ? "Fixierung aufheben" : "Notiz anpinnen";
+    pinBtn.textContent = "📌";
+    pinBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      db.collection(`users/${auth.currentUser.uid}/notizenOrdner/${currentNotizenOrdnerId}/notizen`)
+        .doc(n.id).update({ pinned: !n.pinned });
+    });
+
+    const top = document.createElement("div");
+    top.className = "notiz-card-top";
+    const titleEl = document.createElement("div");
+    titleEl.className = "notiz-card-title";
+    titleEl.textContent = n.titel || "Ohne Titel";
+    top.appendChild(titleEl);
+    top.appendChild(pinBtn);
+
+    card.appendChild(top);
+    card.insertAdjacentHTML("beforeend", `
       <div class="notiz-card-preview">${n.text||"<em style='color:var(--text-muted)'>Leer</em>"}</div>
       <div class="notiz-card-meta">${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""}</div>
-    `;
+    `);
     card.addEventListener("click", () => openNotizModal(n.id, n.titel, n.text));
     list.appendChild(card);
   });
@@ -1324,6 +1954,144 @@ function openNotizModal(id, titel, text) {
 function closeNotizModal() {
   $("notiz-modal").classList.add("hidden");
   currentNotizId = null;
+}
+
+// ════════════════════════════════════════════════════════════
+// AUTOCOMPLETE
+// ════════════════════════════════════════════════════════════
+const AC_KEY = "todo_autocomplete";
+const AC_MAX = 25;
+
+function loadAutocomplete() {
+  const list = $("todo-suggestions");
+  list.innerHTML = "";
+  const items = JSON.parse(localStorage.getItem(AC_KEY) || "[]");
+  items.forEach(text => {
+    const opt = document.createElement("option");
+    opt.value = text;
+    list.appendChild(opt);
+  });
+}
+
+function saveAutocomplete(text) {
+  if (!text || text.length < 3) return;
+  let items = JSON.parse(localStorage.getItem(AC_KEY) || "[]");
+  items = [text, ...items.filter(t => t !== text)].slice(0, AC_MAX);
+  localStorage.setItem(AC_KEY, JSON.stringify(items));
+  loadAutocomplete();
+}
+
+// ════════════════════════════════════════════════════════════
+// SHARING
+// ════════════════════════════════════════════════════════════
+let shareCurrentOrdnerId = null;
+let shareCurrentUserId   = null;
+
+function initSharing(userId) {
+  $("share-modal-close").addEventListener("click", () => $("share-modal").classList.add("hidden"));
+  $("share-modal").addEventListener("click", e => { if (e.target===$("share-modal")) $("share-modal").classList.add("hidden"); });
+
+  $("join-modal-close").addEventListener("click", () => $("join-modal").classList.add("hidden"));
+  $("join-modal").addEventListener("click", e => { if (e.target===$("join-modal")) $("join-modal").classList.add("hidden"); });
+  $("btn-join-ordner").addEventListener("click", () => {
+    $("join-code-input").value = "";
+    $("join-error").textContent = "";
+    $("join-modal").classList.remove("hidden");
+  });
+
+  $("btn-copy-code").addEventListener("click", () => {
+    navigator.clipboard.writeText($("share-code-box").textContent).then(() => {
+      $("btn-copy-code").textContent = "✓ Kopiert!";
+      setTimeout(() => { $("btn-copy-code").innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Code kopieren`; }, 2000);
+    });
+  });
+
+  $("btn-share-add").addEventListener("click", () => {
+    const email = $("share-email-input").value.trim();
+    if (!email || !shareCurrentOrdnerId) return;
+    db.collection(`users/${userId}/todoOrdner`).doc(shareCurrentOrdnerId)
+      .update({ sharedWithEmails: firebase.firestore.FieldValue.arrayUnion(email) })
+      .then(() => {
+        $("share-email-input").value = "";
+        loadSharedEmails(userId);
+      }).catch(() => alert("Fehler beim Speichern – bitte Firestore-Regeln aktualisieren (siehe unten)."));
+  });
+
+  $("btn-join-confirm").addEventListener("click", () => joinFolder($("join-code-input").value.trim(), userId));
+
+  // Geteilte Ordner beim Login laden
+  loadJoinedFolders(userId);
+}
+
+function openShareModal(ordnerId, ordnerName, userId) {
+  shareCurrentOrdnerId = ordnerId;
+  shareCurrentUserId   = userId;
+  const code = `${userId}::${ordnerId}`;
+  $("share-code-box").textContent = code;
+  $("share-modal").classList.remove("hidden");
+  loadSharedEmails(userId);
+}
+
+function loadSharedEmails(userId) {
+  if (!shareCurrentOrdnerId) return;
+  db.collection(`users/${userId}/todoOrdner`).doc(shareCurrentOrdnerId).get().then(snap => {
+    const emails = snap.exists ? (snap.data().sharedWithEmails || []) : [];
+    $("share-email-list").textContent = emails.length
+      ? "Geteilt mit: " + emails.join(", ")
+      : "";
+  });
+}
+
+function joinFolder(code, userId) {
+  $("join-error").textContent = "";
+  if (!code.includes("::")) { $("join-error").textContent = "Ungültiger Code."; return; }
+  const [ownerUid, folderId] = code.split("::");
+  if (!ownerUid || !folderId) { $("join-error").textContent = "Ungültiger Code."; return; }
+
+  db.collection(`users/${ownerUid}/todoOrdner`).doc(folderId).get()
+    .then(snap => {
+      if (!snap.exists) { $("join-error").textContent = "Ordner nicht gefunden."; return; }
+      const folderName = snap.data().name + " 👥";
+
+      // Referenz in eigenen joinedFolders speichern
+      db.collection(`users/${userId}/joinedFolders`).doc(folderId).set({
+        ownerUid, folderId, name: folderName,
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        $("join-modal").classList.add("hidden");
+        subscribeSharedFolder(ownerUid, folderId, folderName, userId);
+      });
+    })
+    .catch(() => {
+      $("join-error").textContent = "Zugriff verweigert – bitte Firestore-Regeln aktualisieren (Share-Modal → ⚙️).";
+    });
+}
+
+function subscribeSharedFolder(ownerUid, folderId, folderName, userId) {
+  const cacheKey = `shared::${ownerUid}::${folderId}`;
+  if (ordnerListeners.has(cacheKey)) return;
+
+  const unsub = db.collection(`users/${ownerUid}/todoOrdner/${folderId}/todos`)
+    .orderBy("createdAt","asc").onSnapshot(snap => {
+      const todos = []; snap.forEach(d => todos.push({id:d.id,...d.data()}));
+      ordnerCache.set(cacheKey, { name: folderName, todos, _sharedOwner: ownerUid, _sharedFolderId: folderId });
+      renderCurrentTodoView(userId);
+    }, () => {});
+  ordnerListeners.set(cacheKey, unsub);
+
+  // Ordner-Bar neu rendern
+  const currentOrdner = [];
+  ordnerCache.forEach((v, k) => { if (!k.startsWith("shared::")) currentOrdner.push({id:k, name:v.name}); });
+  renderOrdnerBarFull(currentOrdner, userId);
+}
+
+function loadJoinedFolders(userId) {
+  db.collection(`users/${userId}/joinedFolders`).get().then(snap => {
+    snap.forEach(doc => {
+      const {ownerUid, folderId, name} = doc.data();
+      if (ownerUid && folderId) subscribeSharedFolder(ownerUid, folderId, name, userId);
+    });
+  }).catch(() => {});
 }
 
 // ════════════════════════════════════════════════════════════
