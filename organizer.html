@@ -329,7 +329,13 @@
     .color-swatch-label {
       font-size: 0.58rem; color: var(--text-muted); text-align: center;
       width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      line-height: 1.2;
+      line-height: 1.2; cursor: text; border-radius: 3px; padding: 1px 2px;
+    }
+    .color-swatch-label:hover { background: var(--primary-light); color: var(--primary); }
+    .color-swatch-label-input {
+      width: 100%; font-size: 0.58rem; text-align: center; border: none;
+      border-bottom: 1px solid var(--primary); background: transparent;
+      color: var(--text); outline: none; padding: 1px 2px; line-height: 1.2;
     }
 
     .ordner-badge {
@@ -1812,6 +1818,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       const lbl = document.createElement("span");
       lbl.className = "color-swatch-label";
       lbl.textContent = f.id === "none" ? "Keine" : (colorLabels[f.id] || f.id);
+      lbl.title = "Klicken zum Umbenennen";
 
       btn.addEventListener("click", e => {
         e.stopPropagation();
@@ -1820,6 +1827,44 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
             .doc(todo.id).update({farbe: f.id === "none" ? "" : f.id});
         popup.style.display = "none";
       });
+
+      // Label inline umbenennen (nur bei benannten Farben)
+      if (f.id !== "none") {
+        lbl.addEventListener("click", e => {
+          e.stopPropagation();
+          const inp = document.createElement("input");
+          inp.type = "text";
+          inp.className = "color-swatch-label-input";
+          inp.value = colorLabels[f.id] || f.id;
+          inp.maxLength = 12;
+          lbl.replaceWith(inp);
+          inp.focus(); inp.select();
+
+          function commitLabel() {
+            const newName = inp.value.trim() || f.id;
+            colorLabels[f.id] = newName;
+            // In Firestore speichern
+            if (auth.currentUser) {
+              db.doc(`users/${auth.currentUser.uid}/settings/colorLabels`)
+                .set(colorLabels, { merge: true });
+            }
+            // Label-Span wiederherstellen
+            const newLbl = document.createElement("span");
+            newLbl.className = "color-swatch-label";
+            newLbl.textContent = newName;
+            newLbl.title = "Klicken zum Umbenennen";
+            inp.replaceWith(newLbl);
+            // Dot-Tooltip aktualisieren falls diese Farbe aktiv ist
+            if (todo.farbe === f.id) colorDot.title = newName;
+          }
+
+          inp.addEventListener("keydown", e => {
+            if (e.key === "Enter") { e.preventDefault(); commitLabel(); }
+            if (e.key === "Escape") { inp.replaceWith(lbl); }
+          });
+          inp.addEventListener("blur", commitLabel);
+        });
+      }
 
       swatch.appendChild(btn);
       swatch.appendChild(lbl);
