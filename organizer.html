@@ -1170,10 +1170,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
-// iOS Safari Kompatibilitaet: Auto-erkennt wenn WebChannel nicht funktioniert
-try {
-  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
-} catch(e) { /* bereits gesetzt */ }
 
 function $(id) { return document.getElementById(id); }
 
