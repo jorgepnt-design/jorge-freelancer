@@ -317,6 +317,19 @@
     .due-badge.today   { background: #ffedd5; color: #ea580c; border-color: #fdba74; }
     [data-theme="dark"] .due-badge.overdue { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
     [data-theme="dark"] .due-badge.today   { background: #7c2d12; color: #fed7aa; border-color: #9a3412; }
+    .due-badge, .priority-badge { cursor: pointer; transition: opacity 0.15s; }
+    .due-badge:hover, .priority-badge:hover { opacity: 0.75; }
+    .todo-add-meta {
+      font-size: 0.7rem; color: var(--text-muted); cursor: pointer; padding: 2px 6px;
+      border-radius: 10px; border: 1px dashed var(--border);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .todo-add-meta:hover { border-color: var(--primary); color: var(--primary); }
+    .todo-inline-date, .todo-inline-prio {
+      font-size: 0.78rem; border: 1.5px solid var(--primary); border-radius: 6px;
+      padding: 2px 6px; background: var(--surface); color: var(--text);
+      outline: none; cursor: pointer;
+    }
 
     /* Color picker */
     .color-picker-wrap { position: relative; }
@@ -2135,26 +2148,93 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       controls.appendChild(badge);
     }
 
-    // Fälligkeits-Badge
-    if (todo.faellig) {
+    // ── Fälligkeits-Badge (klickbar zum Bearbeiten) ──
+    const dateWrap = document.createElement("span");
+    function renderDateBadge() {
+      dateWrap.innerHTML = "";
       const today = new Date().toISOString().slice(0,10);
-      const badge = document.createElement("span");
-      badge.className = "due-badge";
-      badge.textContent = "📅 " + todo.faellig.split("-").reverse().join(".");
-      if (todo.faellig < today)      badge.classList.add("overdue");
-      else if (todo.faellig === today) badge.classList.add("today");
-      controls.appendChild(badge);
+      if (todo.faellig) {
+        const badge = document.createElement("span");
+        badge.className = "due-badge";
+        badge.title = "Klicken zum Ändern";
+        badge.textContent = "📅 " + todo.faellig.split("-").reverse().join(".");
+        if (todo.faellig < today)       badge.classList.add("overdue");
+        else if (todo.faellig === today) badge.classList.add("today");
+        badge.addEventListener("click", openDateEdit);
+        dateWrap.appendChild(badge);
+      } else {
+        const add = document.createElement("span");
+        add.className = "todo-add-meta"; add.textContent = "📅 Datum";
+        add.addEventListener("click", openDateEdit);
+        dateWrap.appendChild(add);
+      }
     }
+    function openDateEdit() {
+      dateWrap.innerHTML = "";
+      const inp = document.createElement("input");
+      inp.type = "date"; inp.className = "todo-inline-date";
+      inp.value = todo.faellig || "";
+      dateWrap.appendChild(inp);
+      inp.focus();
+      function saveDate() {
+        const val = inp.value || "";
+        todo.faellig = val;
+        if (todoOrdnerId)
+          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
+            .doc(todo.id).update({ faellig: val });
+        renderDateBadge();
+      }
+      inp.addEventListener("change", saveDate);
+      inp.addEventListener("blur", () => { if (dateWrap.contains(inp)) renderDateBadge(); });
+    }
+    renderDateBadge();
+    controls.appendChild(dateWrap);
 
-    // Priorität-Badge
-    if (todo.prioritaet && todo.prioritaet !== "none") {
-      const icons = { hoch:"↑", mittel:"→", niedrig:"↓" };
-      const labels = { hoch:"Hoch", mittel:"Mittel", niedrig:"Niedrig" };
-      const badge = document.createElement("span");
-      badge.className = `priority-badge ${todo.prioritaet}`;
-      badge.textContent = `${icons[todo.prioritaet]} ${labels[todo.prioritaet]}`;
-      controls.appendChild(badge);
+    // ── Priorität-Badge (klickbar zum Bearbeiten) ──
+    const prioWrap = document.createElement("span");
+    function renderPrioBadge() {
+      prioWrap.innerHTML = "";
+      if (todo.prioritaet && todo.prioritaet !== "none") {
+        const icons  = { hoch:"↑", mittel:"→", niedrig:"↓" };
+        const labels = { hoch:"Hoch", mittel:"Mittel", niedrig:"Niedrig" };
+        const badge = document.createElement("span");
+        badge.className = `priority-badge ${todo.prioritaet}`;
+        badge.title = "Klicken zum Ändern";
+        badge.textContent = `${icons[todo.prioritaet]} ${labels[todo.prioritaet]}`;
+        badge.addEventListener("click", openPrioEdit);
+        prioWrap.appendChild(badge);
+      } else {
+        const add = document.createElement("span");
+        add.className = "todo-add-meta"; add.textContent = "↑ Prio";
+        add.addEventListener("click", openPrioEdit);
+        prioWrap.appendChild(add);
+      }
     }
+    function openPrioEdit() {
+      prioWrap.innerHTML = "";
+      const sel = document.createElement("select");
+      sel.className = "todo-inline-prio";
+      [["none","Keine"],["hoch","↑ Hoch"],["mittel","→ Mittel"],["niedrig","↓ Niedrig"]].forEach(([v,l]) => {
+        const opt = document.createElement("option");
+        opt.value = v; opt.textContent = l;
+        if ((todo.prioritaet||"none") === v) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      prioWrap.appendChild(sel);
+      sel.focus();
+      function savePrio() {
+        const val = sel.value;
+        todo.prioritaet = val;
+        if (todoOrdnerId)
+          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
+            .doc(todo.id).update({ prioritaet: val });
+        renderPrioBadge();
+      }
+      sel.addEventListener("change", savePrio);
+      sel.addEventListener("blur", () => { if (prioWrap.contains(sel)) renderPrioBadge(); });
+    }
+    renderPrioBadge();
+    controls.appendChild(prioWrap);
 
     // Datum
     const meta = document.createElement("div");
