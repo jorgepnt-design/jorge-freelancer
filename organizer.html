@@ -1515,7 +1515,7 @@ let notifCheckInterval = null;
 
 function initNotifications(userId) {
   $("btn-notif").addEventListener("click", () => {
-    if (!("Notification" in window)) { alert("Dein Browser unterstützt keine Benachrichtigungen."); return; }
+    if (typeof Notification === "undefined") { showToast("Benachrichtigungen werden auf diesem Gerät nicht unterstützt."); return; }
     Notification.requestPermission().then(p => {
       if (p === "granted") {
         $("btn-notif").title = "Benachrichtigungen aktiv ✓";
@@ -1525,8 +1525,8 @@ function initNotifications(userId) {
     });
   });
 
-  // Auto-Permission falls bereits erteilt
-  if (Notification.permission === "granted") {
+  // Auto-Permission falls bereits erteilt (iOS Safari hat kein Notification-Objekt)
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     $("btn-notif").style.color = "#22c55e";
     $("btn-notif").title = "Benachrichtigungen aktiv ✓";
   }
@@ -1540,7 +1540,7 @@ function initNotifications(userId) {
 }
 
 function checkNotifications() {
-  if (Notification.permission !== "granted") return;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
 
   const today = new Date().toISOString().slice(0,10);
   const storageKey = `notified_${today}`;
