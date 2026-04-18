@@ -2176,7 +2176,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       inp.value = todo.faellig || "";
       dateWrap.appendChild(inp);
       inp.focus();
+      let saved = false;
       function saveDate() {
+        saved = true;
         const val = inp.value || "";
         todo.faellig = val;
         if (todoOrdnerId)
@@ -2185,7 +2187,10 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         renderDateBadge();
       }
       inp.addEventListener("change", saveDate);
-      inp.addEventListener("blur", () => { if (dateWrap.contains(inp)) renderDateBadge(); });
+      // Delay blur so Chrome's calendar picker doesn't close the input before the user picks a date
+      inp.addEventListener("blur", () => {
+        setTimeout(() => { if (!saved && dateWrap.contains(inp)) renderDateBadge(); }, 250);
+      });
     }
     renderDateBadge();
     controls.appendChild(dateWrap);
