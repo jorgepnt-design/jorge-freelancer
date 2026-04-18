@@ -304,9 +304,22 @@
     /* Color picker */
     .color-picker-wrap { position: relative; }
     .color-dot {
-      width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
-      border: 2px solid var(--border); display: inline-block; flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px 3px 7px; border-radius: 12px; cursor: pointer;
+      border: 1.5px solid transparent; flex-shrink: 0;
+      font-size: 0.72rem; font-weight: 600; white-space: nowrap;
+      transition: opacity 0.15s;
     }
+    .color-dot:hover { opacity: 0.8; }
+    .color-dot::before {
+      content: ''; width: 9px; height: 9px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0;
+    }
+    .color-dot.no-color {
+      border-color: var(--border); color: var(--text-muted);
+      background: var(--surface2);
+    }
+    .color-dot.no-color::before { background: var(--border); }
     .color-popup {
       position: absolute; bottom: 28px; right: 0; background: var(--surface);
       border: 1px solid var(--border); border-radius: 10px; padding: 8px;
@@ -1797,10 +1810,18 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     const colorWrap = document.createElement("div");
     colorWrap.className = "color-picker-wrap";
     const colorDot = document.createElement("span");
-    colorDot.className = "color-dot";
     const activeFarbe = FARBEN.find(f => f.id === (todo.farbe||"none"));
-    colorDot.style.background = activeFarbe?.hex || "var(--surface2)";
-    colorDot.title = todo.farbe ? (colorLabels[todo.farbe] || todo.farbe) : "Farbe wählen";
+    if (todo.farbe && activeFarbe?.hex) {
+      colorDot.className = "color-dot";
+      const hex = activeFarbe.hex;
+      colorDot.style.background = hex + "22"; // transparenter Hintergrund
+      colorDot.style.borderColor = hex;
+      colorDot.style.color = hex;
+      colorDot.textContent = colorLabels[todo.farbe] || todo.farbe;
+    } else {
+      colorDot.className = "color-dot no-color";
+      colorDot.textContent = "Farbe";
+    }
 
     const popup = document.createElement("div");
     popup.className = "color-popup"; popup.style.display = "none";
@@ -1854,8 +1875,8 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
             newLbl.textContent = newName;
             newLbl.title = "Klicken zum Umbenennen";
             inp.replaceWith(newLbl);
-            // Dot-Tooltip aktualisieren falls diese Farbe aktiv ist
-            if (todo.farbe === f.id) colorDot.title = newName;
+            // Dot-Badge aktualisieren falls diese Farbe aktiv ist
+            if (todo.farbe === f.id) colorDot.textContent = newName;
           }
 
           inp.addEventListener("keydown", e => {
