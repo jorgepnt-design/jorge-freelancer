@@ -1,4 +1,4 @@
-const CACHE_NAME = "jorge-organizer-v3";
+const CACHE_NAME = "jorge-organizer-v4";
 const ASSETS = [
   "/organizer.html",
   "/organizer-manifest.json"
@@ -23,8 +23,8 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   // Network-first for Firebase requests, cache-first for static assets
   const url = new URL(event.request.url);
-  if (url.hostname.includes("firebase") || url.hostname.includes("google")) {
-    return; // Let Firebase handle its own requests
+  if (url.hostname.includes("firebase") || url.hostname.includes("google") || url.hostname.includes("gstatic") || url.hostname.includes("googleapis")) {
+    return; // Externe Dienste direkt laden, nicht cachen
   }
   event.respondWith(
     fetch(event.request)
