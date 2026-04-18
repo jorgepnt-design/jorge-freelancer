@@ -726,12 +726,24 @@
 <div id="login-screen">
   <h1>Jorge Organizer</h1>
   <p>Bitte melde dich an, um fortzufahren.</p>
+
+  <!-- Fehlerbox -->
   <div id="auth-error-box" style="display:none; background:#fee2e2; border:1.5px solid #dc2626; border-radius:10px; padding:14px 16px; margin-bottom:14px; max-width:340px; text-align:left;">
-    <strong style="color:#dc2626; font-size:0.9rem;">Login-Fehler:</strong>
+    <strong style="color:#dc2626; font-size:0.9rem;">⚠️ Login-Fehler:</strong>
     <p id="auth-error-text" style="color:#7f1d1d; font-size:0.85rem; margin-top:6px; word-break:break-word;"></p>
     <p id="auth-error-code" style="color:#9ca3af; font-size:0.75rem; margin-top:4px;"></p>
-    <button onclick="clearAuthCache()" style="margin-top:10px; background:#dc2626; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:0.82rem; cursor:pointer;">🔄 Auth-Cache leeren &amp; neu laden</button>
+    <button onclick="clearAuthCache()" style="margin-top:10px; background:#dc2626; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:0.82rem; cursor:pointer;">🔄 Cache leeren &amp; neu laden</button>
   </div>
+
+  <!-- Weiterleitung-Hinweis (beim Redirect) -->
+  <div id="auth-redirect-box" style="display:none; background:#dbeafe; border:1.5px solid #2563eb; border-radius:10px; padding:14px 16px; margin-bottom:14px; max-width:340px; text-align:left;">
+    <strong style="color:#1d4ed8; font-size:0.9rem;">🔄 Weiterleitung zu Google…</strong>
+    <p style="color:#1e40af; font-size:0.82rem; margin-top:6px;">Du wirst gleich zur Google-Anmeldeseite weitergeleitet. Bitte warte kurz.</p>
+  </div>
+
+  <!-- Version (zum Debuggen) -->
+  <p style="font-size:0.7rem; color:#9ca3af; margin-bottom:10px;">v2025-04-18.6</p>
+
   <button class="btn-google" id="btn-google-signin">
     <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -1251,14 +1263,25 @@ function clearAuthCache() {
 const _isPWA = window.matchMedia("(display-mode: standalone)").matches
             || window.navigator.standalone === true;
 
+function doRedirectLogin() {
+  $("auth-redirect-box").style.display = "block";
+  $("btn-google-signin").disabled = true;
+  auth.signInWithRedirect(provider).catch(err => {
+    $("auth-redirect-box").style.display = "none";
+    $("btn-google-signin").disabled = false;
+    showAuthError(err);
+  });
+}
+
 $("btn-google-signin").addEventListener("click", () => {
   $("auth-error-box").style.display = "none";
   if (_isPWA) {
-    auth.signInWithRedirect(provider).catch(showAuthError);
+    doRedirectLogin();
   } else {
     auth.signInWithPopup(provider).catch(err => {
       if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user") {
-        auth.signInWithRedirect(provider).catch(showAuthError);
+        // Popup blockiert → Weiterleitung benutzen
+        doRedirectLogin();
       } else {
         showAuthError(err);
       }
