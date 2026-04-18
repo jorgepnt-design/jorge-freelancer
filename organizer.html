@@ -1092,6 +1092,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
+// iOS Safari WebChannel/WebSocket fix → forces HTTP long-polling
+db.settings({ experimentalForceLongPolling: true, merge: true });
 
 function $(id) { return document.getElementById(id); }
 
