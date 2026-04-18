@@ -899,6 +899,45 @@
       <div class="empty-state" id="notiz-empty">Noch keine Notizen.</div>
     </div>
   </div>
+
+  <!-- ══ TAB: EINKAUF ══ -->
+  <div id="tab-einkauf" class="tab-content">
+
+    <!-- Artikel hinzufügen (sticky) -->
+    <div class="einkauf-sticky-top">
+      <div class="einkauf-add-row">
+        <input type="text" id="einkauf-input" placeholder="Artikel hinzufügen …"
+               list="einkauf-suggestions" autocomplete="off" />
+        <button class="btn-primary" id="btn-einkauf-add">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Hinzufügen
+        </button>
+      </div>
+    </div>
+    <datalist id="einkauf-suggestions"></datalist>
+
+    <!-- Frühere Artikel (Katalog) -->
+    <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
+      <div class="katalog-title">Frühere Artikel</div>
+      <div class="katalog-chips" id="katalog-chips"></div>
+    </div>
+
+    <!-- Aktuelle Liste -->
+    <div id="einkauf-list" class="einkauf-list">
+      <div class="empty-state" id="einkauf-empty">Noch keine Artikel auf der Liste.</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="einkauf-footer">
+      <span class="einkauf-count" id="einkauf-count"></span>
+      <button class="btn-clear-checked" id="btn-clear-checked">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        Erledigte entfernen
+      </button>
+    </div>
+
+  </div>
+
 </div>
 
 <!-- Notizen-Modal -->
@@ -959,45 +998,6 @@
     <div style="display:flex;justify-content:flex-end;margin-top:14px;">
       <button class="btn-primary" id="btn-color-labels-save">Speichern</button>
     </div>
-  </div>
-</div>
-
-  <!-- ══ TAB: EINKAUF ══ -->
-  <div id="tab-einkauf" class="tab-content">
-
-    <!-- Artikel hinzufügen (sticky) -->
-    <div class="einkauf-sticky-top">
-      <div class="einkauf-add-row">
-        <input type="text" id="einkauf-input" placeholder="Artikel hinzufügen …"
-               list="einkauf-suggestions" autocomplete="off" />
-        <button class="btn-primary" id="btn-einkauf-add">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Hinzufügen
-        </button>
-      </div>
-    </div>
-    <datalist id="einkauf-suggestions"></datalist>
-
-    <!-- Frühere Artikel (Katalog) -->
-    <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
-      <div class="katalog-title">Frühere Artikel</div>
-      <div class="katalog-chips" id="katalog-chips"></div>
-    </div>
-
-    <!-- Aktuelle Liste -->
-    <div id="einkauf-list" class="einkauf-list">
-      <div class="empty-state" id="einkauf-empty">Noch keine Artikel auf der Liste.</div>
-    </div>
-
-    <!-- Footer -->
-    <div class="einkauf-footer">
-      <span class="einkauf-count" id="einkauf-count"></span>
-      <button class="btn-clear-checked" id="btn-clear-checked">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-        Erledigte entfernen
-      </button>
-    </div>
-
   </div>
 </div>
 
@@ -2442,26 +2442,35 @@ let einkaufItems             = [];   // aktuelle Liste
 let einkaufKatalog           = [];   // alle je hinzugefügten Artikel
 
 function initEinkauf(userId) {
-  const listRef    = db.collection(`users/${userId}/einkaufsliste`).orderBy("createdAt","asc");
-  const katalogRef = db.collection(`users/${userId}/einkaufsKatalog`).orderBy("count","desc");
+  // Kein orderBy → kein Firestore-Index nötig, sort client-seitig
+  // (vermeidet Mixed-Type-Fehler zwischen alten Timestamps und neuen Date.now()-Zahlen)
+  const listRef    = db.collection(`users/${userId}/einkaufsliste`);
+  const katalogRef = db.collection(`users/${userId}/einkaufsKatalog`);
 
   // Einkaufsliste live
   if (unsubscribeEinkaufFunc) unsubscribeEinkaufFunc();
   unsubscribeEinkaufFunc = listRef.onSnapshot(snap => {
     einkaufItems = [];
     snap.forEach(d => einkaufItems.push({ id: d.id, ...d.data() }));
+    // Client-seitig sortieren (unterstützt Timestamp und Zahl)
+    einkaufItems.sort((a,b) => {
+      const ta = typeof a.createdAt === "number" ? a.createdAt : (a.createdAt?.toMillis?.() ?? 0);
+      const tb = typeof b.createdAt === "number" ? b.createdAt : (b.createdAt?.toMillis?.() ?? 0);
+      return ta - tb;
+    });
     renderEinkaufList(userId);
     renderKatalogChips(userId);
-  });
+  }, err => console.error("Einkauf-Fehler:", err));
 
   // Katalog live
   if (unsubscribeKatalogFunc) unsubscribeKatalogFunc();
   unsubscribeKatalogFunc = katalogRef.onSnapshot(snap => {
     einkaufKatalog = [];
     snap.forEach(d => einkaufKatalog.push({ id: d.id, ...d.data() }));
+    einkaufKatalog.sort((a,b) => (b.count||0) - (a.count||0));
     renderKatalogChips(userId);
     updateEinkaufSuggestions();
-  });
+  }, err => console.error("Katalog-Fehler:", err));
 
   // Artikel hinzufügen
   function addArtikel() {
