@@ -580,6 +580,76 @@
       max-height: 160px; overflow-y: auto;
     }
 
+    /* ── EINKAUFSLISTE ── */
+    .einkauf-add-row {
+      display: flex; gap: 8px; margin-bottom: 10px;
+    }
+    .einkauf-add-row input { flex: 1; }
+
+    .katalog-wrap { margin-bottom: 14px; }
+    .katalog-title {
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px;
+    }
+    .katalog-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .katalog-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 11px; border: 1.5px solid var(--border);
+      border-radius: 16px; background: var(--surface);
+      font-size: 0.82rem; cursor: pointer; color: var(--text-muted);
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .katalog-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .katalog-chip.already-in-list { opacity: 0.4; cursor: default; }
+    .katalog-chip.already-in-list:hover { border-color: var(--border); color: var(--text-muted); background: var(--surface); }
+
+    .einkauf-list { display: flex; flex-direction: column; gap: 0; }
+    .einkauf-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 11px 14px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 6px; cursor: pointer;
+      transition: background 0.12s, opacity 0.15s;
+    }
+    .einkauf-item:hover { background: var(--surface2); }
+    .einkauf-item.checked { opacity: 0.55; }
+
+    .einkauf-checkbox {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .einkauf-item.checked .einkauf-checkbox {
+      background: var(--status-done); border-color: var(--status-done);
+    }
+    .einkauf-item.checked .einkauf-checkbox::after {
+      content: ''; width: 6px; height: 10px;
+      border: 2px solid #fff; border-top: none; border-left: none;
+      transform: rotate(45deg) translate(-1px, -1px); display: block;
+    }
+
+    .einkauf-name {
+      flex: 1; font-size: 0.92rem; color: var(--text);
+      transition: text-decoration 0.1s;
+    }
+    .einkauf-item.checked .einkauf-name {
+      text-decoration: line-through; color: var(--text-muted);
+    }
+
+    .einkauf-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 12px; flex-wrap: wrap; gap: 8px;
+    }
+    .einkauf-count { font-size: 0.78rem; color: var(--text-muted); }
+    .btn-clear-checked {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 13px; border: 1.5px solid var(--border);
+      border-radius: 6px; background: transparent; font-size: 0.8rem;
+      cursor: pointer; color: var(--text-muted); transition: all 0.15s;
+    }
+    .btn-clear-checked:hover { border-color: var(--danger); color: var(--danger); background: #fee2e2; }
+
     /* ── AUTOCOMPLETE ── */
     input[list]::-webkit-calendar-picker-indicator { display: none !important; }
 
@@ -635,6 +705,7 @@
     <button class="tab-btn" data-tab="dichte">Dichte</button>
     <button class="tab-btn" data-tab="todos">To-dos</button>
     <button class="tab-btn" data-tab="notizen">Notizen</button>
+    <button class="tab-btn" data-tab="einkauf">🛒 Einkauf</button>
   </div>
 
   <!-- ══ TAB: DASHBOARD ══ -->
@@ -880,6 +951,43 @@
   </div>
 </div>
 
+  <!-- ══ TAB: EINKAUF ══ -->
+  <div id="tab-einkauf" class="tab-content">
+
+    <!-- Artikel hinzufügen -->
+    <div class="einkauf-add-row">
+      <input type="text" id="einkauf-input" placeholder="Artikel hinzufügen …"
+             list="einkauf-suggestions" autocomplete="off" />
+      <button class="btn-primary" id="btn-einkauf-add">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Hinzufügen
+      </button>
+    </div>
+    <datalist id="einkauf-suggestions"></datalist>
+
+    <!-- Frühere Artikel (Katalog) -->
+    <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
+      <div class="katalog-title">Frühere Artikel</div>
+      <div class="katalog-chips" id="katalog-chips"></div>
+    </div>
+
+    <!-- Aktuelle Liste -->
+    <div id="einkauf-list" class="einkauf-list">
+      <div class="empty-state" id="einkauf-empty">Noch keine Artikel auf der Liste.</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="einkauf-footer">
+      <span class="einkauf-count" id="einkauf-count"></span>
+      <button class="btn-clear-checked" id="btn-clear-checked">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        Erledigte entfernen
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <!-- Autocomplete datalist -->
 <datalist id="todo-suggestions"></datalist>
 
@@ -1019,6 +1127,7 @@ auth.onAuthStateChanged(user => {
     initNotizen(user.uid);
     initNotifications(user.uid);
     initColorLabels(user.uid);
+    initEinkauf(user.uid);
   } else {
     $("login-screen").style.display = "flex";
     $("app").style.display = "none";
@@ -2311,6 +2420,170 @@ function makeFolderTab(id, name, isActive, onRename, onDelete, onClick) {
   return tab;
 }
 
+// ════════════════════════════════════════════════════════════
+// EINKAUFSLISTE
+// ════════════════════════════════════════════════════════════
+let unsubscribeEinkaufFunc   = null;
+let unsubscribeKatalogFunc   = null;
+let einkaufItems             = [];   // aktuelle Liste
+let einkaufKatalog           = [];   // alle je hinzugefügten Artikel
+
+function initEinkauf(userId) {
+  const listRef    = db.collection(`users/${userId}/einkaufsliste`).orderBy("createdAt","asc");
+  const katalogRef = db.collection(`users/${userId}/einkaufsKatalog`).orderBy("count","desc");
+
+  // Einkaufsliste live
+  if (unsubscribeEinkaufFunc) unsubscribeEinkaufFunc();
+  unsubscribeEinkaufFunc = listRef.onSnapshot(snap => {
+    einkaufItems = [];
+    snap.forEach(d => einkaufItems.push({ id: d.id, ...d.data() }));
+    renderEinkaufList(userId);
+    renderKatalogChips(userId);
+  });
+
+  // Katalog live
+  if (unsubscribeKatalogFunc) unsubscribeKatalogFunc();
+  unsubscribeKatalogFunc = katalogRef.onSnapshot(snap => {
+    einkaufKatalog = [];
+    snap.forEach(d => einkaufKatalog.push({ id: d.id, ...d.data() }));
+    renderKatalogChips(userId);
+    updateEinkaufSuggestions();
+  });
+
+  // Artikel hinzufügen
+  function addArtikel() {
+    const name = $("einkauf-input").value.trim();
+    if (!name) return;
+    $("einkauf-input").value = "";
+
+    // Zur aktiven Liste
+    db.collection(`users/${userId}/einkaufsliste`).add({
+      name, checked: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // In Katalog speichern / Zähler erhöhen
+    const katalogId = name.toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
+    db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId).set({
+      name, count: firebase.firestore.FieldValue.increment(1),
+      lastUsed: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+
+  $("btn-einkauf-add").addEventListener("click", addArtikel);
+  $("einkauf-input").addEventListener("keydown", e => { if (e.key === "Enter") addArtikel(); });
+
+  // Erledigte entfernen
+  $("btn-clear-checked").addEventListener("click", () => {
+    const checked = einkaufItems.filter(i => i.checked);
+    if (!checked.length) return;
+    if (!confirm(`${checked.length} erledigte Artikel entfernen?`)) return;
+    const batch = db.batch();
+    checked.forEach(i => batch.delete(db.doc(`users/${userId}/einkaufsliste/${i.id}`)));
+    batch.commit();
+  });
+}
+
+function renderEinkaufList(userId) {
+  const list  = $("einkauf-list");
+  const empty = $("einkauf-empty");
+  Array.from(list.children).forEach(c => { if (c !== empty) list.removeChild(c); });
+
+  if (einkaufItems.length === 0) {
+    empty.style.display = "block";
+    $("einkauf-count").textContent = "";
+    return;
+  }
+  empty.style.display = "none";
+
+  // Unerledigte zuerst, dann erledigte
+  const sorted = [
+    ...einkaufItems.filter(i => !i.checked),
+    ...einkaufItems.filter(i =>  i.checked)
+  ];
+
+  sorted.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "einkauf-item" + (item.checked ? " checked" : "");
+
+    const checkbox = document.createElement("div");
+    checkbox.className = "einkauf-checkbox";
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "einkauf-name";
+    nameEl.textContent = item.name;
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-delete";
+    delBtn.title = "Entfernen";
+    delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+
+    // Toggle checked
+    row.addEventListener("click", e => {
+      if (e.target.closest(".btn-delete")) return;
+      db.doc(`users/${userId}/einkaufsliste/${item.id}`)
+        .update({ checked: !item.checked });
+    });
+
+    delBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      db.doc(`users/${userId}/einkaufsliste/${item.id}`).delete();
+    });
+
+    row.appendChild(checkbox);
+    row.appendChild(nameEl);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+
+  const done  = einkaufItems.filter(i =>  i.checked).length;
+  const total = einkaufItems.length;
+  $("einkauf-count").textContent = `${done} von ${total} erledigt`;
+}
+
+function renderKatalogChips(userId) {
+  if (einkaufKatalog.length === 0) {
+    $("katalog-wrap").style.display = "none";
+    return;
+  }
+  $("katalog-wrap").style.display = "";
+  const aktiveNamen = new Set(einkaufItems.map(i => i.name.toLowerCase()));
+  const chips = $("katalog-chips");
+  chips.innerHTML = "";
+
+  einkaufKatalog.slice(0, 20).forEach(k => {
+    const chip = document.createElement("span");
+    chip.className = "katalog-chip" + (aktiveNamen.has(k.name.toLowerCase()) ? " already-in-list" : "");
+    chip.textContent = k.name;
+    chip.title = aktiveNamen.has(k.name.toLowerCase()) ? "Bereits auf der Liste" : "Zur Liste hinzufügen";
+
+    if (!aktiveNamen.has(k.name.toLowerCase())) {
+      chip.addEventListener("click", () => {
+        db.collection(`users/${userId}/einkaufsliste`).add({
+          name: k.name, checked: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        // Zähler erhöhen
+        const katalogId = k.name.toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
+        db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId)
+          .set({ count: firebase.firestore.FieldValue.increment(1),
+                 lastUsed: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      });
+    }
+    chips.appendChild(chip);
+  });
+}
+
+function updateEinkaufSuggestions() {
+  const dl = $("einkauf-suggestions");
+  dl.innerHTML = "";
+  einkaufKatalog.forEach(k => {
+    const opt = document.createElement("option");
+    opt.value = k.name;
+    dl.appendChild(opt);
+  });
+}
+
 function cleanupAll() {
   if (unsubscribeTabellenFunc)       { unsubscribeTabellenFunc(); unsubscribeTabellenFunc = null; }
   if (unsubscribeErgebnisseFunc)     { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
@@ -2318,6 +2591,9 @@ function cleanupAll() {
   if (unsubscribeNotizenOrdnerFunc)  { unsubscribeNotizenOrdnerFunc(); unsubscribeNotizenOrdnerFunc = null; }
   ordnerListeners.forEach(u=>u()); ordnerListeners.clear(); ordnerCache.clear();
   notizenListeners.forEach(u=>u()); notizenListeners.clear(); notizenOrdnerCache.clear();
+  if (unsubscribeEinkaufFunc)  { unsubscribeEinkaufFunc();  unsubscribeEinkaufFunc  = null; }
+  if (unsubscribeKatalogFunc)  { unsubscribeKatalogFunc();  unsubscribeKatalogFunc  = null; }
+  einkaufItems = []; einkaufKatalog = [];
   currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId=null;
 }
 </script>
