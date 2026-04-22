@@ -1614,6 +1614,12 @@ $("btn-google-signin").addEventListener("click", () => {
 
 $("btn-signout").addEventListener("click", () => auth.signOut());
 
+// Redirect-Ergebnis explizit auswerten (wichtig für iOS PWA-Debug)
+auth.getRedirectResult().catch(err => {
+  showAuthError(err);
+  if (_isIOSPWA) showSafariFallback();
+});
+
 auth.onAuthStateChanged(user => {
   if (user) {
     $("login-screen").style.display = "none";
