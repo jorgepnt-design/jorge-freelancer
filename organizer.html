@@ -2206,7 +2206,8 @@ function saveNotifSettings(userId) {
 function initNotifications(userId) {
   $("btn-notif").onclick = async () => {
     try {
-      if (notifSettings.enabled) {
+      const canDisableNow = notifSettings.enabled && typeof Notification !== "undefined" && Notification.permission === "granted";
+      if (canDisableNow) {
         const offOk = await disableTruePush(userId);
         notifSettings.enabled = false;
         saveNotifSettings(userId);
