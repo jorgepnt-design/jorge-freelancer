@@ -1086,7 +1086,7 @@
         <option value="mittel">→ Mittel</option>
         <option value="niedrig">↓ Niedrig</option>
       </select>
-      <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" />
+      <input type="text" id="todo-faellig-input" title="Fälligkeitsdatum" placeholder="TT.MM.JJJJ oder JJJJ-MM-TT" />
       <input type="time" id="todo-uhrzeit-input" title="Uhrzeit (optional)" />
     </div>
     <div id="todo-list" class="todo-list">
@@ -1557,6 +1557,38 @@ function initDashboard() {
   });
 }
 
+function normalizeDueDateInput(raw) {
+  const v = (raw || "").trim();
+  if (!v) return "";
+
+  // ISO: YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y, m, d] = v.split("-").map(n => parseInt(n, 10));
+    const dt = new Date(y, m - 1, d, 0, 0, 0, 0);
+    if (dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d) return v;
+    return null;
+  }
+
+  // DE: DD.MM.YYYY (auch mit / oder -)
+  const m = v.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);
+  if (m) {
+    const d = parseInt(m[1], 10);
+    const mo = parseInt(m[2], 10);
+    const y = parseInt(m[3], 10);
+    const dt = new Date(y, mo - 1, d, 0, 0, 0, 0);
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+    return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+
+  return null;
+}
+
+function formatDueDate(isoDate) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate || "";
+  const [y, m, d] = isoDate.split("-");
+  return `${d}.${m}.${y}`;
+}
+
 function renderDashboard() {
   const today = new Date().toISOString().slice(0,10);
   let all = [];
@@ -1595,7 +1627,7 @@ function renderDashboard() {
       row.className = "dash-todo-row";
       const isOverdue = t.faellig < today;
       const isToday   = t.faellig === today;
-      const dateLabel = t.faellig.split("-").reverse().join(".") + (t.faelligZeit ? ` ${t.faelligZeit}` : "");
+      const dateLabel = formatDueDate(t.faellig) + (t.faelligZeit ? ` ${t.faelligZeit}` : "");
       row.innerHTML = `
         <div class="dash-todo-row-text">${t.text}</div>
         <div class="dash-due ${isOverdue?"overdue":isToday?"today":""}">${isOverdue?"⚠️ ":""}${dateLabel}</div>`;
@@ -1834,7 +1866,7 @@ function checkNotifications() {
       const token = `${t.id}|${t.faellig}|${notifSettings.daysBefore}|${notifSettings.hour}`;
       if (notifiedMap[token]) return;
 
-      const dueLabel = t.faellig.split("-").reverse().join(".");
+      const dueLabel = formatDueDate(t.faellig);
       new Notification("Aufgabe fällig", {
         body: `${t.text} (${name}) - fällig am ${dueLabel}`,
         icon: "/organizer-manifest.json"
@@ -2086,7 +2118,12 @@ function initTodos(userId) {
     const zielId = currentOrdnerId === "alle" ? $("todo-ordner-select").value : currentOrdnerId;
     if (!zielId) { alert("Bitte einen Ordner auswählen."); return; }
     const prio   = $("todo-prio-input").value;
-    const faellig= $("todo-faellig-input").value;
+    const faelligRaw = $("todo-faellig-input").value;
+    const faellig = normalizeDueDateInput(faelligRaw);
+    if (faelligRaw && faellig === null) {
+      showToast("Ungültiges Datum. Bitte TT.MM.JJJJ oder JJJJ-MM-TT nutzen.", "error");
+      return;
+    }
     const faelligZeit = $("todo-uhrzeit-input").value;
     db.collection(`users/${userId}/todoOrdner/${zielId}/todos`).add({
       text, status:"offen",
@@ -2323,7 +2360,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     item.className = `todo-item status-${todo.status}`;
     if (todo.farbe) item.dataset.color = todo.farbe;
     if (todo.faellig) {
-      const label = todo.faellig.split("-").reverse().join(".") + (todo.faelligZeit ? ` ${todo.faelligZeit}` : "");
+      const label = formatDueDate(todo.faellig) + (todo.faelligZeit ? ` ${todo.faelligZeit}` : "");
       item.dataset.faellig = label;
     } else {
       item.dataset.faellig = "";
@@ -2398,7 +2435,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         const badge = document.createElement("span");
         badge.className = "due-badge";
         badge.title = "Klicken zum Ändern";
-        const dateLabel = todo.faellig.split("-").reverse().join(".");
+        const dateLabel = formatDueDate(todo.faellig);
         badge.textContent = "📅 " + dateLabel + (todo.faelligZeit ? ` ${todo.faelligZeit}` : "");
         if (todo.faellig < today)       badge.classList.add("overdue");
         else if (todo.faellig === today) badge.classList.add("today");
@@ -2414,8 +2451,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     function openDateEdit() {
       dateWrap.innerHTML = "";
       const inpDate = document.createElement("input");
-      inpDate.type = "date"; inpDate.className = "todo-inline-date";
-      inpDate.value = todo.faellig || "";
+      inpDate.type = "text"; inpDate.className = "todo-inline-date";
+      inpDate.placeholder = "TT.MM.JJJJ";
+      inpDate.value = todo.faellig ? formatDueDate(todo.faellig) : "";
       const inpTime = document.createElement("input");
       inpTime.type = "time"; inpTime.className = "todo-inline-prio";
       inpTime.value = todo.faelligZeit || "";
@@ -2425,7 +2463,12 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       let saved = false;
       function saveDateTime() {
         saved = true;
-        const dateVal = inpDate.value || "";
+        const dateRaw = inpDate.value || "";
+        const dateVal = normalizeDueDateInput(dateRaw);
+        if (dateRaw && dateVal === null) {
+          showToast("Ungültiges Datum. Bitte TT.MM.JJJJ oder JJJJ-MM-TT nutzen.", "error");
+          return;
+        }
         const timeVal = dateVal ? (inpTime.value || "") : "";
         todo.faellig = dateVal;
         todo.faelligZeit = timeVal;
