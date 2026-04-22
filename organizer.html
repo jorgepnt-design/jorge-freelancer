@@ -298,7 +298,7 @@
     .add-todo { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
     .add-todo input[type="text"] { flex: 1; min-width: 140px; }
     .add-todo-extra { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .add-todo-extra select, .add-todo-extra input[type="date"] { flex: 1; min-width: 120px; padding: 7px 10px; font-size: 0.85rem; }
+    .add-todo-extra select, .add-todo-extra input[type="date"], .add-todo-extra input[type="time"] { flex: 1; min-width: 120px; padding: 7px 10px; font-size: 0.85rem; }
 
     /* ── TODO LIST ── */
     .todo-list { display: flex; flex-direction: column; gap: 7px; }
@@ -1087,6 +1087,7 @@
         <option value="niedrig">↓ Niedrig</option>
       </select>
       <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" />
+      <input type="time" id="todo-uhrzeit-input" title="Uhrzeit (optional)" />
     </div>
     <div id="todo-list" class="todo-list">
       <div class="empty-state" id="todo-empty">Noch keine Aufgaben.</div>
@@ -1577,7 +1578,11 @@ function renderDashboard() {
   // Upcoming (nächste 14 Tage, nicht erledigt, mit faellig)
   const upcoming = all
     .filter(t => t.faellig && t.status !== "erledigt")
-    .sort((a,b) => a.faellig.localeCompare(b.faellig))
+    .sort((a,b) => {
+      const adt = `${a.faellig || ""}T${a.faelligZeit || "23:59"}`;
+      const bdt = `${b.faellig || ""}T${b.faelligZeit || "23:59"}`;
+      return adt.localeCompare(bdt);
+    })
     .slice(0, 8);
 
   const upEl = $("dash-upcoming");
@@ -1590,7 +1595,7 @@ function renderDashboard() {
       row.className = "dash-todo-row";
       const isOverdue = t.faellig < today;
       const isToday   = t.faellig === today;
-      const dateLabel = t.faellig.split("-").reverse().join(".");
+      const dateLabel = t.faellig.split("-").reverse().join(".") + (t.faelligZeit ? ` ${t.faelligZeit}` : "");
       row.innerHTML = `
         <div class="dash-todo-row-text">${t.text}</div>
         <div class="dash-due ${isOverdue?"overdue":isToday?"today":""}">${isOverdue?"⚠️ ":""}${dateLabel}</div>`;
@@ -2082,15 +2087,17 @@ function initTodos(userId) {
     if (!zielId) { alert("Bitte einen Ordner auswählen."); return; }
     const prio   = $("todo-prio-input").value;
     const faellig= $("todo-faellig-input").value;
+    const faelligZeit = $("todo-uhrzeit-input").value;
     db.collection(`users/${userId}/todoOrdner/${zielId}/todos`).add({
       text, status:"offen",
       prioritaet: prio !== "none" ? prio : "",
       faellig: faellig || "",
+      faelligZeit: faelligZeit || "",
       farbe: "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     saveAutocomplete(text);
-    $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value="";
+    $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
   }
   $("btn-todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key==="Enter") addTodo(); });
@@ -2315,6 +2322,12 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     const item = document.createElement("div");
     item.className = `todo-item status-${todo.status}`;
     if (todo.farbe) item.dataset.color = todo.farbe;
+    if (todo.faellig) {
+      const label = todo.faellig.split("-").reverse().join(".") + (todo.faelligZeit ? ` ${todo.faelligZeit}` : "");
+      item.dataset.faellig = label;
+    } else {
+      item.dataset.faellig = "";
+    }
 
     // Drag-Handle (nur im Ordner-View, nicht in "Alle")
     if (!zeigeBadge) {
@@ -2385,7 +2398,8 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         const badge = document.createElement("span");
         badge.className = "due-badge";
         badge.title = "Klicken zum Ändern";
-        badge.textContent = "📅 " + todo.faellig.split("-").reverse().join(".");
+        const dateLabel = todo.faellig.split("-").reverse().join(".");
+        badge.textContent = "📅 " + dateLabel + (todo.faelligZeit ? ` ${todo.faelligZeit}` : "");
         if (todo.faellig < today)       badge.classList.add("overdue");
         else if (todo.faellig === today) badge.classList.add("today");
         badge.addEventListener("click", openDateEdit);
@@ -2399,26 +2413,44 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     }
     function openDateEdit() {
       dateWrap.innerHTML = "";
-      const inp = document.createElement("input");
-      inp.type = "date"; inp.className = "todo-inline-date";
-      inp.value = todo.faellig || "";
-      dateWrap.appendChild(inp);
-      inp.focus();
+      const inpDate = document.createElement("input");
+      inpDate.type = "date"; inpDate.className = "todo-inline-date";
+      inpDate.value = todo.faellig || "";
+      const inpTime = document.createElement("input");
+      inpTime.type = "time"; inpTime.className = "todo-inline-prio";
+      inpTime.value = todo.faelligZeit || "";
+      dateWrap.appendChild(inpDate);
+      dateWrap.appendChild(inpTime);
+      inpDate.focus();
       let saved = false;
-      function saveDate() {
+      function saveDateTime() {
         saved = true;
-        const val = inp.value || "";
-        todo.faellig = val;
+        const dateVal = inpDate.value || "";
+        const timeVal = dateVal ? (inpTime.value || "") : "";
+        todo.faellig = dateVal;
+        todo.faelligZeit = timeVal;
         if (todoOrdnerId && todo.id)
           db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
-            .doc(todo.id).update({ faellig: val })
-            .catch(err => console.warn("saveDate:", err));
+            .doc(todo.id).update({ faellig: dateVal, faelligZeit: timeVal })
+            .catch(err => console.warn("saveDateTime:", err));
         renderDateBadge();
       }
-      inp.addEventListener("change", saveDate);
-      // Delay blur so Chrome's calendar picker doesn't close the input before the user picks a date
-      inp.addEventListener("blur", () => {
-        setTimeout(() => { if (!saved && dateWrap.contains(inp)) renderDateBadge(); }, 250);
+      inpDate.addEventListener("change", saveDateTime);
+      inpTime.addEventListener("change", saveDateTime);
+      // Delay blur so picker interaction doesn't immediately close inline editor
+      const onBlur = () => {
+        setTimeout(() => {
+          const active = document.activeElement;
+          if (!saved && active !== inpDate && active !== inpTime && dateWrap.contains(inpDate)) renderDateBadge();
+        }, 250);
+      };
+      inpDate.addEventListener("blur", onBlur);
+      inpTime.addEventListener("blur", onBlur);
+      inpDate.addEventListener("keydown", e => {
+        if (e.key === "Enter") { e.preventDefault(); saveDateTime(); }
+      });
+      inpTime.addEventListener("keydown", e => {
+        if (e.key === "Enter") { e.preventDefault(); saveDateTime(); }
       });
     }
     renderDateBadge();
@@ -2647,7 +2679,7 @@ function exportTodosExcel(userId) {
 
   const data = allTodos.map((t,i) => {
     const d = t.createdAt ? (t.createdAt.toDate ? t.createdAt.toDate() : new Date(t.createdAt)) : null;
-    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Priorität":t.prioritaet||"","Fälligkeit":t.faellig||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
+    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Priorität":t.prioritaet||"","Fälligkeit":t.faellig||"","Uhrzeit":t.faelligZeit||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
   });
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
