@@ -980,7 +980,7 @@
     <h1>Jorge Organizer</h1>
     <div class="header-right">
       <div class="notif-wrap">
-        <button class="btn-icon" id="btn-notif" title="Benachrichtigungen erlauben">
+        <button class="btn-icon" id="btn-notif" title="Glocke aus (klicken zum Aktivieren)">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </button>
         <span class="notif-badge hidden" id="notif-badge">0</span>
@@ -1336,20 +1336,20 @@
 <div class="modal-overlay hidden" id="share-modal">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <h3>Ordner teilen</h3>
+      <h3 id="share-modal-title">Ordner teilen</h3>
       <button class="btn-icon" id="share-modal-close">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div>
-      <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:8px;">Dein Join-Code für diesen Ordner:</p>
+      <p id="share-code-label" style="font-size:0.83rem;color:var(--text-muted);margin-bottom:8px;">Dein Join-Code für diesen Ordner:</p>
       <div class="share-code" id="share-code-box">–</div>
       <button class="btn-copy" id="btn-copy-code">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         Code kopieren
       </button>
     </div>
-    <div class="share-sep">E-Mail des Empfängers hinzufügen</div>
+    <div class="share-sep" id="share-email-sep">E-Mail des Empfängers hinzufügen</div>
     <div style="display:flex;gap:8px;">
       <input type="email" id="share-email-input" placeholder="name@example.com" class="todo-search" style="flex:1;" />
       <button class="btn-primary" id="btn-share-add">Hinzufügen</button>
@@ -1374,6 +1374,18 @@ service cloud.firestore {
       allow read, write: if request.auth != null
         && 'sharedWithEmails' in get(/databases/$(database)/documents/users/$(userId)/todoOrdner/$(folderId)).data
         && get(/databases/$(database)/documents/users/$(userId)/todoOrdner/$(folderId)).data.sharedWithEmails
+             .hasAny([request.auth.token.email]);
+    }
+    match /users/{userId}/dichteTabellen/{tableId} {
+      allow read, write: if request.auth != null
+        && 'sharedWithEmails' in resource.data
+        && resource.data.sharedWithEmails
+             .hasAny([request.auth.token.email]);
+    }
+    match /users/{userId}/dichteTabellen/{tableId}/ergebnisse/{id} {
+      allow read, write: if request.auth != null
+        && 'sharedWithEmails' in get(/databases/$(database)/documents/users/$(userId)/dichteTabellen/$(tableId)).data
+        && get(/databases/$(database)/documents/users/$(userId)/dichteTabellen/$(tableId)).data.sharedWithEmails
              .hasAny([request.auth.token.email]);
     }
   }
@@ -2159,6 +2171,8 @@ let notifCheckInterval = null;
 let unsubscribeNotifSettingsFunc = null;
 const notifSettings = { enabled: true, daysBefore: 0, hour: 9 };
 const notifAllowedHours = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22];
+const NOTIF_ICON_ON = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+const NOTIF_ICON_OFF = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="4" y1="4" x2="20" y2="20"/></svg>`;
 
 function parseDueDateLocal(dateStr) {
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
@@ -2174,17 +2188,22 @@ function formatReminderTiming(daysBefore) {
 }
 
 function updateNotifButtonState() {
+  const btn = $("btn-notif");
+  if (!btn) return;
   if (!notifSettings.enabled) {
-    $("btn-notif").style.color = "#6b7280";
-    $("btn-notif").title = "Push ist aus (klicken zum Aktivieren)";
+    btn.innerHTML = NOTIF_ICON_OFF;
+    btn.style.color = "#6b7280";
+    btn.title = "Glocke aus (klicken zum Aktivieren)";
     return;
   }
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-    $("btn-notif").style.color = "#22c55e";
-    $("btn-notif").title = "Push ist an (klicken zum Deaktivieren)";
+    btn.innerHTML = NOTIF_ICON_ON;
+    btn.style.color = "#22c55e";
+    btn.title = "Glocke an (klicken zum Deaktivieren)";
   } else {
-    $("btn-notif").style.color = "";
-    $("btn-notif").title = "Push aktivieren";
+    btn.innerHTML = NOTIF_ICON_OFF;
+    btn.style.color = "#6b7280";
+    btn.title = "Glocke aus (klicken zum Aktivieren)";
   }
 }
 
@@ -2425,6 +2444,12 @@ function renderTabellenBar(tabellen, userId) {
           const b = db.batch(); snap.forEach(d => b.delete(d.ref));
           b.delete(db.doc(`users/${userId}/dichteTabellen/${t.id}`)); return b.commit(); }); }); },
       () => selectTabelle(t.id, t.name, userId));
+    const shareBtn = document.createElement("button");
+    shareBtn.className = "tabelle-tab-btn";
+    shareBtn.title = "Teilen";
+    shareBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+    shareBtn.addEventListener("click", e => { e.stopPropagation(); openShareModal(t.id, t.name, userId, "dichte"); });
+    tab.querySelector(".tabelle-tab-actions").appendChild(shareBtn);
     bar.insertBefore(tab, newBtn);
   });
 }
@@ -2717,7 +2742,7 @@ function renderOrdnerBar(ordner, userId) {
     const shareBtn = document.createElement("button");
     shareBtn.className = "tabelle-tab-btn"; shareBtn.title = "Teilen";
     shareBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
-    shareBtn.addEventListener("click", e => { e.stopPropagation(); openShareModal(o.id, o.name, userId); });
+    shareBtn.addEventListener("click", e => { e.stopPropagation(); openShareModal(o.id, o.name, userId, "todo"); });
     tab.querySelector(".tabelle-tab-actions").appendChild(shareBtn);
 
     // Join-Code direkt kopieren (z. B. für WhatsApp)
@@ -3491,8 +3516,9 @@ function saveAutocomplete(text) {
 // ════════════════════════════════════════════════════════════
 // SHARING
 // ════════════════════════════════════════════════════════════
-let shareCurrentOrdnerId = null;
-let shareCurrentUserId   = null;
+let shareCurrentResourceId = null;
+let shareCurrentUserId     = null;
+let shareCurrentType       = "todo";
 
 function initSharing(userId) {
   $("share-modal-close").addEventListener("click", () => $("share-modal").classList.add("hidden"));
@@ -3515,8 +3541,8 @@ function initSharing(userId) {
 
   $("btn-share-add").addEventListener("click", () => {
     const email = $("share-email-input").value.trim();
-    if (!email || !shareCurrentOrdnerId) return;
-    db.collection(`users/${userId}/todoOrdner`).doc(shareCurrentOrdnerId)
+    if (!email || !shareCurrentResourceId) return;
+    db.collection(`users/${userId}/${shareCollectionByType(shareCurrentType)}`).doc(shareCurrentResourceId)
       .update({ sharedWithEmails: firebase.firestore.FieldValue.arrayUnion(email) })
       .then(() => {
         $("share-email-input").value = "";
@@ -3530,18 +3556,41 @@ function initSharing(userId) {
   loadJoinedFolders(userId);
 }
 
-function openShareModal(ordnerId, ordnerName, userId) {
-  shareCurrentOrdnerId = ordnerId;
-  shareCurrentUserId   = userId;
-  const code = `${userId}::${ordnerId}`;
+function shareCollectionByType(type) {
+  return type === "dichte" ? "dichteTabellen" : "todoOrdner";
+}
+
+function shareCodeByType(ownerId, resourceId, type) {
+  return type === "dichte"
+    ? `dichte::${ownerId}::${resourceId}`
+    : `${ownerId}::${resourceId}`;
+}
+
+function updateShareModalText(type) {
+  const isDichte = type === "dichte";
+  $("share-modal-title").textContent = isDichte ? "Dichte-Tabelle teilen" : "Ordner teilen";
+  $("share-code-label").textContent = isDichte
+    ? "Dein Share-Code für diese Dichte-Tabelle:"
+    : "Dein Join-Code für diesen Ordner:";
+  $("share-email-sep").textContent = isDichte
+    ? "E-Mail für Tabellen-Zugriff hinzufügen"
+    : "E-Mail des Empfängers hinzufügen";
+}
+
+function openShareModal(resourceId, resourceName, userId, type = "todo") {
+  shareCurrentResourceId = resourceId;
+  shareCurrentUserId     = userId;
+  shareCurrentType       = type;
+  updateShareModalText(type);
+  const code = shareCodeByType(userId, resourceId, type);
   $("share-code-box").textContent = code;
   $("share-modal").classList.remove("hidden");
   loadSharedEmails(userId);
 }
 
 function loadSharedEmails(userId) {
-  if (!shareCurrentOrdnerId) return;
-  db.collection(`users/${userId}/todoOrdner`).doc(shareCurrentOrdnerId).get().then(snap => {
+  if (!shareCurrentResourceId) return;
+  db.collection(`users/${userId}/${shareCollectionByType(shareCurrentType)}`).doc(shareCurrentResourceId).get().then(snap => {
     const emails = snap.exists ? (snap.data().sharedWithEmails || []) : [];
     $("share-email-list").textContent = emails.length
       ? "Geteilt mit: " + emails.join(", ")
@@ -3833,7 +3882,11 @@ function cleanupAll() {
   einkaufItems = []; einkaufKatalog = [];
   notifSettings.enabled = true; notifSettings.daysBefore = 0; notifSettings.hour = 9;
   if ($("notif-badge")) $("notif-badge").classList.add("hidden");
-  if ($("btn-notif")) { $("btn-notif").style.color = ""; $("btn-notif").title = "Benachrichtigungen erlauben"; }
+  if ($("btn-notif")) {
+    $("btn-notif").innerHTML = NOTIF_ICON_OFF;
+    $("btn-notif").style.color = "#6b7280";
+    $("btn-notif").title = "Glocke aus (klicken zum Aktivieren)";
+  }
   currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId=null;
 }
 </script>
