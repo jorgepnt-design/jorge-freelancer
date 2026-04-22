@@ -1345,7 +1345,7 @@ async function ensurePushMessagingInitialized() {
     const title = payload?.notification?.title || "Neue Benachrichtigung";
     const body = payload?.notification?.body || "";
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification(title, { body, icon: "/organizer-manifest.json" });
+      new Notification(title, { body, icon: "/organizer-icon.svg" });
     } else {
       showToast(`${title}${body ? ": " + body : ""}`);
     }
@@ -1999,7 +1999,7 @@ function checkNotifications() {
       const dueLabel = formatDueDate(t.faellig);
       new Notification("Aufgabe fällig", {
         body: `${t.text} (${name}) - fällig am ${dueLabel}`,
-        icon: "/organizer-manifest.json"
+        icon: "/organizer-icon.svg"
       });
       notifiedMap[token] = Date.now();
     });
@@ -3552,5 +3552,4 @@ function cleanupAll() {
 </div>
 </body>
 </html>
-
 

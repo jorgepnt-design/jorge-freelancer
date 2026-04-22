@@ -17,7 +17,7 @@ messaging.onBackgroundMessage((payload) => {
   const n = payload?.notification || {};
   const title = n.title || "Jorge Organizer";
   const body = n.body || "Neue Erinnerung";
-  const icon = n.icon || "/organizer-manifest.json";
+  const icon = n.icon || "/organizer-icon.svg";
   const clickAction = n.click_action || "/organizer.html";
   self.registration.showNotification(title, {
     body,

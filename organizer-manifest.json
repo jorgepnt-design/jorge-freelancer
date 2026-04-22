@@ -1,23 +1,16 @@
 {
   "name": "Jorge Organizer",
   "short_name": "Organizer",
-  "description": "Persönlicher Arbeitsorganizer – Todos, Notizen, Dichterechner",
   "start_url": "/organizer.html",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#2563eb",
+  "background_color": "#f5f5f5",
   "theme_color": "#2563eb",
-  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/2563eb/ffffff?text=JO",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://via.placeholder.com/512x512/2563eb/ffffff?text=JO",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/organizer-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]

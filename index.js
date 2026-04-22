@@ -185,7 +185,7 @@ async function processUser(uid, now) {
           webpush: {
             fcmOptions: { link: "/organizer.html" },
             notification: {
-              icon: "/organizer-manifest.json",
+              icon: "/organizer-icon.svg",
             },
           },
         });
