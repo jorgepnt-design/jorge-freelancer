@@ -1295,6 +1295,7 @@ service cloud.firestore {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 
 <script>
 // ── FIREBASE CONFIG ──────────────────────────────────────────
@@ -1310,8 +1311,94 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
+const FCM_PUBLIC_VAPID_KEY = "F27F0Bm53E8F3fFtX4tan_BH-UzIakEJz2J5zRNZPTM";
+const pushState = {
+  messaging: null,
+  initialized: false,
+  swRegPromise: Promise.resolve(null)
+};
 
 function $(id) { return document.getElementById(id); }
+
+function getPushTokenDocId(token) {
+  return encodeURIComponent(token);
+}
+
+async function savePushToken(userId, token) {
+  if (!userId || !token) return;
+  const docId = getPushTokenDocId(token);
+  await db.doc(`users/${userId}/pushTokens/${docId}`).set({
+    token,
+    userAgent: navigator.userAgent || "",
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+async function ensurePushMessagingInitialized() {
+  if (pushState.initialized) return pushState.messaging;
+  if (!firebase.messaging || !firebase.messaging.isSupported()) return null;
+
+  pushState.messaging = firebase.messaging();
+  pushState.initialized = true;
+
+  pushState.messaging.onMessage((payload) => {
+    const title = payload?.notification?.title || "Neue Benachrichtigung";
+    const body = payload?.notification?.body || "";
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      new Notification(title, { body, icon: "/organizer-manifest.json" });
+    } else {
+      showToast(`${title}${body ? ": " + body : ""}`);
+    }
+  });
+
+  return pushState.messaging;
+}
+
+async function enableTruePush(userId) {
+  if (!userId) return false;
+  if (typeof Notification === "undefined") {
+    showToast("Push wird auf diesem Gerät nicht unterstützt.", "error");
+    return false;
+  }
+  if (!("serviceWorker" in navigator)) {
+    showToast("Service Worker fehlt. Push nicht möglich.", "error");
+    return false;
+  }
+  if (!FCM_PUBLIC_VAPID_KEY || FCM_PUBLIC_VAPID_KEY.startsWith("PASTE_")) {
+    showToast("Push noch nicht konfiguriert: VAPID-Key fehlt.", "error");
+    return false;
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    showToast("Benachrichtigungen nicht erlaubt.", "error");
+    return false;
+  }
+
+  const messaging = await ensurePushMessagingInitialized();
+  if (!messaging) {
+    showToast("Firebase Messaging wird in diesem Browser nicht unterstützt.", "error");
+    return false;
+  }
+
+  const swReg = await pushState.swRegPromise;
+  if (!swReg) {
+    showToast("Service Worker nicht registriert. Push nicht aktiv.", "error");
+    return false;
+  }
+
+  const token = await messaging.getToken({
+    vapidKey: FCM_PUBLIC_VAPID_KEY,
+    serviceWorkerRegistration: swReg
+  });
+  if (!token) {
+    showToast("Kein Push-Token erhalten.", "error");
+    return false;
+  }
+
+  await savePushToken(userId, token);
+  return true;
+}
 
 // ── PDF EXPORT ───────────────────────────────────────────────
 function printArea(html, title) {
@@ -1532,7 +1619,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 
 // ── PWA SERVICE WORKER ───────────────────────────────────────
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("organizer-sw.js").catch(() => {});
+  pushState.swRegPromise = navigator.serviceWorker.register("organizer-sw.js").catch(() => null);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1816,20 +1903,20 @@ function saveNotifSettings(userId) {
 }
 
 function initNotifications(userId) {
-  $("btn-notif").onclick = () => {
-    if (typeof Notification === "undefined") {
-      showToast("Benachrichtigungen werden auf diesem Gerät nicht unterstützt.");
-      return;
-    }
-    Notification.requestPermission().then(p => {
+  $("btn-notif").onclick = async () => {
+    try {
+      const ok = await enableTruePush(userId);
       updateNotifButtonState();
-      if (p === "granted") {
-        showToast("Benachrichtigungen aktiviert.");
+      if (ok) {
+        $("btn-notif").title = "Push aktiv";
+        $("btn-notif").style.color = "#16a34a";
+        showToast("Push-Benachrichtigungen aktiviert.");
         checkNotifications();
-      } else if (p === "denied") {
-        showToast("Benachrichtigungen sind im Browser blockiert.", "error");
       }
-    });
+    } catch (err) {
+      console.warn("enableTruePush:", err);
+      showToast("Push-Aktivierung fehlgeschlagen.", "error");
+    }
   };
 
   $("notif-days-select").onchange = () => {
@@ -1858,6 +1945,10 @@ function initNotifications(userId) {
 
   updateNotifButtonState();
   applyNotifSettingsToUi();
+
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+    enableTruePush(userId).catch(err => console.warn("auto-enable push:", err));
+  }
 
   if (notifCheckInterval) clearInterval(notifCheckInterval);
   notifCheckInterval = setInterval(checkNotifications, 5 * 60 * 1000);
