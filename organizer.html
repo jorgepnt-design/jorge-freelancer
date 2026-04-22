@@ -3787,7 +3787,10 @@ function renderKatalogChips(userId) {
     delBtn.textContent = "×";
     delBtn.addEventListener("click", e => {
       e.stopPropagation();
-      db.collection(`users/${userId}/einkaufsKatalog`).doc(k.id).delete();
+      safeConfirm(`Artikel "${k.name}" wirklich aus "Frühere Artikel" löschen?`).then(ok => {
+        if (!ok) return;
+        db.collection(`users/${userId}/einkaufsKatalog`).doc(k.id).delete();
+      });
     });
     chip.appendChild(delBtn);
 
