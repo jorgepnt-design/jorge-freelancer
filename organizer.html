@@ -852,9 +852,10 @@
     <strong style="color:#1d4ed8; font-size:0.9rem;">🔄 Weiterleitung zu Google…</strong>
     <p style="color:#1e40af; font-size:0.82rem; margin-top:6px;">Du wirst gleich zur Google-Anmeldeseite weitergeleitet. Bitte warte kurz.</p>
     <p id="auth-redirect-help" style="display:none; color:#1e40af; font-size:0.82rem; margin-top:10px;">
-      Falls nichts passiert, öffne diese Adresse bitte in Chrome oder Edge:
-      <strong>http://localhost:5173/organizer.html</strong>
+      Falls nichts passiert, öffne diese Adresse bitte im normalen Safari-Browser:
+      <strong id="auth-open-url">http://localhost:5173/organizer.html</strong>
     </p>
+    <button id="auth-open-safari" class="btn-secondary" style="display:none; margin-top:10px;">In Safari öffnen</button>
   </div>
 
   <button class="btn-google" id="btn-google-signin">
@@ -1545,13 +1546,41 @@ function clearAuthCache() {
 // PWA-Erkennung (Homescreen-App / Chrome-Desktop-App → Popups blockiert)
 const _isPWA = window.matchMedia("(display-mode: standalone)").matches
             || window.navigator.standalone === true;
+const _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const _isIOSPWA = _isIOS && _isPWA;
+const _loginUrl = `${window.location.origin}${window.location.pathname}`;
+
+function showSafariFallback() {
+  $("auth-redirect-help").style.display = "block";
+  if ($("auth-open-url")) $("auth-open-url").textContent = _loginUrl;
+  if ($("auth-open-safari")) $("auth-open-safari").style.display = "";
+}
+
+function openInSafariFallback() {
+  const u = _loginUrl;
+  // iOS standalone may refuse popup/redirect auth; opening browser tab is most reliable.
+  const w = window.open(u, "_blank");
+  if (!w) {
+    navigator.clipboard?.writeText(u).then(
+      () => safePrompt("Safari konnte nicht automatisch geöffnet werden. Bitte diese URL in Safari öffnen:", u),
+      () => safePrompt("Bitte diese URL in Safari öffnen:", u)
+    );
+  } else {
+    navigator.clipboard?.writeText(u).catch(() => {});
+    safePrompt("Falls der neue Tab nicht in Safari erscheint, öffne diese URL in Safari:", u);
+  }
+}
+if ($("auth-open-safari")) {
+  $("auth-open-safari").addEventListener("click", openInSafariFallback);
+}
 
 function doRedirectLogin() {
   $("auth-redirect-box").style.display = "block";
   $("auth-redirect-help").style.display = "none";
+  if ($("auth-open-safari")) $("auth-open-safari").style.display = "none";
   $("btn-google-signin").disabled = true;
   const redirectHelpTimer = setTimeout(() => {
-    $("auth-redirect-help").style.display = "block";
+    showSafariFallback();
     $("btn-google-signin").disabled = false;
   }, 4000);
   auth.signInWithRedirect(provider).catch(err => {
@@ -1559,11 +1588,15 @@ function doRedirectLogin() {
     $("auth-redirect-box").style.display = "none";
     $("btn-google-signin").disabled = false;
     showAuthError(err);
+    if (_isIOSPWA) showSafariFallback();
   });
 }
 
 $("btn-google-signin").addEventListener("click", () => {
   $("auth-error-box").style.display = "none";
+  if (_isIOSPWA) {
+    showSafariFallback();
+  }
   if (_isPWA) {
     doRedirectLogin();
   } else {
@@ -1573,6 +1606,7 @@ $("btn-google-signin").addEventListener("click", () => {
         doRedirectLogin();
       } else {
         showAuthError(err);
+        if (_isIOSPWA) showSafariFallback();
       }
     });
   }
