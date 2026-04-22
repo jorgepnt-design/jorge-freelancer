@@ -1087,7 +1087,7 @@
         <option value="niedrig">↓ Niedrig</option>
       </select>
       <input type="text" id="todo-faellig-input" title="Fälligkeitsdatum" placeholder="TT.MM.JJJJ oder JJJJ-MM-TT" />
-      <input type="time" id="todo-uhrzeit-input" title="Uhrzeit (optional)" />
+      <input type="text" id="todo-uhrzeit-input" title="Uhrzeit (optional)" placeholder="HH:MM" />
     </div>
     <div id="todo-list" class="todo-list">
       <div class="empty-state" id="todo-empty">Noch keine Aufgaben.</div>
@@ -1583,10 +1583,49 @@ function normalizeDueDateInput(raw) {
   return null;
 }
 
+function normalizeDueTimeInput(raw) {
+  const v = (raw || "").trim();
+  if (!v) return "";
+
+  // HH:MM oder H:MM
+  let m = v.match(/^(\d{1,2})[:.](\d{1,2})$/);
+  if (m) {
+    const h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+  }
+
+  // HHMM
+  m = v.match(/^(\d{3,4})$/);
+  if (m) {
+    const num = m[1];
+    const h = parseInt(num.slice(0, num.length - 2), 10);
+    const min = parseInt(num.slice(-2), 10);
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+  }
+
+  // Nur Stunde ("8" -> 08:00)
+  m = v.match(/^(\d{1,2})$/);
+  if (m) {
+    const h = parseInt(m[1], 10);
+    if (h < 0 || h > 23) return null;
+    return `${String(h).padStart(2, "0")}:00`;
+  }
+
+  return null;
+}
+
 function formatDueDate(isoDate) {
   if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate || "";
   const [y, m, d] = isoDate.split("-");
   return `${d}.${m}.${y}`;
+}
+
+function formatDueTime(timeStr) {
+  const t = normalizeDueTimeInput(timeStr || "");
+  return t === null ? (timeStr || "") : t;
 }
 
 function renderDashboard() {
@@ -1611,8 +1650,8 @@ function renderDashboard() {
   const upcoming = all
     .filter(t => t.faellig && t.status !== "erledigt")
     .sort((a,b) => {
-      const adt = `${a.faellig || ""}T${a.faelligZeit || "23:59"}`;
-      const bdt = `${b.faellig || ""}T${b.faelligZeit || "23:59"}`;
+      const adt = `${a.faellig || ""}T${normalizeDueTimeInput(a.faelligZeit || "") || "23:59"}`;
+      const bdt = `${b.faellig || ""}T${normalizeDueTimeInput(b.faelligZeit || "") || "23:59"}`;
       return adt.localeCompare(bdt);
     })
     .slice(0, 8);
@@ -1627,7 +1666,7 @@ function renderDashboard() {
       row.className = "dash-todo-row";
       const isOverdue = t.faellig < today;
       const isToday   = t.faellig === today;
-      const dateLabel = formatDueDate(t.faellig) + (t.faelligZeit ? ` ${t.faelligZeit}` : "");
+      const dateLabel = formatDueDate(t.faellig) + (t.faelligZeit ? ` ${formatDueTime(t.faelligZeit)}` : "");
       row.innerHTML = `
         <div class="dash-todo-row-text">${t.text}</div>
         <div class="dash-due ${isOverdue?"overdue":isToday?"today":""}">${isOverdue?"⚠️ ":""}${dateLabel}</div>`;
@@ -2124,7 +2163,12 @@ function initTodos(userId) {
       showToast("Ungültiges Datum. Bitte TT.MM.JJJJ oder JJJJ-MM-TT nutzen.", "error");
       return;
     }
-    const faelligZeit = $("todo-uhrzeit-input").value;
+    const faelligZeitRaw = $("todo-uhrzeit-input").value;
+    const faelligZeit = normalizeDueTimeInput(faelligZeitRaw);
+    if (faelligZeitRaw && faelligZeit === null) {
+      showToast("Ungültige Uhrzeit. Bitte HH:MM nutzen (z. B. 08:30).", "error");
+      return;
+    }
     db.collection(`users/${userId}/todoOrdner/${zielId}/todos`).add({
       text, status:"offen",
       prioritaet: prio !== "none" ? prio : "",
@@ -2360,7 +2404,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     item.className = `todo-item status-${todo.status}`;
     if (todo.farbe) item.dataset.color = todo.farbe;
     if (todo.faellig) {
-      const label = formatDueDate(todo.faellig) + (todo.faelligZeit ? ` ${todo.faelligZeit}` : "");
+      const label = formatDueDate(todo.faellig) + (todo.faelligZeit ? ` ${formatDueTime(todo.faelligZeit)}` : "");
       item.dataset.faellig = label;
     } else {
       item.dataset.faellig = "";
@@ -2436,7 +2480,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         badge.className = "due-badge";
         badge.title = "Klicken zum Ändern";
         const dateLabel = formatDueDate(todo.faellig);
-        badge.textContent = "📅 " + dateLabel + (todo.faelligZeit ? ` ${todo.faelligZeit}` : "");
+        badge.textContent = "📅 " + dateLabel + (todo.faelligZeit ? ` ${formatDueTime(todo.faelligZeit)}` : "");
         if (todo.faellig < today)       badge.classList.add("overdue");
         else if (todo.faellig === today) badge.classList.add("today");
         badge.addEventListener("click", openDateEdit);
@@ -2455,8 +2499,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       inpDate.placeholder = "TT.MM.JJJJ";
       inpDate.value = todo.faellig ? formatDueDate(todo.faellig) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = "time"; inpTime.className = "todo-inline-prio";
-      inpTime.value = todo.faelligZeit || "";
+      inpTime.type = "text"; inpTime.className = "todo-inline-prio";
+      inpTime.placeholder = "HH:MM";
+      inpTime.value = todo.faelligZeit ? formatDueTime(todo.faelligZeit) : "";
       dateWrap.appendChild(inpDate);
       dateWrap.appendChild(inpTime);
       inpDate.focus();
@@ -2469,7 +2514,13 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
           showToast("Ungültiges Datum. Bitte TT.MM.JJJJ oder JJJJ-MM-TT nutzen.", "error");
           return;
         }
-        const timeVal = dateVal ? (inpTime.value || "") : "";
+        const timeRaw = inpTime.value || "";
+        const normalizedTime = normalizeDueTimeInput(timeRaw);
+        if (timeRaw && normalizedTime === null) {
+          showToast("Ungültige Uhrzeit. Bitte HH:MM nutzen (z. B. 08:30).", "error");
+          return;
+        }
+        const timeVal = dateVal ? (normalizedTime || "") : "";
         todo.faellig = dateVal;
         todo.faelligZeit = timeVal;
         if (todoOrdnerId && todo.id)
