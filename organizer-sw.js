@@ -1,38 +1,44 @@
-const CACHE_NAME = "jorge-organizer-v10";
-const ASSETS = [
-  "/organizer.html",
-  "/organizer-manifest.json"
-];
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js");
 
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
-  self.skipWaiting();
+firebase.initializeApp({
+  apiKey: "AIzaSyBBMU-KPmSzu0F9iFGV_AF049Aivtnx0S4",
+  authDomain: "arbeitsapp-3364c.firebaseapp.com",
+  projectId: "arbeitsapp-3364c",
+  storageBucket: "arbeitsapp-3364c.firebasestorage.app",
+  messagingSenderId: "202291981896",
+  appId: "1:202291981896:web:0294b473eaff98a454b27d",
+  measurementId: "G-7ZJCVC7TRZ"
 });
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  const n = payload?.notification || {};
+  const title = n.title || "Jorge Organizer";
+  const body = n.body || "Neue Erinnerung";
+  const icon = n.icon || "/organizer-manifest.json";
+  const clickAction = n.click_action || "/organizer.html";
+  self.registration.showNotification(title, {
+    body,
+    icon,
+    data: { clickAction }
+  });
 });
 
-self.addEventListener("fetch", event => {
-  // Network-first for Firebase requests, cache-first for static assets
-  const url = new URL(event.request.url);
-  if (url.hostname.includes("firebase") || url.hostname.includes("google") || url.hostname.includes("gstatic") || url.hostname.includes("googleapis")) {
-    return; // Externe Dienste direkt laden, nicht cachen
-  }
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification?.data?.clickAction || "/organizer.html";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+      return null;
+    })
   );
 });
