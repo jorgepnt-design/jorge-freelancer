@@ -1444,6 +1444,12 @@ async function savePushToken(userId, token) {
   }, { merge: true });
 }
 
+async function removePushToken(userId, token) {
+  if (!userId || !token) return;
+  const docId = getPushTokenDocId(token);
+  await db.doc(`users/${userId}/pushTokens/${docId}`).delete().catch(() => {});
+}
+
 async function ensurePushMessagingInitialized() {
   if (pushState.initialized) return pushState.messaging;
   if (!firebase.messaging || !firebase.messaging.isSupported()) return null;
@@ -1508,6 +1514,26 @@ async function enableTruePush(userId) {
 
   await savePushToken(userId, token);
   return true;
+}
+
+async function disableTruePush(userId) {
+  const messaging = await ensurePushMessagingInitialized();
+  if (!messaging) return true;
+  try {
+    const swReg = await pushState.swRegPromise;
+    const token = await messaging.getToken({
+      vapidKey: FCM_PUBLIC_VAPID_KEY,
+      serviceWorkerRegistration: swReg || undefined
+    });
+    if (token) {
+      await removePushToken(userId, token);
+      await messaging.deleteToken(token).catch(() => {});
+    }
+    return true;
+  } catch (err) {
+    console.warn("disableTruePush:", err);
+    return false;
+  }
 }
 
 // ── PDF EXPORT ───────────────────────────────────────────────
@@ -2131,7 +2157,7 @@ function renderCalendar() {
 // ════════════════════════════════════════════════════════════
 let notifCheckInterval = null;
 let unsubscribeNotifSettingsFunc = null;
-const notifSettings = { daysBefore: 0, hour: 9 };
+const notifSettings = { enabled: true, daysBefore: 0, hour: 9 };
 const notifAllowedHours = [6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22];
 
 function parseDueDateLocal(dateStr) {
@@ -2148,12 +2174,17 @@ function formatReminderTiming(daysBefore) {
 }
 
 function updateNotifButtonState() {
+  if (!notifSettings.enabled) {
+    $("btn-notif").style.color = "#6b7280";
+    $("btn-notif").title = "Push ist aus (klicken zum Aktivieren)";
+    return;
+  }
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     $("btn-notif").style.color = "#22c55e";
-    $("btn-notif").title = "Benachrichtigungen aktiv";
+    $("btn-notif").title = "Push ist an (klicken zum Deaktivieren)";
   } else {
     $("btn-notif").style.color = "";
-    $("btn-notif").title = "Benachrichtigungen erlauben";
+    $("btn-notif").title = "Push aktivieren";
   }
 }
 
@@ -2165,6 +2196,7 @@ function applyNotifSettingsToUi() {
 function saveNotifSettings(userId) {
   if (!userId) return;
   db.doc(`users/${userId}/settings/notifications`).set({
+    enabled: !!notifSettings.enabled,
     daysBefore: notifSettings.daysBefore,
     hour: notifSettings.hour,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2174,13 +2206,21 @@ function saveNotifSettings(userId) {
 function initNotifications(userId) {
   $("btn-notif").onclick = async () => {
     try {
-      const ok = await enableTruePush(userId);
-      updateNotifButtonState();
-      if (ok) {
-        $("btn-notif").title = "Push aktiv";
-        $("btn-notif").style.color = "#16a34a";
-        showToast("Push-Benachrichtigungen aktiviert.");
-        checkNotifications();
+      if (notifSettings.enabled) {
+        const offOk = await disableTruePush(userId);
+        notifSettings.enabled = false;
+        saveNotifSettings(userId);
+        updateNotifButtonState();
+        showToast(offOk ? "Push-Benachrichtigungen deaktiviert." : "Push teilweise deaktiviert.");
+      } else {
+        const ok = await enableTruePush(userId);
+        if (ok) {
+          notifSettings.enabled = true;
+          saveNotifSettings(userId);
+          updateNotifButtonState();
+          showToast("Push-Benachrichtigungen aktiviert.");
+          checkNotifications();
+        }
       }
     } catch (err) {
       console.warn("enableTruePush:", err);
@@ -2204,6 +2244,8 @@ function initNotifications(userId) {
   if (unsubscribeNotifSettingsFunc) unsubscribeNotifSettingsFunc();
   unsubscribeNotifSettingsFunc = db.doc(`users/${userId}/settings/notifications`).onSnapshot(snap => {
     const data = snap.exists ? (snap.data() || {}) : {};
+    if (typeof data.enabled === "boolean") notifSettings.enabled = data.enabled;
+    else notifSettings.enabled = true;
     if (typeof data.daysBefore === "number") notifSettings.daysBefore = data.daysBefore;
     if (typeof data.hour === "number") notifSettings.hour = data.hour;
     if (![ -1, 0, 1, 2, 3, 7 ].includes(notifSettings.daysBefore)) notifSettings.daysBefore = 0;
@@ -2215,7 +2257,7 @@ function initNotifications(userId) {
   updateNotifButtonState();
   applyNotifSettingsToUi();
 
-  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+  if (notifSettings.enabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
     enableTruePush(userId).catch(err => console.warn("auto-enable push:", err));
   }
 
@@ -2237,6 +2279,7 @@ function checkNotifications() {
     badge.classList.add("hidden");
   }
 
+  if (!notifSettings.enabled) return;
   if (notifSettings.daysBefore < 0) return;
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
 
@@ -3784,7 +3827,7 @@ function cleanupAll() {
   if (unsubscribeEinkaufFunc)  { unsubscribeEinkaufFunc();  unsubscribeEinkaufFunc  = null; }
   if (unsubscribeKatalogFunc)  { unsubscribeKatalogFunc();  unsubscribeKatalogFunc  = null; }
   einkaufItems = []; einkaufKatalog = [];
-  notifSettings.daysBefore = 0; notifSettings.hour = 9;
+  notifSettings.enabled = true; notifSettings.daysBefore = 0; notifSettings.hour = 9;
   if ($("notif-badge")) $("notif-badge").classList.add("hidden");
   if ($("btn-notif")) { $("btn-notif").style.color = ""; $("btn-notif").title = "Benachrichtigungen erlauben"; }
   currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId=null;

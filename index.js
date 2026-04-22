@@ -9,7 +9,7 @@ const db = admin.firestore();
 const TZ = "Europe/Berlin";
 const WINDOW_MINUTES = 10;
 const ALLOWED_DAYS_BEFORE = new Set([-1, 0, 1, 2, 3, 7]);
-const DEFAULT_SETTINGS = { daysBefore: 0, hour: 9 };
+const DEFAULT_SETTINGS = { enabled: true, daysBefore: 0, hour: 9 };
 
 function parseIsoDate(dateStr) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || "")) return null;
@@ -83,6 +83,7 @@ async function getUserNotificationSettings(uid) {
   if (!snap.exists) return { ...DEFAULT_SETTINGS };
   const data = snap.data() || {};
   return {
+    enabled: typeof data.enabled === "boolean" ? data.enabled : DEFAULT_SETTINGS.enabled,
     daysBefore: normalizeDaysBefore(data.daysBefore),
     hour: normalizeHour(data.hour),
   };
@@ -121,6 +122,7 @@ async function removeInvalidTokens(uid, invalidTokenDocIds) {
 
 async function processUser(uid, now) {
   const settings = await getUserNotificationSettings(uid);
+  if (!settings.enabled) return { sent: 0, skipped: "disabled" };
   if (settings.daysBefore < 0) return { sent: 0, skipped: "disabled" };
 
   const tokenDocs = await getUserPushTokens(uid);
