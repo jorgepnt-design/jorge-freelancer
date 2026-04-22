@@ -13,7 +13,7 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* â”€â”€ THEME VARS â”€â”€ */
+    /* ── THEME VARS ── */
     :root {
       --bg: #f5f5f5;
       --surface: #ffffff;
@@ -52,7 +52,7 @@
       transition: background 0.2s, color 0.2s;
     }
 
-    /* â”€â”€ LOGIN â”€â”€ */
+    /* ── LOGIN ── */
     #login-screen {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; min-height: 100vh; gap: 24px; padding: 24px;
@@ -67,7 +67,7 @@
     }
     .btn-google:hover { background: var(--surface2); box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
 
-    /* â”€â”€ APP â”€â”€ */
+    /* ── APP ── */
     #app { display: none; flex-direction: column; min-height: 100vh; }
     header {
       background: var(--surface); border-bottom: 1px solid var(--border);
@@ -96,7 +96,7 @@
     }
     .btn-signout:hover { background: var(--surface2); color: var(--danger); border-color: var(--danger); }
 
-    /* â”€â”€ MAIN TABS â”€â”€ */
+    /* ── MAIN TABS ── */
     .tabs {
       display: flex; background: var(--surface); border-bottom: 1px solid var(--border);
       position: sticky; top: 56px; z-index: 9;
@@ -110,7 +110,7 @@
     .tab-content { display: none; padding: 16px; max-width: 1100px; margin: 0 auto; width: 100%; }
     .tab-content.active { display: block; }
 
-    /* â”€â”€ CARDS & FIELDS â”€â”€ */
+    /* ── CARDS & FIELDS ── */
     .card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
@@ -151,7 +151,7 @@
     .btn-primary:hover { background: var(--primary-hover); }
     .save-hint { font-size: 0.73rem; color: var(--text-muted); margin-top: 6px; text-align: right; min-height: 15px; }
 
-    /* â”€â”€ DICHTE â”€â”€ */
+    /* ── DICHTE ── */
     .dichte-layout { display: grid; grid-template-columns: 340px 1fr; gap: 14px; align-items: start; }
     .result-box {
       background: var(--primary-light); border: 1.5px solid var(--primary-border);
@@ -162,7 +162,7 @@
     .result-unit  { font-size: 0.88rem; color: var(--primary); }
     .result-box.hidden { display: none; }
 
-    /* â”€â”€ TABELLEN-BAR (shared for Dichte + Todos + Notizen) â”€â”€ */
+    /* ── TABELLEN-BAR (shared for Dichte + Todos + Notizen) ── */
     .tabellen-bar {
       display: flex; align-items: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
     }
@@ -191,7 +191,7 @@
     }
     .btn-new-tabelle:hover { border-color: var(--primary); color: var(--primary); }
 
-    /* â”€â”€ ERGEBNIS-TABELLE â”€â”€ */
+    /* ── ERGEBNIS-TABELLE ── */
     .ergebnis-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
     .ergebnis-card-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -228,7 +228,7 @@
     .avg-value { font-size: 1.05rem; font-weight: 700; color: var(--primary); }
     .table-empty { padding: 28px 14px; text-align: center; color: var(--text-muted); font-size: 0.83rem; }
 
-    /* â”€â”€ TODO FILTER BAR â”€â”€ */
+    /* ── TODO FILTER BAR ── */
     .todo-toolbar {
       display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;
     }
@@ -279,7 +279,7 @@
       border-color: var(--primary);
     }
 
-    /* â”€â”€ TODO STATS â”€â”€ */
+    /* ── TODO STATS ── */
     .todo-stats {
       display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
     }
@@ -294,13 +294,13 @@
     [data-theme="dark"] .stat-pill.progress { background: #1e3a5f; }
     [data-theme="dark"] .stat-pill.erledigt { background: #14532d; border-color: #166534; }
 
-    /* â”€â”€ ADD TODO FORM â”€â”€ */
+    /* ── ADD TODO FORM ── */
     .add-todo { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
     .add-todo input[type="text"] { flex: 1; min-width: 140px; }
     .add-todo-extra { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
     .add-todo-extra select, .add-todo-extra input[type="date"] { flex: 1; min-width: 120px; padding: 7px 10px; font-size: 0.85rem; }
 
-    /* â”€â”€ TODO LIST â”€â”€ */
+    /* ── TODO LIST ── */
     .todo-list { display: flex; flex-direction: column; gap: 7px; }
     .todo-item {
       background: var(--surface); border: 1.5px solid var(--border);
@@ -429,7 +429,7 @@
 
     .empty-state { text-align: center; padding: 36px 20px; color: var(--text-muted); font-size: 0.88rem; }
 
-    /* â”€â”€ NOTIZEN â”€â”€ */
+    /* ── NOTIZEN ── */
     .notiz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
     .notiz-card {
       background: var(--surface); border: 1.5px solid var(--border);
@@ -475,7 +475,7 @@
     }
     .notiz-add-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-    /* â”€â”€ MODAL â”€â”€ */
+    /* ── MODAL ── */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
       display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -493,10 +493,10 @@
     .modal-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
     .modal-save-hint { font-size: 0.73rem; color: var(--text-muted); }
 
-    /* â”€â”€ UTILS â”€â”€ */
+    /* ── UTILS ── */
     .hidden { display: none !important; }
 
-    /* â”€â”€ MOBILE TODO LAYOUT â”€â”€ */
+    /* ── MOBILE TODO LAYOUT ── */
     .todo-controls-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 
     @media (max-width: 700px) {
@@ -515,7 +515,7 @@
       .tab-content { padding: 12px; }
     }
 
-    /* â”€â”€ NOTIFICATION BELL â”€â”€ */
+    /* ── NOTIFICATION BELL ── */
     .notif-wrap { position: relative; }
     .notif-badge {
       position: absolute; top: -4px; right: -4px;
@@ -524,7 +524,7 @@
       display: flex; align-items: center; justify-content: center; pointer-events: none;
     }
 
-    /* â”€â”€ DASHBOARD â”€â”€ */
+    /* ── DASHBOARD ── */
     .dash-overview {
       display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
       gap: 12px; align-items: start; margin-bottom: 12px;
@@ -577,7 +577,7 @@
     .dash-note-meta  { font-size: 0.71rem; color: var(--text-muted); margin-top: 1px; }
     .dash-empty { font-size: 0.82rem; color: var(--text-muted); padding: 6px 0; }
 
-    /* â”€â”€ CALENDAR â”€â”€ */
+    /* ── CALENDAR ── */
     .cal-wrap {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 12px;
@@ -612,7 +612,7 @@
     .cal-dot.done    { background: #22c55e; }
     .cal-dot.overdue { background: #dc2626; }
 
-    /* â”€â”€ DRAG & DROP â”€â”€ */
+    /* ── DRAG & DROP ── */
     .drag-handle {
       cursor: grab; color: var(--border); flex-shrink: 0;
       line-height: 0; padding: 2px 3px; border-radius: 3px;
@@ -622,7 +622,7 @@
     .todo-item.is-dragging { opacity: 0.35; }
     .todo-item.drag-target { outline: 2px dashed var(--primary); outline-offset: 1px; }
 
-    /* â”€â”€ PIN NOTIZEN â”€â”€ */
+    /* ── PIN NOTIZEN ── */
     .notiz-card-top {
       display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 6px;
     }
@@ -642,7 +642,7 @@
     .btn-pin:hover  { color: #f59e0b; }
     .btn-pin.active { color: #f59e0b; }
 
-    /* â”€â”€ SHARE MODAL â”€â”€ */
+    /* ── SHARE MODAL ── */
     .share-code {
       background: var(--surface2); border: 1.5px solid var(--primary-border);
       border-radius: 6px; padding: 10px 14px; font-family: monospace;
@@ -668,7 +668,7 @@
       max-height: 160px; overflow-y: auto;
     }
 
-    /* â”€â”€ EINKAUFSLISTE â”€â”€ */
+    /* ── EINKAUFSLISTE ── */
     .einkauf-sticky-top {
       position: sticky;
       top: 101px; /* 56px header + ~45px tabs */
@@ -708,7 +708,7 @@
     .katalog-chip:hover .katalog-chip-del { color: var(--danger); }
     .katalog-chip-del:hover { background: #fee2e2 !important; color: var(--danger) !important; }
 
-    /* â”€â”€ PDF / PRINT â”€â”€ */
+    /* ── PDF / PRINT ── */
     .btn-pdf {
       display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;
       background: #dc2626; color: #fff; border: none; border-radius: 7px;
@@ -780,7 +780,7 @@
     }
     .btn-clear-checked:hover { border-color: var(--danger); color: var(--danger); background: #fee2e2; }
 
-    /* â”€â”€ AUTOCOMPLETE â”€â”€ */
+    /* ── AUTOCOMPLETE ── */
     input[list]::-webkit-calendar-picker-indicator { display: none !important; }
 
     @media (max-width: 900px) {
@@ -794,7 +794,7 @@
       .cal-wrap       { max-width: none; }
     }
 
-    /* â”€â”€ TOAST â”€â”€ */
+    /* ── TOAST ── */
     #toast-container {
       position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
       z-index: 9999; display: flex; flex-direction: column; gap: 8px;
@@ -809,7 +809,7 @@
     .toast.toast-error  { background: #dc2626; }
     .toast.toast-success{ background: #16a34a; }
 
-    /* â”€â”€ CUSTOM DIALOGS (iOS PWA compat) â”€â”€ */
+    /* ── CUSTOM DIALOGS (iOS PWA compat) ── */
     #safe-confirm-overlay, #safe-prompt-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9998;
       display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -837,18 +837,18 @@
 
   <!-- Fehlerbox -->
   <div id="auth-error-box" style="display:none; background:#fee2e2; border:1.5px solid #dc2626; border-radius:10px; padding:14px 16px; margin-bottom:14px; max-width:340px; text-align:left;">
-    <strong style="color:#dc2626; font-size:0.9rem;">âš ï¸ Login-Fehler:</strong>
+    <strong style="color:#dc2626; font-size:0.9rem;">⚠️ Login-Fehler:</strong>
     <p id="auth-error-text" style="color:#7f1d1d; font-size:0.85rem; margin-top:6px; word-break:break-word;"></p>
     <p id="auth-error-code" style="color:#9ca3af; font-size:0.75rem; margin-top:4px;"></p>
-    <button onclick="clearAuthCache()" style="margin-top:10px; background:#dc2626; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:0.82rem; cursor:pointer;">ðŸ”„ Cache leeren &amp; neu laden</button>
+    <button onclick="clearAuthCache()" style="margin-top:10px; background:#dc2626; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:0.82rem; cursor:pointer;">🔄 Cache leeren &amp; neu laden</button>
   </div>
 
   <!-- Weiterleitung-Hinweis (beim Redirect) -->
   <div id="auth-redirect-box" style="display:none; background:#dbeafe; border:1.5px solid #2563eb; border-radius:10px; padding:14px 16px; margin-bottom:14px; max-width:340px; text-align:left;">
-    <strong style="color:#1d4ed8; font-size:0.9rem;">ðŸ”„ Weiterleitung zu Googleâ€¦</strong>
+    <strong style="color:#1d4ed8; font-size:0.9rem;">🔄 Weiterleitung zu Google…</strong>
     <p style="color:#1e40af; font-size:0.82rem; margin-top:6px;">Du wirst gleich zur Google-Anmeldeseite weitergeleitet. Bitte warte kurz.</p>
     <p id="auth-redirect-help" style="display:none; color:#1e40af; font-size:0.82rem; margin-top:10px;">
-      Falls nichts passiert, Ã¶ffne diese Adresse bitte in Chrome oder Edge:
+      Falls nichts passiert, öffne diese Adresse bitte in Chrome oder Edge:
       <strong>http://localhost:5173/organizer.html</strong>
     </p>
   </div>
@@ -890,28 +890,28 @@
     <button class="tab-btn" data-tab="dichte">Dichte</button>
     <button class="tab-btn" data-tab="todos">To-dos</button>
     <button class="tab-btn" data-tab="notizen">Notizen</button>
-    <button class="tab-btn" data-tab="einkauf">ðŸ›’ Einkauf</button>
+    <button class="tab-btn" data-tab="einkauf">🛒 Einkauf</button>
   </div>
 
-  <!-- â•â• TAB: DASHBOARD â•â• -->
+  <!-- ══ TAB: DASHBOARD ══ -->
   <div id="tab-dashboard" class="tab-content active">
     <div class="dash-overview">
       <div class="dash-stat-grid">
         <div class="dash-stat-card s-offen">
           <div class="dash-stat-label">Offen</div>
-          <div class="dash-stat-value" id="d-stat-offen">â€“</div>
+          <div class="dash-stat-value" id="d-stat-offen">–</div>
         </div>
         <div class="dash-stat-card s-progress">
           <div class="dash-stat-label">In Arbeit</div>
-          <div class="dash-stat-value" id="d-stat-progress">â€“</div>
+          <div class="dash-stat-value" id="d-stat-progress">–</div>
         </div>
         <div class="dash-stat-card s-done">
           <div class="dash-stat-label">Erledigt</div>
-          <div class="dash-stat-value" id="d-stat-done">â€“</div>
+          <div class="dash-stat-value" id="d-stat-done">–</div>
         </div>
         <div class="dash-stat-card s-overdue">
-          <div class="dash-stat-label">ÃœberfÃ¤llig</div>
-          <div class="dash-stat-value" id="d-stat-overdue">â€“</div>
+          <div class="dash-stat-label">Überfällig</div>
+          <div class="dash-stat-value" id="d-stat-overdue">–</div>
         </div>
       </div>
 
@@ -929,7 +929,7 @@
     <!-- Untere zwei Panels -->
     <div class="dash-lower">
       <div class="dash-panel">
-        <div class="dash-panel-title">DemnÃ¤chst fÃ¤llig</div>
+        <div class="dash-panel-title">Demnächst fällig</div>
         <div id="dash-upcoming"></div>
       </div>
       <div class="dash-panel">
@@ -939,7 +939,7 @@
     </div>
   </div>
 
-  <!-- â•â• TAB: DICHTE â•â• -->
+  <!-- ══ TAB: DICHTE ══ -->
   <div id="tab-dichte" class="tab-content">
     <div class="tabellen-bar" id="tabellen-bar">
       <button class="btn-new-tabelle" id="btn-new-tabelle">
@@ -952,14 +952,14 @@
         <div class="card">
           <h2>Abmessungen &amp; Masse</h2>
           <div class="grid-2">
-            <div class="field"><label>LÃ¤nge (mm)</label><input type="number" id="d-laenge" placeholder="z. B. 100" min="0" step="any" /></div>
+            <div class="field"><label>Länge (mm)</label><input type="number" id="d-laenge" placeholder="z. B. 100" min="0" step="any" /></div>
             <div class="field"><label>Breite (mm)</label><input type="number" id="d-breite" placeholder="z. B. 50"  min="0" step="any" /></div>
             <div class="field"><label>Dicke (mm)</label> <input type="number" id="d-dicke"  placeholder="z. B. 10"  min="0" step="any" /></div>
             <div class="field"><label>Masse (g)</label>  <input type="number" id="d-masse"  placeholder="z. B. 250" min="0" step="any" /></div>
           </div>
           <div class="field" style="margin-top:10px;">
             <label>Notiz (optional)</label>
-            <input type="text" id="d-notiz" placeholder="z. B. Material, Charge â€¦" />
+            <input type="text" id="d-notiz" placeholder="z. B. Material, Charge …" />
           </div>
           <div style="margin-top:14px;">
             <button class="btn-primary" id="btn-berechnen">Berechnen &amp; Speichern</button>
@@ -968,8 +968,8 @@
         </div>
         <div id="dichte-result" class="result-box hidden">
           <span class="result-label">Dichte:</span>
-          <span class="result-value" id="dichte-wert">â€”</span>
-          <span class="result-unit">kg/mÂ³</span>
+          <span class="result-value" id="dichte-wert">—</span>
+          <span class="result-unit">kg/m³</span>
         </div>
       </div>
       <div class="ergebnis-card">
@@ -986,7 +986,7 @@
           <table>
             <thead><tr>
               <th>Datum</th><th>L (mm)</th><th>B (mm)</th><th>D (mm)</th>
-              <th>Masse (g)</th><th>Dichte (kg/mÂ³)</th><th>Notiz</th><th></th>
+              <th>Masse (g)</th><th>Dichte (kg/m³)</th><th>Notiz</th><th></th>
             </tr></thead>
             <tbody id="ergebnis-tbody">
               <tr id="ergebnis-empty-row"><td colspan="8" class="table-empty">Noch keine Ergebnisse.</td></tr>
@@ -995,22 +995,22 @@
         </div>
         <div class="avg-row" id="avg-row" style="display:none;">
           <span class="avg-label">Durchschnitt</span>
-          <span class="avg-value"><span id="avg-wert">â€”</span> kg/mÂ³</span>
+          <span class="avg-value"><span id="avg-wert">—</span> kg/m³</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- â•â• TAB: TO-DOS â•â• -->
+  <!-- ══ TAB: TO-DOS ══ -->
   <div id="tab-todos" class="tab-content">
     <!-- Toolbar: Suche + Filter + Export -->
     <div class="todo-toolbar">
-      <input class="todo-search" id="todo-search" type="text" placeholder="ðŸ”  Suchen â€¦" />
+      <input class="todo-search" id="todo-search" type="text" placeholder="🔍  Suchen …" />
       <select id="filter-prio" class="btn-toggle" style="cursor:pointer; padding:7px 10px;">
-        <option value="">Alle PrioritÃ¤ten</option>
-        <option value="hoch">â†‘ Hoch</option>
-        <option value="mittel">â†’ Mittel</option>
-        <option value="niedrig">â†“ Niedrig</option>
+        <option value="">Alle Prioritäten</option>
+        <option value="hoch">↑ Hoch</option>
+        <option value="mittel">→ Mittel</option>
+        <option value="niedrig">↓ Niedrig</option>
         <option value="none">Ohne</option>
       </select>
       <button class="btn-toggle" id="btn-hide-done">
@@ -1033,7 +1033,7 @@
         <span class="todo-reminder-label">Erinnerung</span>
         <select id="notif-days-select" class="todo-reminder-select">
           <option value="-1">Aus</option>
-          <option value="0">am FÃ¤lligkeitstag</option>
+          <option value="0">am Fälligkeitstag</option>
           <option value="1">1 Tag vorher</option>
           <option value="2">2 Tage vorher</option>
           <option value="3">3 Tage vorher</option>
@@ -1075,25 +1075,25 @@
     </div>
     <!-- Neue Aufgabe -->
     <div class="add-todo">
-      <input type="text" id="todo-input" placeholder="Neue Aufgabe â€¦" list="todo-suggestions" autocomplete="off" />
+      <input type="text" id="todo-input" placeholder="Neue Aufgabe …" list="todo-suggestions" autocomplete="off" />
       <select id="todo-ordner-select" style="display:none; max-width:130px;"></select>
-      <button class="btn-primary" id="btn-todo-add">HinzufÃ¼gen</button>
+      <button class="btn-primary" id="btn-todo-add">Hinzufügen</button>
     </div>
     <div class="add-todo-extra">
       <select id="todo-prio-input">
-        <option value="none">â€” PrioritÃ¤t</option>
-        <option value="hoch">â†‘ Hoch</option>
-        <option value="mittel">â†’ Mittel</option>
-        <option value="niedrig">â†“ Niedrig</option>
+        <option value="none">— Priorität</option>
+        <option value="hoch">↑ Hoch</option>
+        <option value="mittel">→ Mittel</option>
+        <option value="niedrig">↓ Niedrig</option>
       </select>
-      <input type="date" id="todo-faellig-input" title="FÃ¤lligkeitsdatum" />
+      <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" />
     </div>
     <div id="todo-list" class="todo-list">
       <div class="empty-state" id="todo-empty">Noch keine Aufgaben.</div>
     </div>
   </div>
 
-  <!-- â•â• TAB: NOTIZEN â•â• -->
+  <!-- ══ TAB: NOTIZEN ══ -->
   <div id="tab-notizen" class="tab-content">
     <div class="tabellen-bar" id="notiz-ordner-bar">
       <button class="btn-new-tabelle" id="btn-new-notiz-ordner">
@@ -1106,25 +1106,25 @@
     </div>
   </div>
 
-  <!-- â•â• TAB: EINKAUF â•â• -->
+  <!-- ══ TAB: EINKAUF ══ -->
   <div id="tab-einkauf" class="tab-content">
 
-    <!-- Artikel hinzufÃ¼gen (sticky) -->
+    <!-- Artikel hinzufügen (sticky) -->
     <div class="einkauf-sticky-top">
       <div class="einkauf-add-row">
-        <input type="text" id="einkauf-input" placeholder="Artikel hinzufÃ¼gen â€¦"
+        <input type="text" id="einkauf-input" placeholder="Artikel hinzufügen …"
                list="einkauf-suggestions" autocomplete="off" />
         <button class="btn-primary" id="btn-einkauf-add">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          HinzufÃ¼gen
+          Hinzufügen
         </button>
       </div>
     </div>
     <datalist id="einkauf-suggestions"></datalist>
 
-    <!-- FrÃ¼here Artikel (Katalog) -->
+    <!-- Frühere Artikel (Katalog) -->
     <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
-      <div class="katalog-title">FrÃ¼here Artikel</div>
+      <div class="katalog-title">Frühere Artikel</div>
       <div class="katalog-chips" id="katalog-chips"></div>
     </div>
 
@@ -1154,7 +1154,7 @@
 <div class="modal-overlay hidden" id="notiz-modal">
   <div class="modal">
     <div class="modal-header">
-      <input type="text" id="notiz-modal-title" placeholder="Titel â€¦" style="flex:1; font-size:1rem; font-weight:600; border:none; border-bottom:2px solid var(--border); border-radius:0; padding:4px 0; background:transparent; color:var(--text);" />
+      <input type="text" id="notiz-modal-title" placeholder="Titel …" style="flex:1; font-size:1rem; font-weight:600; border:none; border-bottom:2px solid var(--border); border-radius:0; padding:4px 0; background:transparent; color:var(--text);" />
       <button class="btn-icon" id="notiz-modal-close" style="margin-left:10px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -1162,14 +1162,14 @@
     <div class="notiz-toolbar">
       <button type="button" class="notiz-fmt-btn" id="nfmt-bold" title="Fett (Ctrl+B)"><strong>B</strong></button>
       <button type="button" class="notiz-fmt-btn" id="nfmt-italic" title="Kursiv (Ctrl+I)"><em>I</em></button>
-      <button type="button" class="notiz-fmt-btn" id="nfmt-bullet" title="AufzÃ¤hlung">â€¢ Liste</button>
-      <button type="button" class="notiz-fmt-btn" id="nfmt-preview" title="Vorschau" style="margin-left:auto;">ðŸ‘ Vorschau</button>
+      <button type="button" class="notiz-fmt-btn" id="nfmt-bullet" title="Aufzählung">• Liste</button>
+      <button type="button" class="notiz-fmt-btn" id="nfmt-preview" title="Vorschau" style="margin-left:auto;">👁 Vorschau</button>
     </div>
-    <textarea id="notiz-modal-text" placeholder="Notiz schreiben â€¦ (**fett**, *kursiv*, - Liste)"></textarea>
+    <textarea id="notiz-modal-text" placeholder="Notiz schreiben … (**fett**, *kursiv*, - Liste)"></textarea>
     <div class="notiz-md-preview hidden" id="notiz-md-preview"></div>
     <div class="modal-footer">
       <span class="modal-save-hint" id="notiz-save-hint"></span>
-      <button class="btn-delete" id="notiz-modal-delete" title="Notiz lÃ¶schen" style="color:#d1d5db;">
+      <button class="btn-delete" id="notiz-modal-delete" title="Notiz löschen" style="color:#d1d5db;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>
     </div>
@@ -1185,7 +1185,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">Gib jeder Farbe einen Namen â€“ er erscheint im Picker und als Tooltip.</p>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">Gib jeder Farbe einen Namen – er erscheint im Picker und als Tooltip.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="width:18px;height:18px;border-radius:50%;background:#ef4444;flex-shrink:0;display:inline-block;"></span>
@@ -1231,22 +1231,22 @@
       </button>
     </div>
     <div>
-      <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:8px;">Dein Join-Code fÃ¼r diesen Ordner:</p>
-      <div class="share-code" id="share-code-box">â€“</div>
+      <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:8px;">Dein Join-Code für diesen Ordner:</p>
+      <div class="share-code" id="share-code-box">–</div>
       <button class="btn-copy" id="btn-copy-code">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         Code kopieren
       </button>
     </div>
-    <div class="share-sep">E-Mail des EmpfÃ¤ngers hinzufÃ¼gen</div>
+    <div class="share-sep">E-Mail des Empfängers hinzufügen</div>
     <div style="display:flex;gap:8px;">
       <input type="email" id="share-email-input" placeholder="name@example.com" class="todo-search" style="flex:1;" />
-      <button class="btn-primary" id="btn-share-add">HinzufÃ¼gen</button>
+      <button class="btn-primary" id="btn-share-add">Hinzufügen</button>
     </div>
     <div id="share-email-list" style="font-size:0.8rem;color:var(--text-muted);min-height:18px;"></div>
     <details style="margin-top:4px;">
-      <summary style="font-size:0.78rem;color:var(--text-muted);cursor:pointer;margin-bottom:6px;">âš™ï¸ Einmalig: Firestore-Regeln aktualisieren</summary>
-      <p style="font-size:0.76rem;color:var(--text-muted);margin-bottom:6px;">Kopiere diese Regeln in <b>Firebase Console â†’ Firestore â†’ Regeln</b>:</p>
+      <summary style="font-size:0.78rem;color:var(--text-muted);cursor:pointer;margin-bottom:6px;">⚙️ Einmalig: Firestore-Regeln aktualisieren</summary>
+      <p style="font-size:0.76rem;color:var(--text-muted);margin-bottom:6px;">Kopiere diese Regeln in <b>Firebase Console → Firestore → Regeln</b>:</p>
       <div class="share-rules">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -1296,7 +1296,7 @@ service cloud.firestore {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// â”€â”€ FIREBASE CONFIG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── FIREBASE CONFIG ──────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyBBMU-KPmSzu0F9iFGV_AF049Aivtnx0S4",
   authDomain:        "arbeitsapp-3364c.firebaseapp.com",
@@ -1312,7 +1312,7 @@ const db   = firebase.firestore();
 
 function $(id) { return document.getElementById(id); }
 
-// â”€â”€ PDF EXPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PDF EXPORT ───────────────────────────────────────────────
 function printArea(html, title) {
   const area = $("print-area");
   area.style.display = "block";
@@ -1326,10 +1326,10 @@ function printEinkauf() {
   const done   = einkaufItems.filter(i =>  i.checked);
   const rows   = [...undone, ...done].map(i =>
     `<div class="print-item${i.checked ? " checked" : ""}">
-      <span>${i.checked ? "â˜‘" : "â˜"}</span>
+      <span>${i.checked ? "☑" : "☐"}</span>
       <span>${i.name}</span>
     </div>`).join("");
-  printArea(rows, "ðŸ›’ Einkaufsliste");
+  printArea(rows, "🛒 Einkaufsliste");
 }
 
 function printTodos(ordnerName) {
@@ -1340,16 +1340,16 @@ function printTodos(ordnerName) {
     const faellig = el.dataset.faellig || "";
     const done   = status === "erledigt";
     return `<div class="print-item${done ? " checked" : ""}">
-      <span>${done ? "â˜‘" : "â˜"}</span>
+      <span>${done ? "☑" : "☐"}</span>
       <span>${text}</span>
-      ${faellig ? `<span class="print-meta">FÃ¤llig: ${faellig}</span>` : ""}
+      ${faellig ? `<span class="print-meta">Fällig: ${faellig}</span>` : ""}
     </div>`;
   }).join("");
-  const title = ordnerName ? `âœ… Todos â€“ ${ordnerName}` : "âœ… Alle Todos";
+  const title = ordnerName ? `✅ Todos – ${ordnerName}` : "✅ Alle Todos";
   printArea(items || "<p>Keine Todos vorhanden.</p>", title);
 }
 
-// â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── TOAST ────────────────────────────────────────────────────
 function showToast(msg, type = "") {
   const c = $("toast-container");
   const t = document.createElement("div");
@@ -1362,8 +1362,8 @@ function showToast(msg, type = "") {
   }, 3200);
 }
 
-// â”€â”€ SAFE DIALOGS (iOS Safari PWA: confirm/alert/prompt blockiert) â”€â”€
-function safeConfirm(msg, okLabel = "LÃ¶schen") {
+// ── SAFE DIALOGS (iOS Safari PWA: confirm/alert/prompt blockiert) ──
+function safeConfirm(msg, okLabel = "Löschen") {
   return new Promise(resolve => {
     $("safe-confirm-msg").textContent = msg;
     $("safe-confirm-ok").textContent = okLabel;
@@ -1407,7 +1407,7 @@ function safePrompt(msg, defaultVal = "") {
   });
 }
 
-// â”€â”€ DARK MODE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DARK MODE ────────────────────────────────────────────────
 function applyTheme(dark) {
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   $("icon-sun").style.display  = dark ? "none"  : "";
@@ -1422,7 +1422,7 @@ $("btn-darkmode").addEventListener("click", () => {
   applyTheme(darkMode);
 });
 
-// â”€â”€ AUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── AUTH ─────────────────────────────────────────────────────
 const provider = new firebase.auth.GoogleAuthProvider();
 
 function showAuthError(err) {
@@ -1433,7 +1433,7 @@ function showAuthError(err) {
   const isFileProtocol = window.location.protocol === "file:";
   const unsupportedEnv = err.code === "auth/operation-not-supported-in-this-environment";
   text.textContent = (isFileProtocol || unsupportedEnv)
-    ? "Google-Login funktioniert nicht, wenn organizer.html direkt als Datei geÃ¶ffnet wird. Bitte Ã¶ffne den Organizer Ã¼ber http://localhost:5173/organizer.html."
+    ? "Google-Login funktioniert nicht, wenn organizer.html direkt als Datei geöffnet wird. Bitte öffne den Organizer über http://localhost:5173/organizer.html."
     : (err.message || String(err));
   code.textContent = "Code: " + (err.code || "unbekannt") + " | URL: " + window.location.href;
   box.style.display = "block";
@@ -1450,7 +1450,7 @@ function clearAuthCache() {
   window.location.reload();
 }
 
-// PWA-Erkennung (Homescreen-App / Chrome-Desktop-App â†’ Popups blockiert)
+// PWA-Erkennung (Homescreen-App / Chrome-Desktop-App → Popups blockiert)
 const _isPWA = window.matchMedia("(display-mode: standalone)").matches
             || window.navigator.standalone === true;
 
@@ -1477,7 +1477,7 @@ $("btn-google-signin").addEventListener("click", () => {
   } else {
     auth.signInWithPopup(provider).catch(err => {
       if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user") {
-        // Popup blockiert â†’ Weiterleitung benutzen
+        // Popup blockiert → Weiterleitung benutzen
         doRedirectLogin();
       } else {
         showAuthError(err);
@@ -1519,7 +1519,7 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// â”€â”€ MAIN TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MAIN TABS ────────────────────────────────────────────────
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -1529,15 +1529,15 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
   });
 });
 
-// â”€â”€ PWA SERVICE WORKER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PWA SERVICE WORKER ───────────────────────────────────────
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("organizer-sw.js").catch(() => {});
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // DASHBOARD + KALENDER
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-const MONATE = ["Januar","Februar","MÃ¤rz","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+// ════════════════════════════════════════════════════════════
+const MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 const WOCHENTAGE = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 let calYear, calMonth;
 
@@ -1574,7 +1574,7 @@ function renderDashboard() {
   // Calendar
   renderCalendar();
 
-  // Upcoming (nÃ¤chste 14 Tage, nicht erledigt, mit faellig)
+  // Upcoming (nächste 14 Tage, nicht erledigt, mit faellig)
   const upcoming = all
     .filter(t => t.faellig && t.status !== "erledigt")
     .sort((a,b) => a.faellig.localeCompare(b.faellig))
@@ -1583,7 +1583,7 @@ function renderDashboard() {
   const upEl = $("dash-upcoming");
   upEl.innerHTML = "";
   if (upcoming.length === 0) {
-    upEl.innerHTML = '<div class="dash-empty">Keine offenen FÃ¤lligkeiten</div>';
+    upEl.innerHTML = '<div class="dash-empty">Keine offenen Fälligkeiten</div>';
   } else {
     upcoming.forEach(t => {
       const row = document.createElement("div");
@@ -1593,7 +1593,7 @@ function renderDashboard() {
       const dateLabel = t.faellig.split("-").reverse().join(".");
       row.innerHTML = `
         <div class="dash-todo-row-text">${t.text}</div>
-        <div class="dash-due ${isOverdue?"overdue":isToday?"today":""}">${isOverdue?"âš ï¸ ":""}${dateLabel}</div>`;
+        <div class="dash-due ${isOverdue?"overdue":isToday?"today":""}">${isOverdue?"⚠️ ":""}${dateLabel}</div>`;
       upEl.appendChild(row);
     });
   }
@@ -1618,7 +1618,7 @@ function renderDashboard() {
       const d = n.updatedAt ? (n.updatedAt.toDate ? n.updatedAt.toDate() : new Date(n.updatedAt)) : null;
       row.innerHTML = `
         <div class="dash-note-title">${n.titel || "Ohne Titel"}</div>
-        <div class="dash-note-meta">${n._ordnerName} Â· ${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"}) : ""}</div>`;
+        <div class="dash-note-meta">${n._ordnerName} · ${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"}) : ""}</div>`;
       notesEl.appendChild(row);
     });
   }
@@ -1650,7 +1650,7 @@ function renderCalendar() {
   let startDow = firstDay.getDay() - 1; // Mo=0
   if (startDow < 0) startDow = 6;
 
-  // Vormonat-FÃ¼ller
+  // Vormonat-Füller
   for (let i = 0; i < startDow; i++) {
     const prev = new Date(calYear, calMonth, i - startDow + 1);
     const d = document.createElement("div");
@@ -1683,7 +1683,7 @@ function renderCalendar() {
     grid.appendChild(d);
   }
 
-  // Nachmonat-FÃ¼ller
+  // Nachmonat-Füller
   const total = startDow + lastDay.getDate();
   const rest  = (7 - (total % 7)) % 7;
   for (let i = 1; i <= rest; i++) {
@@ -1694,9 +1694,9 @@ function renderCalendar() {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // NOTIFICATIONS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 let notifCheckInterval = null;
 let unsubscribeNotifSettingsFunc = null;
 const notifSettings = { daysBefore: 0, hour: 9 };
@@ -1842,7 +1842,7 @@ function checkNotifications() {
 }
 
 // TAB 1: DICHTE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 let dichteDebounce = null;
 let unsubscribeErgebnisseFunc = null;
 let unsubscribeTabellenFunc   = null;
@@ -1865,7 +1865,7 @@ function initDichte(userId) {
   ["d-laenge","d-breite","d-dicke","d-masse"].forEach(id => {
     $(id).addEventListener("input", () => {
       clearTimeout(dichteDebounce);
-      $("dichte-save-hint").textContent = "Wird gespeichert â€¦";
+      $("dichte-save-hint").textContent = "Wird gespeichert …";
       dichteDebounce = setTimeout(() => {
         settingsRef.set({
           laenge: parseFloat($("d-laenge").value)||null,
@@ -1873,27 +1873,27 @@ function initDichte(userId) {
           dicke:  parseFloat($("d-dicke").value) ||null,
           masse:  parseFloat($("d-masse").value) ||null,
         }, { merge: true })
-          .then(() => { $("dichte-save-hint").textContent = "Gespeichert âœ“"; })
+          .then(() => { $("dichte-save-hint").textContent = "Gespeichert ✓"; })
           .catch(()=> { $("dichte-save-hint").textContent = "Fehler"; });
       }, 1000);
     });
   });
 
   $("btn-berechnen").addEventListener("click", () => {
-    if (!currentTabelleId) { alert("Bitte zuerst eine Tabelle auswÃ¤hlen."); return; }
+    if (!currentTabelleId) { alert("Bitte zuerst eine Tabelle auswählen."); return; }
     const L = parseFloat($("d-laenge").value);
     const B = parseFloat($("d-breite").value);
     const D = parseFloat($("d-dicke").value);
     const M = parseFloat($("d-masse").value);
     const N = $("d-notiz").value.trim();
-    if ([L,B,D,M].some(v => isNaN(v)||v<=0)) { alert("Bitte alle Felder mit positiven Zahlen ausfÃ¼llen."); return; }
+    if ([L,B,D,M].some(v => isNaN(v)||v<=0)) { alert("Bitte alle Felder mit positiven Zahlen ausfüllen."); return; }
     const dichte = (M / ((L*B*D)/1000)) * 1000;
     zeigeDichte(dichte);
-    $("dichte-save-hint").textContent = "Wird gespeichert â€¦";
+    $("dichte-save-hint").textContent = "Wird gespeichert …";
     db.collection(`users/${userId}/dichteTabellen/${currentTabelleId}/ergebnisse`).add({
       laenge:L, breite:B, dicke:D, masse:M, dichte, notiz: N||"",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(()=>{ $("dichte-save-hint").textContent = "Gespeichert âœ“"; $("d-notiz").value=""; })
+    }).then(()=>{ $("dichte-save-hint").textContent = "Gespeichert ✓"; $("d-notiz").value=""; })
       .catch(()=>{ $("dichte-save-hint").textContent = "Fehler"; });
   });
 
@@ -1940,7 +1940,7 @@ function renderTabellenBar(tabellen, userId) {
       // rename
       () => { safePrompt("Neuer Name:", t.name).then(n => { if (n&&n.trim()) db.collection(`users/${userId}/dichteTabellen`).doc(t.id).update({name:n.trim()}).then(()=>{ if(currentTabelleId===t.id) $("ergebnis-tabelle-name").textContent=n.trim(); }); }); },
       // delete
-      () => { safeConfirm(`Tabelle "${t.name}" lÃ¶schen?`).then(ok => { if (!ok) return;
+      () => { safeConfirm(`Tabelle "${t.name}" löschen?`).then(ok => { if (!ok) return;
         db.collection(`users/${userId}/dichteTabellen/${t.id}/ergebnisse`).get().then(snap => {
           const b = db.batch(); snap.forEach(d => b.delete(d.ref));
           b.delete(db.doc(`users/${userId}/dichteTabellen/${t.id}`)); return b.commit(); }); }); },
@@ -1956,7 +1956,7 @@ function zeigeDichte(wert) {
 
 function fmt(n) {
   return typeof n === "number"
-    ? n.toLocaleString("de-DE",{minimumFractionDigits:1,maximumFractionDigits:2}) : "â€”";
+    ? n.toLocaleString("de-DE",{minimumFractionDigits:1,maximumFractionDigits:2}) : "—";
 }
 
 function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
@@ -1966,11 +1966,11 @@ function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
   emptyRow.style.display = "none";
   rows.forEach(row => {
     const d = row.createdAt ? (row.createdAt.toDate ? row.createdAt.toDate() : new Date(row.createdAt)) : null;
-    const datum = d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"}) : "â€”";
+    const datum = d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"}) : "—";
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${datum}</td><td>${fmt(row.laenge)}</td><td>${fmt(row.breite)}</td><td>${fmt(row.dicke)}</td><td>${fmt(row.masse)}</td><td class="dichte-val">${fmt(row.dichte)}</td><td class="notiz-cell" title="${row.notiz||''}">${row.notiz||''}</td><td></td>`;
     const delBtn = document.createElement("button");
-    delBtn.className = "btn-delete"; delBtn.title = "LÃ¶schen";
+    delBtn.className = "btn-delete"; delBtn.title = "Löschen";
     delBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
     delBtn.addEventListener("click", () =>
       db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id).delete());
@@ -1987,18 +1987,18 @@ function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
 function exportDichteExcel(rows, avg, tabelleName) {
   const data = rows.map((r,i) => {
     const d = r.createdAt ? (r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt)) : null;
-    return {"Nr.":i+1,"Datum":d?d.toLocaleDateString("de-DE"):"","LÃ¤nge (mm)":r.laenge,"Breite (mm)":r.breite,"Dicke (mm)":r.dicke,"Masse (g)":r.masse,"Dichte (kg/mÂ³)":parseFloat(r.dichte.toFixed(2)),"Notiz":r.notiz||""};
+    return {"Nr.":i+1,"Datum":d?d.toLocaleDateString("de-DE"):"","Länge (mm)":r.laenge,"Breite (mm)":r.breite,"Dicke (mm)":r.dicke,"Masse (g)":r.masse,"Dichte (kg/m³)":parseFloat(r.dichte.toFixed(2)),"Notiz":r.notiz||""};
   });
-  data.push({}); data.push({"Nr.":"","Datum":"Durchschnitt","LÃ¤nge (mm)":"","Breite (mm)":"","Dicke (mm)":"","Masse (g)":"","Dichte (kg/mÂ³)":parseFloat(avg.toFixed(2)),"Notiz":""});
+  data.push({}); data.push({"Nr.":"","Datum":"Durchschnitt","Länge (mm)":"","Breite (mm)":"","Dicke (mm)":"","Masse (g)":"","Dichte (kg/m³)":parseFloat(avg.toFixed(2)),"Notiz":""});
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, (tabelleName||"Dichte").slice(0,31));
   XLSX.writeFile(wb, `${(tabelleName||"Dichte").replace(/[\\/:*?"<>|]/g,"_")}_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // TAB 2: TODOS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 let unsubscribeOrdnerFunc = null;
 let currentOrdnerId       = "alle";
 let hideDone              = false;
@@ -2012,7 +2012,7 @@ const FARBEN = [
   {id:"blau",hex:"#3b82f6"},{id:"lila",hex:"#a855f7"},
 ];
 
-// Farb-Labels: Standard-Namen, werden aus Firestore Ã¼berschrieben
+// Farb-Labels: Standard-Namen, werden aus Firestore überschrieben
 let colorLabels = {
   rot:"Dringend", orange:"Wichtig", gelb:"Hinweis",
   gruen:"OK", blau:"Info", lila:"Idee"
@@ -2045,7 +2045,7 @@ function saveColorLabels(userId) {
     data[f.id] = inp ? (inp.value.trim() || f.id) : f.id;
   });
   const saveBtn = $("btn-color-labels-save");
-  saveBtn.textContent = "Speichert â€¦";
+  saveBtn.textContent = "Speichert …";
   saveBtn.disabled = true;
   db.doc(`users/${userId}/settings/colorLabels`).set(data)
     .then(() => {
@@ -2079,7 +2079,7 @@ function initTodos(userId) {
   function addTodo() {
     const text = $("todo-input").value.trim(); if (!text) return;
     const zielId = currentOrdnerId === "alle" ? $("todo-ordner-select").value : currentOrdnerId;
-    if (!zielId) { alert("Bitte einen Ordner auswÃ¤hlen."); return; }
+    if (!zielId) { alert("Bitte einen Ordner auswählen."); return; }
     const prio   = $("todo-prio-input").value;
     const faellig= $("todo-faellig-input").value;
     db.collection(`users/${userId}/todoOrdner/${zielId}/todos`).add({
@@ -2163,7 +2163,7 @@ function renderCurrentTodoView(userId) {
     allTodos = cached ? cached.todos.map(t => ({ ...t, _ordnerName: cached.name })) : [];
   }
 
-  // Sortieren (berÃ¼cksichtigt drag&drop order-Feld)
+  // Sortieren (berücksichtigt drag&drop order-Feld)
   allTodos = sortTodos(allTodos);
 
   // Filter
@@ -2216,12 +2216,12 @@ function renderOrdnerBar(ordner, userId) {
   ordner.filter(o => !o.id.startsWith("shared::")).forEach(o => {
     const tab = makeFolderTab(o.id, o.name, o.id === currentOrdnerId,
       () => { safePrompt("Neuer Name:",o.name).then(n => { if(n&&n.trim()) db.collection(`users/${userId}/todoOrdner`).doc(o.id).update({name:n.trim()}); }); },
-      () => { safeConfirm(`Ordner "${o.name}" lÃ¶schen?`).then(ok => { if(!ok) return;
+      () => { safeConfirm(`Ordner "${o.name}" löschen?`).then(ok => { if(!ok) return;
         db.collection(`users/${userId}/todoOrdner/${o.id}/todos`).get().then(snap => {
           const b=db.batch(); snap.forEach(d=>b.delete(d.ref));
           b.delete(db.doc(`users/${userId}/todoOrdner/${o.id}`)); return b.commit(); }); }); },
       () => selectOrdner(o.id, userId));
-    // Share-Button anhÃ¤ngen
+    // Share-Button anhängen
     const shareBtn = document.createElement("button");
     shareBtn.className = "tabelle-tab-btn"; shareBtn.title = "Teilen";
     shareBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
@@ -2338,7 +2338,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       controls.appendChild(badge);
     }
 
-    // â”€â”€ FÃ¤lligkeits-Badge (klickbar zum Bearbeiten) â”€â”€
+    // ── Fälligkeits-Badge (klickbar zum Bearbeiten) ──
     const dateWrap = document.createElement("span");
     function renderDateBadge() {
       dateWrap.innerHTML = "";
@@ -2346,15 +2346,15 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       if (todo.faellig) {
         const badge = document.createElement("span");
         badge.className = "due-badge";
-        badge.title = "Klicken zum Ã„ndern";
-        badge.textContent = "ðŸ“… " + todo.faellig.split("-").reverse().join(".");
+        badge.title = "Klicken zum Ändern";
+        badge.textContent = "📅 " + todo.faellig.split("-").reverse().join(".");
         if (todo.faellig < today)       badge.classList.add("overdue");
         else if (todo.faellig === today) badge.classList.add("today");
         badge.addEventListener("click", openDateEdit);
         dateWrap.appendChild(badge);
       } else {
         const add = document.createElement("span");
-        add.className = "todo-add-meta"; add.textContent = "ðŸ“… Datum";
+        add.className = "todo-add-meta"; add.textContent = "📅 Datum";
         add.addEventListener("click", openDateEdit);
         dateWrap.appendChild(add);
       }
@@ -2386,22 +2386,22 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     renderDateBadge();
     controls.appendChild(dateWrap);
 
-    // â”€â”€ PrioritÃ¤t-Badge (klickbar zum Bearbeiten) â”€â”€
+    // ── Priorität-Badge (klickbar zum Bearbeiten) ──
     const prioWrap = document.createElement("span");
     function renderPrioBadge() {
       prioWrap.innerHTML = "";
       if (todo.prioritaet && todo.prioritaet !== "none") {
-        const icons  = { hoch:"â†‘", mittel:"â†’", niedrig:"â†“" };
+        const icons  = { hoch:"↑", mittel:"→", niedrig:"↓" };
         const labels = { hoch:"Hoch", mittel:"Mittel", niedrig:"Niedrig" };
         const badge = document.createElement("span");
         badge.className = `priority-badge ${todo.prioritaet}`;
-        badge.title = "Klicken zum Ã„ndern";
+        badge.title = "Klicken zum Ändern";
         badge.textContent = `${icons[todo.prioritaet]} ${labels[todo.prioritaet]}`;
         badge.addEventListener("click", openPrioEdit);
         prioWrap.appendChild(badge);
       } else {
         const add = document.createElement("span");
-        add.className = "todo-add-meta"; add.textContent = "â†‘ Prio";
+        add.className = "todo-add-meta"; add.textContent = "↑ Prio";
         add.addEventListener("click", openPrioEdit);
         prioWrap.appendChild(add);
       }
@@ -2410,7 +2410,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       prioWrap.innerHTML = "";
       const sel = document.createElement("select");
       sel.className = "todo-inline-prio";
-      [["none","Keine"],["hoch","â†‘ Hoch"],["mittel","â†’ Mittel"],["niedrig","â†“ Niedrig"]].forEach(([v,l]) => {
+      [["none","Keine"],["hoch","↑ Hoch"],["mittel","→ Mittel"],["niedrig","↓ Niedrig"]].forEach(([v,l]) => {
         const opt = document.createElement("option");
         opt.value = v; opt.textContent = l;
         if ((todo.prioritaet||"none") === v) opt.selected = true;
@@ -2571,13 +2571,13 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     });
     controls.appendChild(editBtn);
 
-    // LÃ¶schen
+    // Löschen
     const delBtn = document.createElement("button");
-    delBtn.className = "btn-delete"; delBtn.title = "LÃ¶schen";
+    delBtn.className = "btn-delete"; delBtn.title = "Löschen";
     delBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
     delBtn.addEventListener("click", () => {
       if (!todoOrdnerId) return;
-      safeConfirm("Aufgabe lÃ¶schen?").then(ok => {
+      safeConfirm("Aufgabe löschen?").then(ok => {
         if (ok) db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).delete();
       });
     });
@@ -2609,7 +2609,7 @@ function exportTodosExcel(userId) {
 
   const data = allTodos.map((t,i) => {
     const d = t.createdAt ? (t.createdAt.toDate ? t.createdAt.toDate() : new Date(t.createdAt)) : null;
-    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","PrioritÃ¤t":t.prioritaet||"","FÃ¤lligkeit":t.faellig||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
+    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Priorität":t.prioritaet||"","Fälligkeit":t.faellig||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
   });
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -2617,12 +2617,12 @@ function exportTodosExcel(userId) {
   XLSX.writeFile(wb, `Aufgaben_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // TAB 3: NOTIZEN
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 let unsubscribeNotizenOrdnerFunc = null;
 let currentNotizenOrdnerId       = null;
-let notizenOrdnerCache           = new Map(); // id â†’ {name, notizen[]}
+let notizenOrdnerCache           = new Map(); // id → {name, notizen[]}
 let notizenListeners             = new Map();
 let currentNotizId               = null;
 let notizDebounce                = null;
@@ -2642,7 +2642,7 @@ function initNotizen(userId) {
   $("notiz-modal").addEventListener("click", e => { if (e.target===$("notiz-modal")) closeNotizModal(); });
   $("notiz-modal-delete").addEventListener("click", () => {
     if (!currentNotizId||!currentNotizenOrdnerId) return;
-    safeConfirm("Notiz lÃ¶schen?").then(ok => {
+    safeConfirm("Notiz löschen?").then(ok => {
       if (!ok) return;
       db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).doc(currentNotizId).delete();
       closeNotizModal();
@@ -2652,13 +2652,13 @@ function initNotizen(userId) {
   function autoSaveNotiz() {
     if (!currentNotizId||!currentNotizenOrdnerId) return;
     clearTimeout(notizDebounce);
-    $("notiz-save-hint").textContent = "Speichert â€¦";
+    $("notiz-save-hint").textContent = "Speichert …";
     notizDebounce = setTimeout(() => {
       db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).doc(currentNotizId).update({
         titel: $("notiz-modal-title").value.trim() || "Ohne Titel",
         text:  $("notiz-modal-text").value,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(()=>{ $("notiz-save-hint").textContent="Gespeichert âœ“"; })
+      }).then(()=>{ $("notiz-save-hint").textContent="Gespeichert ✓"; })
         .catch(()=>{ $("notiz-save-hint").textContent="Fehler"; });
     }, 800);
   }
@@ -2716,7 +2716,7 @@ function renderNotizenOrdnerBar(ordner, userId) {
   ordner.forEach(o => {
     const tab = makeFolderTab(o.id, o.name, o.id===currentNotizenOrdnerId,
       () => { safePrompt("Neuer Name:",o.name).then(n => { if(n&&n.trim()) db.collection(`users/${userId}/notizenOrdner`).doc(o.id).update({name:n.trim()}); }); },
-      () => { safeConfirm(`Ordner "${o.name}" lÃ¶schen?`).then(ok => { if(!ok) return;
+      () => { safeConfirm(`Ordner "${o.name}" löschen?`).then(ok => { if(!ok) return;
         db.collection(`users/${userId}/notizenOrdner/${o.id}/notizen`).get().then(snap=>{
           const b=db.batch(); snap.forEach(d=>b.delete(d.ref));
           b.delete(db.doc(`users/${userId}/notizenOrdner/${o.id}`)); return b.commit(); }); }); },
@@ -2765,7 +2765,7 @@ function renderNotizenList(userId) {
     const pinBtn = document.createElement("button");
     pinBtn.className = "btn-pin" + (n.pinned ? " active" : "");
     pinBtn.title = n.pinned ? "Fixierung aufheben" : "Notiz anpinnen";
-    pinBtn.textContent = "ðŸ“Œ";
+    pinBtn.textContent = "📌";
     pinBtn.addEventListener("click", e => {
       e.stopPropagation();
       db.collection(`users/${auth.currentUser.uid}/notizenOrdner/${currentNotizenOrdnerId}/notizen`)
@@ -2790,7 +2790,7 @@ function renderNotizenList(userId) {
   });
 }
 
-// â”€â”€ Markdown helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Markdown helpers ──────────────────────────────────────────
 function mdInline(text) {
   return text
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
@@ -2817,7 +2817,7 @@ function mdToHtml(raw) {
   return out.join("");
 }
 
-// â”€â”€ Toolbar + keyboard shortcuts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Toolbar + keyboard shortcuts ─────────────────────────────
 function insertFmt(wrap, prefix) {
   const ta = $("notiz-modal-text");
   const start = ta.selectionStart, end = ta.selectionEnd;
@@ -2863,10 +2863,10 @@ function insertFmt(wrap, prefix) {
     if (previewing) {
       prev.innerHTML = mdToHtml($("notiz-modal-text").value) || "<em style='color:var(--text-muted)'>Leer</em>";
       prev.classList.remove("hidden");
-      $("nfmt-preview").textContent = "âœï¸ Bearbeiten";
+      $("nfmt-preview").textContent = "✏️ Bearbeiten";
     } else {
       prev.classList.add("hidden");
-      $("nfmt-preview").textContent = "ðŸ‘ Vorschau";
+      $("nfmt-preview").textContent = "👁 Vorschau";
       $("notiz-modal-text").focus();
     }
   });
@@ -2885,7 +2885,7 @@ function openNotizModal(id, titel, text) {
   // reset preview mode
   $("notiz-modal-text").classList.remove("hidden");
   $("notiz-md-preview").classList.add("hidden");
-  $("nfmt-preview").textContent = "ðŸ‘ Vorschau";
+  $("nfmt-preview").textContent = "👁 Vorschau";
   $("notiz-modal").classList.remove("hidden");
   $("notiz-modal-text").focus();
 }
@@ -2895,9 +2895,9 @@ function closeNotizModal() {
   currentNotizId = null;
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // AUTOCOMPLETE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 const AC_KEY = "todo_autocomplete";
 const AC_MAX = 25;
 
@@ -2920,9 +2920,9 @@ function saveAutocomplete(text) {
   loadAutocomplete();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // SHARING
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 let shareCurrentOrdnerId = null;
 let shareCurrentUserId   = null;
 
@@ -2940,7 +2940,7 @@ function initSharing(userId) {
 
   $("btn-copy-code").addEventListener("click", () => {
     navigator.clipboard.writeText($("share-code-box").textContent).then(() => {
-      $("btn-copy-code").textContent = "âœ“ Kopiert!";
+      $("btn-copy-code").textContent = "✓ Kopiert!";
       setTimeout(() => { $("btn-copy-code").innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Code kopieren`; }, 2000);
     });
   });
@@ -2953,7 +2953,7 @@ function initSharing(userId) {
       .then(() => {
         $("share-email-input").value = "";
         loadSharedEmails(userId);
-      }).catch(() => alert("Fehler beim Speichern â€“ bitte Firestore-Regeln aktualisieren (siehe unten)."));
+      }).catch(() => alert("Fehler beim Speichern – bitte Firestore-Regeln aktualisieren (siehe unten)."));
   });
 
   $("btn-join-confirm").addEventListener("click", () => joinFolder($("join-code-input").value.trim(), userId));
@@ -2983,14 +2983,14 @@ function loadSharedEmails(userId) {
 
 function joinFolder(code, userId) {
   $("join-error").textContent = "";
-  if (!code.includes("::")) { $("join-error").textContent = "UngÃ¼ltiger Code."; return; }
+  if (!code.includes("::")) { $("join-error").textContent = "Ungültiger Code."; return; }
   const [ownerUid, folderId] = code.split("::");
-  if (!ownerUid || !folderId) { $("join-error").textContent = "UngÃ¼ltiger Code."; return; }
+  if (!ownerUid || !folderId) { $("join-error").textContent = "Ungültiger Code."; return; }
 
   db.collection(`users/${ownerUid}/todoOrdner`).doc(folderId).get()
     .then(snap => {
       if (!snap.exists) { $("join-error").textContent = "Ordner nicht gefunden."; return; }
-      const folderName = snap.data().name + " ðŸ‘¥";
+      const folderName = snap.data().name + " 👥";
 
       // Referenz in eigenen joinedFolders speichern
       db.collection(`users/${userId}/joinedFolders`).doc(folderId).set({
@@ -3002,7 +3002,7 @@ function joinFolder(code, userId) {
       });
     })
     .catch(() => {
-      $("join-error").textContent = "Zugriff verweigert â€“ bitte Firestore-Regeln aktualisieren (Share-Modal â†’ âš™ï¸).";
+      $("join-error").textContent = "Zugriff verweigert – bitte Firestore-Regeln aktualisieren (Share-Modal → ⚙️).";
     });
 }
 
@@ -3033,9 +3033,9 @@ function loadJoinedFolders(userId) {
   }).catch(() => {});
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // SHARED HELPERS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 function makeFolderTab(id, name, isActive, onRename, onDelete, onClick) {
   const tab = document.createElement("div");
   tab.className = "tabelle-tab" + (isActive ? " active" : "");
@@ -3049,7 +3049,7 @@ function makeFolderTab(id, name, isActive, onRename, onDelete, onClick) {
   renameBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
   renameBtn.addEventListener("click", e => { e.stopPropagation(); onRename(); });
   const delBtn = document.createElement("button");
-  delBtn.className = "tabelle-tab-btn del"; delBtn.title = "LÃ¶schen";
+  delBtn.className = "tabelle-tab-btn del"; delBtn.title = "Löschen";
   delBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
   delBtn.addEventListener("click", e => { e.stopPropagation(); onDelete(); });
   actions.appendChild(renameBtn); actions.appendChild(delBtn);
@@ -3058,16 +3058,16 @@ function makeFolderTab(id, name, isActive, onRename, onDelete, onClick) {
   return tab;
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 // EINKAUFSLISTE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════
 let unsubscribeEinkaufFunc   = null;
 let unsubscribeKatalogFunc   = null;
 let einkaufItems             = [];   // aktuelle Liste
-let einkaufKatalog           = [];   // alle je hinzugefÃ¼gten Artikel
+let einkaufKatalog           = [];   // alle je hinzugefügten Artikel
 
 function initEinkauf(userId) {
-  // Kein orderBy â†’ kein Firestore-Index nÃ¶tig, sort client-seitig
+  // Kein orderBy → kein Firestore-Index nötig, sort client-seitig
   // (vermeidet Mixed-Type-Fehler zwischen alten Timestamps und neuen Date.now()-Zahlen)
   const listRef    = db.collection(`users/${userId}/einkaufsliste`);
   const katalogRef = db.collection(`users/${userId}/einkaufsKatalog`);
@@ -3077,7 +3077,7 @@ function initEinkauf(userId) {
   unsubscribeEinkaufFunc = listRef.onSnapshot(snap => {
     einkaufItems = [];
     snap.forEach(d => einkaufItems.push({ id: d.id, ...d.data() }));
-    // Client-seitig sortieren (unterstÃ¼tzt Timestamp und Zahl)
+    // Client-seitig sortieren (unterstützt Timestamp und Zahl)
     einkaufItems.sort((a,b) => {
       const ta = typeof a.createdAt === "number" ? a.createdAt : (a.createdAt?.toMillis?.() ?? 0);
       const tb = typeof b.createdAt === "number" ? b.createdAt : (b.createdAt?.toMillis?.() ?? 0);
@@ -3097,20 +3097,20 @@ function initEinkauf(userId) {
     updateEinkaufSuggestions();
   }, err => console.error("Katalog-Fehler:", err));
 
-  // Artikel hinzufÃ¼gen
+  // Artikel hinzufügen
   function addArtikel() {
     const name = $("einkauf-input").value.trim();
     if (!name) return;
     $("einkauf-input").value = "";
 
-    // Zur aktiven Liste (createdAt als Zahl fÃ¼r zuverlÃ¤ssige cross-device-Sortierung)
+    // Zur aktiven Liste (createdAt als Zahl für zuverlässige cross-device-Sortierung)
     db.collection(`users/${userId}/einkaufsliste`).add({
       name, checked: false,
       createdAt: Date.now()
     }).catch(err => showToast("Fehler beim Speichern: " + err.message, "error"));
 
-    // In Katalog speichern / ZÃ¤hler erhÃ¶hen
-    const katalogId = name.toLowerCase().replace(/[^a-z0-9Ã¤Ã¶Ã¼ÃŸ]/g, "_");
+    // In Katalog speichern / Zähler erhöhen
+    const katalogId = name.toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
     db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId).set({
       name, count: firebase.firestore.FieldValue.increment(1),
       lastUsed: Date.now()
@@ -3205,18 +3205,18 @@ function renderKatalogChips(userId) {
     const chip = document.createElement("span");
     const already = aktiveNamen.has(k.name.toLowerCase());
     chip.className = "katalog-chip" + (already ? " already-in-list" : "");
-    chip.title = already ? "Bereits auf der Liste" : "Zur Liste hinzufÃ¼gen";
+    chip.title = already ? "Bereits auf der Liste" : "Zur Liste hinzufügen";
 
     // Name-Text
     const nameSpan = document.createElement("span");
     nameSpan.textContent = k.name;
     chip.appendChild(nameSpan);
 
-    // Ã— LÃ¶schen-Button
+    // × Löschen-Button
     const delBtn = document.createElement("button");
     delBtn.className = "katalog-chip-del";
-    delBtn.title = "Aus frÃ¼heren Artikeln entfernen";
-    delBtn.textContent = "Ã—";
+    delBtn.title = "Aus früheren Artikeln entfernen";
+    delBtn.textContent = "×";
     delBtn.addEventListener("click", e => {
       e.stopPropagation();
       db.collection(`users/${userId}/einkaufsKatalog`).doc(k.id).delete();
@@ -3228,7 +3228,7 @@ function renderKatalogChips(userId) {
         db.collection(`users/${userId}/einkaufsliste`).add({
           name: k.name, checked: false, createdAt: Date.now()
         });
-        const katalogId = k.name.toLowerCase().replace(/[^a-z0-9Ã¤Ã¶Ã¼ÃŸ]/g, "_");
+        const katalogId = k.name.toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
         db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId)
           .set({ count: firebase.firestore.FieldValue.increment(1),
                  lastUsed: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
@@ -3270,7 +3270,7 @@ function cleanupAll() {
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<!-- Print-Bereich (fÃ¼r PDF-Export) -->
+<!-- Print-Bereich (für PDF-Export) -->
 <div id="print-area" style="display:none;"></div>
 
 <!-- Custom Confirm (iOS PWA compat) -->
@@ -3279,7 +3279,7 @@ function cleanupAll() {
     <p id="safe-confirm-msg"></p>
     <div class="safe-dialog-btns">
       <button class="btn-secondary" id="safe-confirm-cancel">Abbrechen</button>
-      <button class="btn-danger" id="safe-confirm-ok">LÃ¶schen</button>
+      <button class="btn-danger" id="safe-confirm-ok">Löschen</button>
     </div>
   </div>
 </div>
@@ -3297,4 +3297,5 @@ function cleanupAll() {
 </div>
 </body>
 </html>
+
 
