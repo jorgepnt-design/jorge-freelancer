@@ -855,7 +855,7 @@
       Falls nichts passiert, öffne diese Adresse bitte im normalen Safari-Browser:
       <strong id="auth-open-url">http://localhost:5173/organizer.html</strong>
     </p>
-    <button id="auth-open-safari" class="btn-secondary" style="display:none; margin-top:10px;">In Safari öffnen</button>
+    <button id="auth-open-safari" class="btn-secondary" style="display:none; margin-top:10px;">In Safari anmelden</button>
   </div>
 
   <button class="btn-google" id="btn-google-signin">
@@ -1562,12 +1562,12 @@ function openInSafariFallback() {
   const w = window.open(u, "_blank");
   if (!w) {
     navigator.clipboard?.writeText(u).then(
-      () => safePrompt("Safari konnte nicht automatisch geöffnet werden. Bitte diese URL in Safari öffnen:", u),
-      () => safePrompt("Bitte diese URL in Safari öffnen:", u)
+      () => safePrompt("Safari konnte nicht automatisch geöffnet werden. URL ist kopiert. In Safari einfügen und dort anmelden:", u),
+      () => safePrompt("Bitte diese URL in Safari öffnen und dort anmelden:", u)
     );
   } else {
     navigator.clipboard?.writeText(u).catch(() => {});
-    safePrompt("Falls der neue Tab nicht in Safari erscheint, öffne diese URL in Safari:", u);
+    safePrompt("Falls der neue Tab nicht in Safari erscheint: URL kopieren, Safari öffnen, einfügen, anmelden.", u);
   }
 }
 if ($("auth-open-safari")) {
