@@ -70,6 +70,96 @@
       cursor: pointer; transition: background 0.15s, box-shadow 0.15s; color: var(--text);
     }
     .btn-google:hover { background: var(--surface2); box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+    .auth-divider {
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin: 6px 0 2px;
+      position: relative;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      border-top: 1px solid var(--border);
+    }
+    .auth-divider::before { left: 0; }
+    .auth-divider::after { right: 0; }
+    .auth-email-wrap {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .auth-email-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .auth-email-input:focus { outline: none; border-color: var(--primary); }
+    .auth-password-wrap {
+      position: relative;
+      width: 100%;
+    }
+    .auth-password-wrap .auth-email-input {
+      padding-right: 42px;
+    }
+    .auth-toggle-pass {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.95rem;
+      line-height: 1;
+      padding: 4px;
+    }
+    .auth-toggle-pass:hover { color: var(--text); }
+    .auth-pass-hint {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      min-height: 16px;
+      margin-top: -2px;
+    }
+    .auth-pass-hint.weak { color: #dc2626; }
+    .auth-pass-hint.medium { color: #ea580c; }
+    .auth-pass-hint.strong { color: #16a34a; }
+    .auth-email-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .auth-email-btn {
+      flex: 1;
+      min-width: 106px;
+      border-radius: 8px;
+      padding: 9px 10px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .auth-email-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .auth-email-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
 
     /* ── APP ── */
     #app { display: none; flex-direction: column; min-height: 100vh; }
@@ -867,6 +957,21 @@
     </svg>
     Mit Google anmelden
   </button>
+
+  <div class="auth-divider">oder</div>
+  <div class="auth-email-wrap">
+    <input id="auth-email" class="auth-email-input" type="email" placeholder="E-Mail" autocomplete="email" />
+    <div class="auth-password-wrap">
+      <input id="auth-password" class="auth-email-input" type="password" placeholder="Passwort (min. 6 Zeichen)" autocomplete="current-password" />
+      <button id="btn-toggle-password" class="auth-toggle-pass" type="button" title="Passwort anzeigen">👁</button>
+    </div>
+    <div id="auth-password-hint" class="auth-pass-hint"></div>
+    <div class="auth-email-btns">
+      <button id="btn-email-login" class="auth-email-btn primary">Anmelden</button>
+      <button id="btn-email-register" class="auth-email-btn">Registrieren</button>
+      <button id="btn-email-reset" class="auth-email-btn">Passwort zurücksetzen</button>
+    </div>
+  </div>
 </div>
 
 <!-- APP -->
@@ -1532,6 +1637,120 @@ function showAuthError(err) {
   box.style.display = "block";
 }
 
+function readEmailPassword() {
+  const email = ($("auth-email")?.value || "").trim();
+  const password = ($("auth-password")?.value || "").trim();
+  return { email, password };
+}
+
+function setEmailAuthBusy(busy) {
+  ["btn-email-login", "btn-email-register", "btn-email-reset", "btn-google-signin"].forEach(id => {
+    const el = $(id);
+    if (el) el.disabled = !!busy;
+  });
+}
+
+function clearAuthErrorBox() {
+  const box = $("auth-error-box");
+  if (box) box.style.display = "none";
+}
+
+function scorePasswordStrength(pw) {
+  if (!pw) return { label: "", cls: "" };
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  if (score <= 1) return { label: "Passwortstärke: schwach", cls: "weak" };
+  if (score <= 3) return { label: "Passwortstärke: mittel", cls: "medium" };
+  return { label: "Passwortstärke: stark", cls: "strong" };
+}
+
+function updatePasswordHint() {
+  const pw = $("auth-password")?.value || "";
+  const hint = $("auth-password-hint");
+  if (!hint) return;
+  const s = scorePasswordStrength(pw);
+  hint.textContent = s.label;
+  hint.classList.remove("weak", "medium", "strong");
+  if (s.cls) hint.classList.add(s.cls);
+}
+
+function setupPasswordUi() {
+  const pw = $("auth-password");
+  const toggle = $("btn-toggle-password");
+  if (!pw || !toggle) return;
+  toggle.addEventListener("click", () => {
+    const show = pw.type === "password";
+    pw.type = show ? "text" : "password";
+    toggle.textContent = show ? "🙈" : "👁";
+    toggle.title = show ? "Passwort verbergen" : "Passwort anzeigen";
+    pw.focus();
+  });
+  pw.addEventListener("input", updatePasswordHint);
+  updatePasswordHint();
+}
+
+async function doEmailLogin() {
+  clearAuthErrorBox();
+  const { email, password } = readEmailPassword();
+  if (!email || !password) {
+    showToast("Bitte E-Mail und Passwort eingeben.", "error");
+    return;
+  }
+  setEmailAuthBusy(true);
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (err) {
+    showAuthError(err);
+  } finally {
+    setEmailAuthBusy(false);
+  }
+}
+
+async function doEmailRegister() {
+  clearAuthErrorBox();
+  const { email, password } = readEmailPassword();
+  if (!email || !password) {
+    showToast("Bitte E-Mail und Passwort eingeben.", "error");
+    return;
+  }
+  if (password.length < 6) {
+    showToast("Passwort muss mindestens 6 Zeichen haben.", "error");
+    return;
+  }
+  setEmailAuthBusy(true);
+  try {
+    await auth.createUserWithEmailAndPassword(email, password);
+    showToast("Konto erstellt und angemeldet.");
+  } catch (err) {
+    showAuthError(err);
+  } finally {
+    setEmailAuthBusy(false);
+  }
+}
+
+async function doPasswordReset() {
+  clearAuthErrorBox();
+  const email = ($("auth-email")?.value || "").trim();
+  if (!email) {
+    showToast("Bitte zuerst E-Mail eingeben.", "error");
+    return;
+  }
+  setEmailAuthBusy(true);
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showToast("Reset-Mail gesendet. Bitte Postfach prüfen.");
+  } catch (err) {
+    showAuthError(err);
+  } finally {
+    setEmailAuthBusy(false);
+  }
+}
+
 function clearAuthCache() {
   // Alle Firebase-Auth-Keys aus localStorage/sessionStorage entfernen
   const toDelete = Object.keys(localStorage).filter(k =>
@@ -1593,7 +1812,7 @@ function doRedirectLogin() {
 }
 
 $("btn-google-signin").addEventListener("click", () => {
-  $("auth-error-box").style.display = "none";
+  clearAuthErrorBox();
   if (_isIOSPWA) {
     showSafariFallback();
   }
@@ -1611,6 +1830,12 @@ $("btn-google-signin").addEventListener("click", () => {
     });
   }
 });
+
+$("btn-email-login").addEventListener("click", doEmailLogin);
+$("btn-email-register").addEventListener("click", doEmailRegister);
+$("btn-email-reset").addEventListener("click", doPasswordReset);
+$("auth-password").addEventListener("keydown", e => { if (e.key === "Enter") doEmailLogin(); });
+setupPasswordUi();
 
 $("btn-signout").addEventListener("click", () => auth.signOut());
 
