@@ -1328,11 +1328,11 @@
         <span class="todo-date-row-label">Fällig</span>
         <label class="todo-date-field">
           <span>Datum</span>
-          <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <input type="text" id="todo-faellig-input" title="Fälligkeitsdatum" placeholder="26.04.2026" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" />
         </label>
         <label class="todo-date-field">
           <span>Zeit</span>
-          <input type="time" id="todo-uhrzeit-input" title="Uhrzeit (optional)" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <input type="text" id="todo-uhrzeit-input" title="Uhrzeit (optional)" placeholder="20:00" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" />
         </label>
       </div>
       <button type="button" class="todo-date-toggle" id="todo-reminder-toggle">⏰ Erinnerung setzen</button>
@@ -1340,11 +1340,11 @@
         <span class="todo-date-row-label">Erinnerung</span>
         <label class="todo-date-field">
           <span>Datum</span>
-          <input type="date" id="todo-reminder-date-input" title="Erinnerung am" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <input type="text" id="todo-reminder-date-input" title="Erinnerung am" placeholder="23.04.2026" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" />
         </label>
         <label class="todo-date-field">
           <span>Zeit</span>
-          <input type="time" id="todo-reminder-time-input" title="Erinnerungszeit" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <input type="text" id="todo-reminder-time-input" title="Erinnerungszeit" placeholder="12:00" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" />
         </label>
       </div>
       <span class="todo-inline-hint" id="todo-reminder-hint">Datum + Uhrzeit der Erinnerung zusammen setzen</span>
@@ -2243,6 +2243,10 @@ function toTimeInputValue(raw) {
   return v === null ? "" : v;
 }
 
+function isNativeMobilePickerPreferred() {
+  return _isIOS;
+}
+
 function formatReminderDateTime(reminderAt) {
   const m = (reminderAt || "").match(/^(\d{4}-\d{2}-\d{2})T(.+)$/);
   if (!m) return reminderAt || "";
@@ -2943,11 +2947,29 @@ function setTodoDatePanel(open) {
   setTodoPanel("todo-date-panel", open, updateTodoDateUi);
 }
 
+function configureTodoDateInputs() {
+  const useNative = isNativeMobilePickerPreferred();
+  [
+    ["todo-faellig-input", useNative ? "date" : "text", "26.04.2026", "numeric"],
+    ["todo-uhrzeit-input", useNative ? "time" : "text", "20:00", "numeric"],
+    ["todo-reminder-date-input", useNative ? "date" : "text", "23.04.2026", "numeric"],
+    ["todo-reminder-time-input", useNative ? "time" : "text", "12:00", "numeric"],
+  ].forEach(([id, type, placeholder, inputMode]) => {
+    const el = $(id);
+    if (!el) return;
+    el.type = type;
+    if (type === "text") el.placeholder = placeholder;
+    else el.removeAttribute("placeholder");
+    el.inputMode = inputMode;
+  });
+}
+
 function initTodos(userId) {
   const ordnerRef = db.collection(`users/${userId}/todoOrdner`).orderBy("createdAt","asc");
 
   $("btn-new-ordner").addEventListener("click", () => createOrdner(userId));
   initSharing(userId);
+  configureTodoDateInputs();
   if ($("todo-date-toggle")) {
     $("todo-date-toggle").addEventListener("click", () => {
       const panel = $("todo-date-panel");
@@ -3342,17 +3364,21 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     function openDateEdit() {
       dateWrap.innerHTML = "";
       const inpDate = document.createElement("input");
-      inpDate.type = "date"; inpDate.className = "todo-inline-date";
+      inpDate.type = isNativeMobilePickerPreferred() ? "date" : "text"; inpDate.className = "todo-inline-date";
       inpDate.autocomplete = "off";
       inpDate.autocapitalize = "off";
       inpDate.spellcheck = false;
-      inpDate.value = todo.faellig ? toDateInputValue(todo.faellig) : "";
+      inpDate.inputMode = "numeric";
+      if (inpDate.type === "text") inpDate.placeholder = "26.04.2026";
+      inpDate.value = todo.faellig ? (inpDate.type === "date" ? toDateInputValue(todo.faellig) : formatDueDate(todo.faellig)) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = "time"; inpTime.className = "todo-inline-prio";
+      inpTime.type = isNativeMobilePickerPreferred() ? "time" : "text"; inpTime.className = "todo-inline-prio";
       inpTime.autocomplete = "off";
       inpTime.autocapitalize = "off";
       inpTime.spellcheck = false;
-      inpTime.value = todo.faelligZeit ? toTimeInputValue(todo.faelligZeit) : "";
+      inpTime.inputMode = "numeric";
+      if (inpTime.type === "text") inpTime.placeholder = "20:00";
+      inpTime.value = todo.faelligZeit ? (inpTime.type === "time" ? toTimeInputValue(todo.faelligZeit) : formatDueTime(todo.faelligZeit)) : "";
       dateWrap.appendChild(inpDate);
       dateWrap.appendChild(inpTime);
       inpDate.focus();
@@ -3422,19 +3448,23 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     function openReminderEdit() {
       reminderWrap.innerHTML = "";
       const inpDate = document.createElement("input");
-      inpDate.type = "date";
+      inpDate.type = isNativeMobilePickerPreferred() ? "date" : "text";
       inpDate.className = "todo-inline-date";
       inpDate.autocomplete = "off";
       inpDate.autocapitalize = "off";
       inpDate.spellcheck = false;
-      inpDate.value = todo.reminderAt ? toDateInputValue(todo.reminderAt.slice(0, 10)) : "";
+      inpDate.inputMode = "numeric";
+      if (inpDate.type === "text") inpDate.placeholder = "23.04.2026";
+      inpDate.value = todo.reminderAt ? (inpDate.type === "date" ? toDateInputValue(todo.reminderAt.slice(0, 10)) : formatDueDate(todo.reminderAt.slice(0, 10))) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = "time";
+      inpTime.type = isNativeMobilePickerPreferred() ? "time" : "text";
       inpTime.className = "todo-inline-prio";
       inpTime.autocomplete = "off";
       inpTime.autocapitalize = "off";
       inpTime.spellcheck = false;
-      inpTime.value = todo.reminderAt ? toTimeInputValue(todo.reminderAt.slice(11)) : "";
+      inpTime.inputMode = "numeric";
+      if (inpTime.type === "text") inpTime.placeholder = "12:00";
+      inpTime.value = todo.reminderAt ? (inpTime.type === "time" ? toTimeInputValue(todo.reminderAt.slice(11)) : formatDueTime(todo.reminderAt.slice(11))) : "";
       reminderWrap.appendChild(inpDate);
       reminderWrap.appendChild(inpTime);
       inpDate.focus();
