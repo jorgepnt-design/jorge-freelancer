@@ -578,6 +578,36 @@
       flex-wrap: nowrap;
       max-width: 100%;
     }
+    .todo-inline-edit-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .todo-inline-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+    .todo-inline-edit-btn.ok {
+      border-color: #86efac;
+      background: #dcfce7;
+      color: #166534;
+    }
+    .todo-inline-edit-btn.cancel {
+      border-color: #fca5a5;
+      background: #fee2e2;
+      color: #991b1b;
+    }
 
     /* Color picker */
     .color-picker-wrap { position: relative; }
@@ -747,6 +777,7 @@
       }
       body.ios-picker .todo-inline-edit-row {
         gap: 10px;
+        flex-wrap: wrap;
       }
       body.ios-picker .todo-inline-date,
       body.ios-picker .todo-inline-prio {
@@ -755,6 +786,15 @@
         min-width: 132px;
         min-height: 44px;
         padding: 4px 10px;
+      }
+      body.ios-picker .todo-inline-edit-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+      body.ios-picker .todo-inline-edit-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
       }
     }
     @media (max-width: 480px) {
@@ -2992,6 +3032,29 @@ function setTodoDatePanel(open) {
   setTodoPanel("todo-date-panel", open, updateTodoDateUi);
 }
 
+function createInlineEditActions(onSave, onCancel) {
+  const actions = document.createElement("span");
+  actions.className = "todo-inline-edit-actions";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.className = "todo-inline-edit-btn ok";
+  saveBtn.title = "Speichern";
+  saveBtn.textContent = "✓";
+  saveBtn.addEventListener("click", onSave);
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "todo-inline-edit-btn cancel";
+  cancelBtn.title = "Abbrechen";
+  cancelBtn.textContent = "✕";
+  cancelBtn.addEventListener("click", onCancel);
+
+  actions.appendChild(saveBtn);
+  actions.appendChild(cancelBtn);
+  return actions;
+}
+
 function configureTodoDateInputs() {
   const useNative = isNativeMobilePickerPreferred();
   [
@@ -3412,6 +3475,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     function openDateEdit() {
       dateWrap.innerHTML = "";
       dateWrap.className = "todo-inline-edit-row";
+      const requireExplicitSave = isNativeMobilePickerPreferred();
       const inpDate = document.createElement("input");
       inpDate.type = isNativeMobilePickerPreferred() ? "date" : "text"; inpDate.className = "todo-inline-date";
       inpDate.autocomplete = "off";
@@ -3430,10 +3494,12 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       inpTime.value = todo.faelligZeit ? (inpTime.type === "time" ? toTimeInputValue(todo.faelligZeit) : formatDueTime(todo.faelligZeit)) : "";
       dateWrap.appendChild(inpDate);
       dateWrap.appendChild(inpTime);
+      if (requireExplicitSave) {
+        dateWrap.appendChild(createInlineEditActions(saveDateTime, renderDateBadge));
+      }
       inpDate.focus();
       let saved = false;
       function saveDateTime() {
-        saved = true;
         const dateRaw = inpDate.value || "";
         const dateVal = normalizeDueDateInput(dateRaw);
         if (dateRaw && dateVal === null) {
@@ -3447,6 +3513,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
           return;
         }
         const timeVal = dateVal ? (normalizedTime || "") : "";
+        saved = true;
         todo.faellig = dateVal;
         todo.faelligZeit = timeVal;
         if (todoOrdnerId && todo.id)
@@ -3455,10 +3522,13 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
             .catch(err => console.warn("saveDateTime:", err));
         renderDateBadge();
       }
-      inpDate.addEventListener("change", saveDateTime);
-      inpTime.addEventListener("change", saveDateTime);
+      if (!requireExplicitSave) {
+        inpDate.addEventListener("change", saveDateTime);
+        inpTime.addEventListener("change", saveDateTime);
+      }
       // Delay blur so picker interaction doesn't immediately close inline editor
       const onBlur = () => {
+        if (requireExplicitSave) return;
         setTimeout(() => {
           const active = document.activeElement;
           if (!saved && active !== inpDate && active !== inpTime && dateWrap.contains(inpDate)) renderDateBadge();
@@ -3498,6 +3568,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     function openReminderEdit() {
       reminderWrap.innerHTML = "";
       reminderWrap.className = "todo-inline-edit-row";
+      const requireExplicitSave = isNativeMobilePickerPreferred();
       const inpDate = document.createElement("input");
       inpDate.type = isNativeMobilePickerPreferred() ? "date" : "text";
       inpDate.className = "todo-inline-date";
@@ -3518,6 +3589,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       inpTime.value = todo.reminderAt ? (inpTime.type === "time" ? toTimeInputValue(todo.reminderAt.slice(11)) : formatDueTime(todo.reminderAt.slice(11))) : "";
       reminderWrap.appendChild(inpDate);
       reminderWrap.appendChild(inpTime);
+      if (requireExplicitSave) {
+        reminderWrap.appendChild(createInlineEditActions(saveReminder, renderReminderBadge));
+      }
       inpDate.focus();
       let saved = false;
       function saveReminder() {
@@ -3536,9 +3610,12 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         renderReminderBadge();
         checkNotifications();
       }
-      inpDate.addEventListener("change", saveReminder);
-      inpTime.addEventListener("change", saveReminder);
+      if (!requireExplicitSave) {
+        inpDate.addEventListener("change", saveReminder);
+        inpTime.addEventListener("change", saveReminder);
+      }
       const onBlur = () => {
+        if (requireExplicitSave) return;
         setTimeout(() => {
           const active = document.activeElement;
           if (!saved && active !== inpDate && active !== inpTime && reminderWrap.contains(inpDate)) renderReminderBadge();
