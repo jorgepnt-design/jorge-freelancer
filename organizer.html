@@ -833,7 +833,7 @@
       .bottom-nav-btn.active { color: var(--primary); }
       .bottom-nav-btn svg { transition: transform 0.15s; flex-shrink: 0; }
       .bottom-nav-btn.active svg { transform: scale(1.15); }
-      .tab-content { padding-bottom: 76px; }
+      .tab-content { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
       #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 14px); }
     }
 
@@ -3983,6 +3983,11 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
 
       addBtn.addEventListener("click", addSubtask);
       addInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addSubtask(); } });
+      addInput.addEventListener("focus", () => {
+        // iOS: keyboard opens ~300ms, then page may auto-scroll — counter both
+        setTimeout(() => { addInput.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 350);
+        setTimeout(() => { addInput.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 650);
+      });
 
       addRow.appendChild(addInput);
       addRow.appendChild(addBtn);
