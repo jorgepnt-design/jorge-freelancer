@@ -443,7 +443,7 @@
     .todo-date-row input[type="date"],
     .todo-date-row input[type="time"],
     .todo-inline-date[type="date"],
-    .todo-inline-prio[type="time"] {
+    .todo-inline-time[type="time"] {
       min-width: 0;
       min-height: 38px;
       box-sizing: border-box;
@@ -537,15 +537,6 @@
     .todo-controls { display: flex; align-items: center; gap: 5px; flex-shrink: 0; flex-wrap: wrap; }
     .todo-meta { font-size: 0.71rem; color: var(--text-muted); white-space: nowrap; }
     .todo-status select { padding: 4px 7px; font-size: 0.78rem; border-radius: 5px; min-width: 110px; }
-    .priority-badge {
-      font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap;
-    }
-    .priority-badge.hoch   { background: #fee2e2; color: #dc2626; }
-    .priority-badge.mittel { background: #ffedd5; color: #ea580c; }
-    .priority-badge.niedrig{ background: #dcfce7; color: #16a34a; }
-    [data-theme="dark"] .priority-badge.hoch    { background: #7f1d1d; color: #fca5a5; }
-    [data-theme="dark"] .priority-badge.mittel  { background: #7c2d12; color: #fed7aa; }
-    [data-theme="dark"] .priority-badge.niedrig { background: #14532d; color: #86efac; }
     .due-badge {
       font-size: 0.71rem; font-weight: 500; padding: 2px 7px; border-radius: 10px;
       background: var(--surface2); color: var(--text-muted); white-space: nowrap; border: 1px solid var(--border);
@@ -554,15 +545,15 @@
     .due-badge.today   { background: #ffedd5; color: #ea580c; border-color: #fdba74; }
     [data-theme="dark"] .due-badge.overdue { background: #7f1d1d; color: #fca5a5; border-color: #991b1b; }
     [data-theme="dark"] .due-badge.today   { background: #7c2d12; color: #fed7aa; border-color: #9a3412; }
-    .due-badge, .priority-badge { cursor: pointer; transition: opacity 0.15s; }
-    .due-badge:hover, .priority-badge:hover { opacity: 0.75; }
+    .due-badge { cursor: pointer; transition: opacity 0.15s; }
+    .due-badge:hover { opacity: 0.75; }
     .todo-add-meta {
       font-size: 0.7rem; color: var(--text-muted); cursor: pointer; padding: 2px 6px;
       border-radius: 10px; border: 1px dashed var(--border);
       transition: border-color 0.15s, color 0.15s;
     }
     .todo-add-meta:hover { border-color: var(--primary); color: var(--primary); }
-    .todo-inline-date, .todo-inline-prio {
+    .todo-inline-date, .todo-inline-time {
       font-size: 0.78rem; border: 1.5px solid var(--primary); border-radius: 6px;
       padding: 2px 6px; background: var(--surface); color: var(--text);
       outline: none; cursor: pointer;
@@ -771,7 +762,7 @@
       .todo-date-field span {
         font-size: 0.64rem;
       }
-      .todo-inline-date, .todo-inline-prio {
+      .todo-inline-date, .todo-inline-time {
         width: 116px;
         min-width: 116px;
       }
@@ -780,7 +771,7 @@
         flex-wrap: wrap;
       }
       body.ios-picker .todo-inline-date,
-      body.ios-picker .todo-inline-prio {
+      body.ios-picker .todo-inline-time {
         font-size: 1rem;
         width: 132px;
         min-width: 132px;
@@ -1350,13 +1341,6 @@
     <!-- Toolbar: Suche + Filter + Export -->
     <div class="todo-toolbar">
       <input class="todo-search" id="todo-search" type="text" placeholder="🔍  Suchen …" />
-      <select id="filter-prio" class="btn-toggle" style="cursor:pointer; padding:7px 10px;">
-        <option value="">Alle Prioritäten</option>
-        <option value="hoch">↑ Hoch</option>
-        <option value="mittel">→ Mittel</option>
-        <option value="niedrig">↓ Niedrig</option>
-        <option value="none">Ohne</option>
-      </select>
       <button class="btn-toggle" id="btn-hide-done">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
         Erledigte
@@ -1402,12 +1386,6 @@
       <button class="btn-primary" id="btn-todo-add">Hinzufügen</button>
     </div>
     <div class="add-todo-extra">
-      <select id="todo-prio-input">
-        <option value="none">— Priorität</option>
-        <option value="hoch">↑ Hoch</option>
-        <option value="mittel">→ Mittel</option>
-        <option value="niedrig">↓ Niedrig</option>
-      </select>
       <button type="button" class="todo-date-toggle" id="todo-date-toggle">📅 Fälligkeit setzen</button>
       <div class="todo-date-row todo-date-panel hidden" id="todo-date-panel">
         <span class="todo-date-row-label">Fällig</span>
@@ -3118,13 +3096,10 @@ function initTodos(userId) {
     renderCurrentTodoView(userId);
   });
   $("todo-search").addEventListener("input", () => renderCurrentTodoView(userId));
-  $("filter-prio").addEventListener("change", () => renderCurrentTodoView(userId));
-
   function addTodo() {
     const text = $("todo-input").value.trim(); if (!text) return;
     const zielId = currentOrdnerId === "alle" ? $("todo-ordner-select").value : currentOrdnerId;
     if (!zielId) { alert("Bitte einen Ordner auswählen."); return; }
-    const prio   = $("todo-prio-input").value;
     const faelligRaw = $("todo-faellig-input").value;
     const faellig = normalizeDueDateInput(faelligRaw);
     if (faelligRaw && faellig === null) {
@@ -3146,7 +3121,7 @@ function initTodos(userId) {
     }
     db.collection(`users/${userId}/todoOrdner/${zielId}/todos`).add({
       text, status:"offen",
-      prioritaet: prio !== "none" ? prio : "",
+      prioritaet: "",
       faellig: faellig || "",
       faelligZeit: faelligZeit || "",
       reminderAt: reminderResult.value || "",
@@ -3154,7 +3129,7 @@ function initTodos(userId) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     saveAutocomplete(text);
-    $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
+    $("todo-input").value=""; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
     $("todo-reminder-date-input").value=""; $("todo-reminder-time-input").value="";
     setTodoDatePanel(!isNativeMobilePickerPreferred());
     setTodoReminderPanel(!isNativeMobilePickerPreferred());
@@ -3219,7 +3194,6 @@ function selectOrdner(id, userId) {
 
 function renderCurrentTodoView(userId) {
   const search   = ($("todo-search").value||"").toLowerCase().trim();
-  const filterP  = $("filter-prio").value;
 
   let allTodos = [];
   if (currentOrdnerId === "alle") {
@@ -3236,9 +3210,8 @@ function renderCurrentTodoView(userId) {
   // Filter
   if (hideDone)     allTodos = allTodos.filter(t => t.status !== "erledigt");
   if (search)       allTodos = allTodos.filter(t => t.text.toLowerCase().includes(search));
-  if (filterP)      allTodos = allTodos.filter(t => filterP === "none" ? !t.prioritaet : t.prioritaet === filterP);
 
-  // Stats (ungefiltert nach Ordner, aber nach Suche/Prio)
+  // Stats (ungefiltert nach Ordner, aber nach Suche)
   let statBase = [];
   ordnerCache.forEach(({ name, todos }) => {
     if (currentOrdnerId === "alle" || ordnerCache.get(currentOrdnerId)?.name === name || currentOrdnerId === name)
@@ -3485,7 +3458,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       if (inpDate.type === "text") inpDate.placeholder = "26.04.2026";
       inpDate.value = todo.faellig ? (inpDate.type === "date" ? toDateInputValue(todo.faellig) : formatDueDate(todo.faellig)) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = isNativeMobilePickerPreferred() ? "time" : "text"; inpTime.className = "todo-inline-prio";
+      inpTime.type = isNativeMobilePickerPreferred() ? "time" : "text"; inpTime.className = "todo-inline-time";
       inpTime.autocomplete = "off";
       inpTime.autocapitalize = "off";
       inpTime.spellcheck = false;
@@ -3580,7 +3553,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       inpDate.value = todo.reminderAt ? (inpDate.type === "date" ? toDateInputValue(todo.reminderAt.slice(0, 10)) : formatDueDate(todo.reminderAt.slice(0, 10))) : "";
       const inpTime = document.createElement("input");
       inpTime.type = isNativeMobilePickerPreferred() ? "time" : "text";
-      inpTime.className = "todo-inline-prio";
+      inpTime.className = "todo-inline-time";
       inpTime.autocomplete = "off";
       inpTime.autocapitalize = "off";
       inpTime.spellcheck = false;
@@ -3632,53 +3605,6 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     }
     renderReminderBadge();
     controls.appendChild(reminderWrap);
-
-    // ── Priorität-Badge (klickbar zum Bearbeiten) ──
-    const prioWrap = document.createElement("span");
-    function renderPrioBadge() {
-      prioWrap.innerHTML = "";
-      if (todo.prioritaet && todo.prioritaet !== "none") {
-        const icons  = { hoch:"↑", mittel:"→", niedrig:"↓" };
-        const labels = { hoch:"Hoch", mittel:"Mittel", niedrig:"Niedrig" };
-        const badge = document.createElement("span");
-        badge.className = `priority-badge ${todo.prioritaet}`;
-        badge.title = "Klicken zum Ändern";
-        badge.textContent = `${icons[todo.prioritaet]} ${labels[todo.prioritaet]}`;
-        badge.addEventListener("click", openPrioEdit);
-        prioWrap.appendChild(badge);
-      } else {
-        const add = document.createElement("span");
-        add.className = "todo-add-meta"; add.textContent = "↑ Prio";
-        add.addEventListener("click", openPrioEdit);
-        prioWrap.appendChild(add);
-      }
-    }
-    function openPrioEdit() {
-      prioWrap.innerHTML = "";
-      const sel = document.createElement("select");
-      sel.className = "todo-inline-prio";
-      [["none","Keine"],["hoch","↑ Hoch"],["mittel","→ Mittel"],["niedrig","↓ Niedrig"]].forEach(([v,l]) => {
-        const opt = document.createElement("option");
-        opt.value = v; opt.textContent = l;
-        if ((todo.prioritaet||"none") === v) opt.selected = true;
-        sel.appendChild(opt);
-      });
-      prioWrap.appendChild(sel);
-      sel.focus();
-      function savePrio() {
-        const val = sel.value;
-        todo.prioritaet = val;
-        if (todoOrdnerId && todo.id)
-          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
-            .doc(todo.id).update({ prioritaet: val })
-            .catch(err => console.warn("savePrio:", err));
-        renderPrioBadge();
-      }
-      sel.addEventListener("change", savePrio);
-      sel.addEventListener("blur", () => { if (prioWrap.contains(sel)) renderPrioBadge(); });
-    }
-    renderPrioBadge();
-    controls.appendChild(prioWrap);
 
     // Datum
     const meta = document.createElement("div");
@@ -3843,7 +3769,6 @@ function findOrdnerIdForTodo(todoId) {
 
 function exportTodosExcel(userId) {
   const search  = ($("todo-search").value||"").toLowerCase().trim();
-  const filterP = $("filter-prio").value;
   let allTodos  = [];
   ordnerCache.forEach(({name,todos}) => todos.forEach(t => allTodos.push({...t,_ordnerName:name})));
   if (currentOrdnerId !== "alle") {
@@ -3852,11 +3777,10 @@ function exportTodosExcel(userId) {
   }
   if (hideDone)  allTodos = allTodos.filter(t=>t.status!=="erledigt");
   if (search)    allTodos = allTodos.filter(t=>t.text.toLowerCase().includes(search));
-  if (filterP)   allTodos = allTodos.filter(t=>filterP==="none"?!t.prioritaet:t.prioritaet===filterP);
 
   const data = allTodos.map((t,i) => {
     const d = t.createdAt ? (t.createdAt.toDate ? t.createdAt.toDate() : new Date(t.createdAt)) : null;
-    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Priorität":t.prioritaet||"","Fälligkeit":t.faellig||"","Uhrzeit":t.faelligZeit||"","Erinnerung":t.reminderAt||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
+    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Fälligkeit":t.faellig||"","Uhrzeit":t.faelligZeit||"","Erinnerung":t.reminderAt||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
   });
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
