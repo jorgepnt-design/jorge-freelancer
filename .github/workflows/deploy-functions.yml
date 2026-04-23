@@ -36,4 +36,5 @@ jobs:
         run: npm install
 
       - name: Deploy functions
-        run: firebase deploy --only functions --project arbeitsapp-3364c
+        run: firebase deploy --only functions --project arbeitsapp-3364c --force
+
