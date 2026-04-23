@@ -7,7 +7,8 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const TZ = "Europe/Berlin";
-const WINDOW_MINUTES = 10;
+const DELIVERY_GRACE_HOURS = 24;
+const WEBPUSH_TTL_SECONDS = 86400;
 const DEFAULT_SETTINGS = { enabled: true };
 
 function normalizeDueTime(raw) {
@@ -129,7 +130,7 @@ async function processUser(uid, now) {
       const triggerAt = parseReminderAt(todo.reminderAt);
       if (!triggerAt) continue;
 
-      const latestAt = triggerAt.plus({ minutes: WINDOW_MINUTES });
+      const latestAt = triggerAt.plus({ hours: DELIVERY_GRACE_HOURS });
       if (now < triggerAt || now > latestAt) continue;
 
       const reminderDate = todo.reminderAt.slice(0, 10);
@@ -174,6 +175,10 @@ async function processUser(uid, now) {
           },
           webpush: {
             fcmOptions: { link: "/organizer.html" },
+            headers: {
+              TTL: String(WEBPUSH_TTL_SECONDS),
+              Urgency: "high",
+            },
             notification: {
               icon: "/organizer-icon.svg",
               requireInteraction: true,
