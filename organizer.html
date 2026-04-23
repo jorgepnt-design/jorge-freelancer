@@ -3000,8 +3000,9 @@ function initTodos(userId) {
       });
     }
   });
-  setTodoDatePanel(false);
-  setTodoReminderPanel(false);
+  const keepCollapsed = isNativeMobilePickerPreferred();
+  setTodoDatePanel(!keepCollapsed);
+  setTodoReminderPanel(!keepCollapsed);
   $("btn-hide-done").addEventListener("click", () => {
     hideDone = !hideDone;
     $("btn-hide-done").classList.toggle("active", hideDone);
@@ -3046,8 +3047,8 @@ function initTodos(userId) {
     saveAutocomplete(text);
     $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
     $("todo-reminder-date-input").value=""; $("todo-reminder-time-input").value="";
-    setTodoDatePanel(false);
-    setTodoReminderPanel(false);
+    setTodoDatePanel(!isNativeMobilePickerPreferred());
+    setTodoReminderPanel(!isNativeMobilePickerPreferred());
   }
   $("btn-todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key==="Enter") addTodo(); });
