@@ -833,7 +833,7 @@
       .bottom-nav-btn.active { color: var(--primary); }
       .bottom-nav-btn svg { transition: transform 0.15s; flex-shrink: 0; }
       .bottom-nav-btn.active svg { transform: scale(1.15); }
-      .tab-content { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+      .tab-content { padding-bottom: 160px; }
       #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 14px); }
     }
 
@@ -3300,6 +3300,8 @@ function selectOrdner(id, userId) {
 }
 
 function renderCurrentTodoView(userId) {
+  // Preserve scroll position – Firestore re-renders must not jump the page
+  const savedScroll = window.scrollY;
   const search   = ($("todo-search").value||"").toLowerCase().trim();
 
   let allTodos = [];
@@ -3338,6 +3340,8 @@ function renderCurrentTodoView(userId) {
   renderTodos(allTodos, userId, currentOrdnerId === "alle" ? null : currentOrdnerId, currentOrdnerId === "alle");
   renderDashboard();
   checkNotifications();
+  // Restore scroll position after DOM rebuild (requestAnimationFrame waits for paint)
+  requestAnimationFrame(() => { window.scrollTo(0, savedScroll); });
 }
 
 function updateOrdnerSelect(ordner) {
