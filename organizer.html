@@ -4555,7 +4555,6 @@ function openFabTodoModal() {
     sel.appendChild(opt);
   }
   $("fab-todo-input").value = "";
-  $("fab-todo-prio").value = "none";
   $("fab-todo-modal").classList.remove("hidden");
   setTimeout(() => $("fab-todo-input").focus(), 80);
 }
@@ -4569,10 +4568,9 @@ function saveFabTodo(userId) {
   if (!text) { $("fab-todo-input").focus(); return; }
   const folderId = $("fab-todo-folder").value;
   if (!folderId) { showToast("Bitte zuerst einen Ordner anlegen.", "error"); return; }
-  const prio = $("fab-todo-prio").value;
   db.collection(`users/${userId}/todoOrdner/${folderId}/todos`).add({
     text, status: "offen",
-    prioritaet: prio === "none" ? "" : prio,
+    prioritaet: "",
     faellig: "", faelligZeit: "", reminderAt: "", farbe: "",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
@@ -4649,15 +4647,7 @@ function cleanupAll() {
       </button>
     </div>
     <input type="text" id="fab-todo-input" placeholder="Aufgabe …" autocomplete="off" />
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <select id="fab-todo-folder" style="flex:1; min-width:120px;"></select>
-      <select id="fab-todo-prio" style="flex:1; min-width:110px;">
-        <option value="none">— Priorität</option>
-        <option value="hoch">↑ Hoch</option>
-        <option value="mittel">→ Mittel</option>
-        <option value="niedrig">↓ Niedrig</option>
-      </select>
-    </div>
+    <select id="fab-todo-folder" style="width:100%;"></select>
     <div style="display:flex; justify-content:flex-end; gap:8px;">
       <button class="btn-secondary" id="fab-todo-cancel">Abbrechen</button>
       <button class="btn-primary" id="fab-todo-save">Hinzufügen</button>
