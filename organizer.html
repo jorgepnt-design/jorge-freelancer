@@ -2217,8 +2217,10 @@ function switchTab(tabName) {
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => switchTab(btn.dataset.tab));
 });
-document.querySelectorAll(".bottom-nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+// Bottom nav wird nach dem Script-Tag ins DOM eingefügt → Event-Delegation statt querySelectorAll
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".bottom-nav-btn");
+  if (btn && btn.dataset.tab) switchTab(btn.dataset.tab);
 });
 
 // ── PWA SERVICE WORKER ───────────────────────────────────────
