@@ -8,28 +8,7 @@ const db = admin.firestore();
 
 const TZ = "Europe/Berlin";
 const WINDOW_MINUTES = 10;
-const ALLOWED_DAYS_BEFORE = new Set([-1, 0, 1, 2, 3, 7]);
-const DEFAULT_SETTINGS = { enabled: true, daysBefore: 0, hour: 9 };
-
-function parseIsoDate(dateStr) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || "")) return null;
-  const dt = DateTime.fromISO(dateStr, { zone: TZ });
-  return dt.isValid ? dt : null;
-}
-
-function normalizeHour(rawHour) {
-  const h = Number(rawHour);
-  if (!Number.isFinite(h)) return DEFAULT_SETTINGS.hour;
-  if (h < 0 || h > 23) return DEFAULT_SETTINGS.hour;
-  return Math.floor(h);
-}
-
-function normalizeDaysBefore(rawDays) {
-  const d = Number(rawDays);
-  if (!Number.isFinite(d)) return DEFAULT_SETTINGS.daysBefore;
-  const n = Math.floor(d);
-  return ALLOWED_DAYS_BEFORE.has(n) ? n : DEFAULT_SETTINGS.daysBefore;
-}
+const DEFAULT_SETTINGS = { enabled: true };
 
 function normalizeDueTime(raw) {
   const v = (raw || "").trim();
@@ -61,6 +40,12 @@ function normalizeDueTime(raw) {
   return "";
 }
 
+function parseReminderAt(reminderAt) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(reminderAt || "")) return null;
+  const dt = DateTime.fromISO(reminderAt, { zone: TZ });
+  return dt.isValid ? dt : null;
+}
+
 function chunk(arr, size) {
   const out = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -84,8 +69,6 @@ async function getUserNotificationSettings(uid) {
   const data = snap.data() || {};
   return {
     enabled: typeof data.enabled === "boolean" ? data.enabled : DEFAULT_SETTINGS.enabled,
-    daysBefore: normalizeDaysBefore(data.daysBefore),
-    hour: normalizeHour(data.hour),
   };
 }
 
@@ -123,7 +106,6 @@ async function removeInvalidTokens(uid, invalidTokenDocIds) {
 async function processUser(uid, now) {
   const settings = await getUserNotificationSettings(uid);
   if (!settings.enabled) return { sent: 0, skipped: "disabled" };
-  if (settings.daysBefore < 0) return { sent: 0, skipped: "disabled" };
 
   const tokenDocs = await getUserPushTokens(uid);
   if (!tokenDocs.length) return { sent: 0, skipped: "no_tokens" };
@@ -142,33 +124,36 @@ async function processUser(uid, now) {
     for (const todoDoc of todosSnap.docs) {
       const todo = todoDoc.data() || {};
       if (todo.status === "erledigt") continue;
-      if (!todo.faellig) continue;
+      if (!todo.reminderAt) continue;
 
-      const dueDate = parseIsoDate(todo.faellig);
-      if (!dueDate) continue;
+      const triggerAt = parseReminderAt(todo.reminderAt);
+      if (!triggerAt) continue;
 
-      const triggerAt = dueDate
-        .minus({ days: settings.daysBefore })
-        .set({ hour: settings.hour, minute: 0, second: 0, millisecond: 0 });
       const latestAt = triggerAt.plus({ minutes: WINDOW_MINUTES });
       if (now < triggerAt || now > latestAt) continue;
 
+      const reminderDate = todo.reminderAt.slice(0, 10);
+      const reminderTime = normalizeDueTime(todo.reminderAt.slice(11));
       const dueTime = normalizeDueTime(todo.faelligZeit || "");
-      const dueLabel = dueDate.toFormat("dd.MM.yyyy") + (dueTime ? ` ${dueTime}` : "");
-      const dedupeKey = encodeURIComponent(
-        `${folderId}|${todoDoc.id}|${todo.faellig}|${dueTime}|${settings.daysBefore}|${settings.hour}`
-      );
+      const dueLabel = todo.faellig
+        ? DateTime.fromISO(todo.faellig, { zone: TZ }).toFormat("dd.MM.yyyy") + (dueTime ? ` ${dueTime}` : "")
+        : "";
+      const reminderLabel = triggerAt.toFormat("dd.MM.yyyy HH:mm");
+      const dedupeKey = encodeURIComponent(`${folderId}|${todoDoc.id}|${todo.reminderAt}`);
       const canSend = await markNotificationSent(uid, dedupeKey, {
         folderId,
         folderName,
         todoId: todoDoc.id,
         title: todo.text || "Aufgabe",
+        reminderAt: todo.reminderAt,
       });
       if (!canSend) continue;
 
       const notification = {
-        title: "Jorge Organizer: Aufgabe fällig",
-        body: `${todo.text || "Aufgabe"} (${folderName}) · ${dueLabel}`,
+        title: "Jorge Organizer: Erinnerung",
+        body: dueLabel
+          ? `${todo.text || "Aufgabe"} (${folderName}) - Erinnerung ${reminderLabel} - Faellig ${dueLabel}`
+          : `${todo.text || "Aufgabe"} (${folderName}) - Erinnerung ${reminderLabel}`,
       };
 
       const tokenValues = tokenDocs.map((t) => t.token);
@@ -178,16 +163,21 @@ async function processUser(uid, now) {
           tokens,
           notification,
           data: {
-            type: "todo_due",
+            type: "todo_reminder",
             folderId,
             todoId: todoDoc.id,
             dueDate: todo.faellig || "",
             dueTime: dueTime || "",
+            reminderAt: todo.reminderAt || "",
+            reminderDate,
+            reminderTime: reminderTime || "",
           },
           webpush: {
             fcmOptions: { link: "/organizer.html" },
             notification: {
               icon: "/organizer-icon.svg",
+              requireInteraction: true,
+              tag: `todo-reminder-${todoDoc.id}`,
             },
           },
         });
@@ -195,7 +185,10 @@ async function processUser(uid, now) {
         result.responses.forEach((resp, idx) => {
           if (resp.success) return;
           const code = resp.error?.code || "";
-          if (code === "messaging/registration-token-not-registered" || code === "messaging/invalid-registration-token") {
+          if (
+            code === "messaging/registration-token-not-registered" ||
+            code === "messaging/invalid-registration-token"
+          ) {
             const badToken = tokens[idx];
             const tokenDoc = tokenDocs.find((t) => t.token === badToken);
             if (tokenDoc) invalidTokenDocIds.add(tokenDoc.id);

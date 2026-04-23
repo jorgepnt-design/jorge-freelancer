@@ -372,6 +372,14 @@
       outline: none;
       border-color: var(--primary);
     }
+    .todo-reminder-inline.hint {
+      font-size: 0.79rem;
+      color: var(--text-muted);
+    }
+    .todo-reminder-inline strong {
+      color: var(--text);
+      font-size: 0.8rem;
+    }
 
     /* ── TODO STATS ── */
     .todo-stats {
@@ -607,10 +615,41 @@
       .grid-2 { grid-template-columns: 1fr; }
       .user-name { display: none; }
       .tab-content { padding: 12px; }
+      .notif-status { padding: 0 8px; font-size: 0.68rem; }
     }
 
     /* ── NOTIFICATION BELL ── */
-    .notif-wrap { position: relative; }
+    .notif-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .notif-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #f3f4f6;
+      color: #4b5563;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .notif-status.is-on {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .notif-status.is-off {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #991b1b;
+    }
     .notif-badge {
       position: absolute; top: -4px; right: -4px;
       background: #ef4444; color: #fff; border-radius: 50%;
@@ -983,6 +1022,7 @@
         <button class="btn-icon" id="btn-notif" title="Glocke aus (klicken zum Aktivieren)">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </button>
+        <span class="notif-status is-off" id="notif-status">Push aus</span>
         <span class="notif-badge hidden" id="notif-badge">0</span>
       </div>
       <button class="btn-icon" id="btn-darkmode" title="Dark Mode">
@@ -1147,31 +1187,9 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         PDF
       </button>
-      <div class="todo-reminder-inline" title="Wann Erinnerungen gesendet werden sollen">
-        <span class="todo-reminder-label">Erinnerung</span>
-        <select id="notif-days-select" class="todo-reminder-select">
-          <option value="-1">Aus</option>
-          <option value="0">am Fälligkeitstag</option>
-          <option value="1">1 Tag vorher</option>
-          <option value="2">2 Tage vorher</option>
-          <option value="3">3 Tage vorher</option>
-          <option value="7">7 Tage vorher</option>
-        </select>
-        <span class="todo-reminder-label">um</span>
-        <select id="notif-hour-select" class="todo-reminder-select">
-          <option value="6">06:00</option>
-          <option value="7">07:00</option>
-          <option value="8">08:00</option>
-          <option value="9">09:00</option>
-          <option value="10">10:00</option>
-          <option value="11">11:00</option>
-          <option value="12">12:00</option>
-          <option value="14">14:00</option>
-          <option value="16">16:00</option>
-          <option value="18">18:00</option>
-          <option value="20">20:00</option>
-          <option value="22">22:00</option>
-        </select>
+      <div class="todo-reminder-inline hint" title="Erinnerung wird pro To-do separat eingetragen">
+        <strong>Erinnerung pro To-do</strong>
+        <span class="todo-reminder-label">Datum und Uhrzeit direkt beim Eintrag setzen</span>
       </div>
     </div>
     <!-- Stats -->
@@ -1206,6 +1224,8 @@
       </select>
       <input type="text" id="todo-faellig-input" title="Fälligkeitsdatum" placeholder="TT.MM.JJJJ oder JJJJ-MM-TT" />
       <input type="text" id="todo-uhrzeit-input" title="Uhrzeit (optional)" placeholder="HH:MM" />
+      <input type="text" id="todo-reminder-date-input" title="Erinnerung am" placeholder="Erinnerung: TT.MM.JJJJ oder JJJJ-MM-TT" />
+      <input type="text" id="todo-reminder-time-input" title="Erinnerungszeit" placeholder="Erinnerung: HH:MM" />
     </div>
     <div id="todo-list" class="todo-list">
       <div class="empty-state" id="todo-empty">Noch keine Aufgaben.</div>
@@ -1481,7 +1501,12 @@ async function ensurePushMessagingInitialized() {
     const title = payload?.notification?.title || "Neue Benachrichtigung";
     const body = payload?.notification?.body || "";
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification(title, { body, icon: "/organizer-icon.svg" });
+      new Notification(title, {
+        body,
+        icon: "/organizer-icon.svg",
+        requireInteraction: true,
+        tag: payload?.data?.todoId ? `todo-reminder-${payload.data.todoId}` : "organizer-push"
+      });
     } else {
       showToast(`${title}${body ? ": " + body : ""}`);
     }
@@ -1490,14 +1515,36 @@ async function ensurePushMessagingInitialized() {
   return pushState.messaging;
 }
 
-async function enableTruePush(userId) {
-  if (!userId) return false;
+function isLocalhostHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
+function getPushSupportIssue() {
   if (typeof Notification === "undefined") {
-    showToast("Push wird auf diesem Gerät nicht unterstützt.", "error");
-    return false;
+    return "Push wird auf diesem Gerät nicht unterstützt.";
   }
   if (!("serviceWorker" in navigator)) {
-    showToast("Service Worker fehlt. Push nicht möglich.", "error");
+    return "Service Worker fehlt. Push nicht möglich.";
+  }
+  if (!window.isSecureContext && !isLocalhostHost(window.location.hostname)) {
+    return "Push funktioniert nur über HTTPS oder auf localhost.";
+  }
+  if (_isIOS && !_isPWA) {
+    return "Auf dem iPhone funktioniert Web-Push nur in der installierten Home-Bildschirm-App. Bitte in Safari öffnen, Teilen -> Zum Home-Bildschirm und dort den Organizer starten.";
+  }
+  if (!firebase.messaging || !firebase.messaging.isSupported()) {
+    return _isIOS
+      ? "Firebase Messaging ist auf diesem iPhone in der aktuellen Umgebung nicht verfügbar. Starte den Organizer aus der installierten Home-Bildschirm-App."
+      : "Firebase Messaging wird in diesem Browser nicht unterstützt.";
+  }
+  return "";
+}
+
+async function enableTruePush(userId) {
+  if (!userId) return false;
+  const supportIssue = getPushSupportIssue();
+  if (supportIssue) {
+    showToast(supportIssue, "error");
     return false;
   }
   if (!FCM_PUBLIC_VAPID_KEY || FCM_PUBLIC_VAPID_KEY.startsWith("PASTE_")) {
@@ -1507,13 +1554,15 @@ async function enableTruePush(userId) {
 
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
-    showToast("Benachrichtigungen nicht erlaubt.", "error");
+    showToast(permission === "denied"
+      ? "Benachrichtigungen wurden blockiert. Bitte in den iPhone-Einstellungen für diese Home-Bildschirm-App wieder erlauben."
+      : "Benachrichtigungen nicht erlaubt.", "error");
     return false;
   }
 
   const messaging = await ensurePushMessagingInitialized();
   if (!messaging) {
-    showToast("Firebase Messaging wird in diesem Browser nicht unterstützt.", "error");
+    showToast(getPushSupportIssue() || "Firebase Messaging wird in diesem Browser nicht unterstützt.", "error");
     return false;
   }
 
@@ -2019,6 +2068,38 @@ function normalizeDueTimeInput(raw) {
   return null;
 }
 
+function normalizeReminderDateTimeInput(dateRaw, timeRaw) {
+  const hasDate = !!(dateRaw || "").trim();
+  const hasTime = !!(timeRaw || "").trim();
+  if (!hasDate && !hasTime) return { value: "", error: "" };
+  if (!hasDate || !hasTime) {
+    return { value: null, error: "Für die Erinnerung bitte Datum und Uhrzeit zusammen angeben." };
+  }
+  const dateVal = normalizeDueDateInput(dateRaw);
+  if (dateVal === null) {
+    return { value: null, error: "Ungültiges Erinnerungsdatum. Bitte TT.MM.JJJJ oder JJJJ-MM-TT nutzen." };
+  }
+  const timeVal = normalizeDueTimeInput(timeRaw);
+  if (timeVal === null) {
+    return { value: null, error: "Ungültige Erinnerungszeit. Bitte HH:MM nutzen (z. B. 12:00)." };
+  }
+  return { value: `${dateVal}T${timeVal}`, error: "" };
+}
+
+function parseReminderDateTimeLocal(reminderAt) {
+  const v = (reminderAt || "").trim();
+  const m = v.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/);
+  if (!m) return null;
+  const [y, mo, d] = m[1].split("-").map(n => parseInt(n, 10));
+  const [h, min] = m[2].split(":").map(n => parseInt(n, 10));
+  const dt = new Date(y, mo - 1, d, h, min, 0, 0);
+  if (
+    dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d ||
+    dt.getHours() !== h || dt.getMinutes() !== min
+  ) return null;
+  return dt;
+}
+
 function formatDueDate(isoDate) {
   if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate || "";
   const [y, m, d] = isoDate.split("-");
@@ -2028,6 +2109,12 @@ function formatDueDate(isoDate) {
 function formatDueTime(timeStr) {
   const t = normalizeDueTimeInput(timeStr || "");
   return t === null ? (timeStr || "") : t;
+}
+
+function formatReminderDateTime(reminderAt) {
+  const m = (reminderAt || "").match(/^(\d{4}-\d{2}-\d{2})T(.+)$/);
+  if (!m) return reminderAt || "";
+  return `${formatDueDate(m[1])} ${formatDueTime(m[2])}`;
 }
 
 function renderDashboard() {
@@ -2197,27 +2284,50 @@ function formatReminderTiming(daysBefore) {
 
 function updateNotifButtonState() {
   const btn = $("btn-notif");
+  const status = $("notif-status");
   if (!btn) return;
+  const supportIssue = getPushSupportIssue();
   if (!notifSettings.enabled) {
     btn.innerHTML = NOTIF_ICON_OFF;
-    btn.style.color = "#6b7280";
-    btn.title = "Glocke aus (klicken zum Aktivieren)";
+    btn.style.color = "#991b1b";
+    btn.style.background = "#fee2e2";
+    btn.style.borderColor = "#fca5a5";
+    btn.title = supportIssue || "Glocke aus (klicken zum Aktivieren)";
+    if (status) {
+      status.textContent = "Push aus";
+      status.className = "notif-status is-off";
+      status.title = btn.title;
+    }
     return;
   }
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     btn.innerHTML = NOTIF_ICON_ON;
     btn.style.color = "#22c55e";
+    btn.style.background = "#dcfce7";
+    btn.style.borderColor = "#86efac";
     btn.title = "Glocke an (klicken zum Deaktivieren)";
+    if (status) {
+      status.textContent = "Push an";
+      status.className = "notif-status is-on";
+      status.title = btn.title;
+    }
   } else {
     btn.innerHTML = NOTIF_ICON_OFF;
-    btn.style.color = "#6b7280";
-    btn.title = "Glocke aus (klicken zum Aktivieren)";
+    btn.style.color = "#991b1b";
+    btn.style.background = "#fee2e2";
+    btn.style.borderColor = "#fca5a5";
+    btn.title = supportIssue || "Glocke aus (klicken zum Aktivieren)";
+    if (status) {
+      status.textContent = "Push aus";
+      status.className = "notif-status is-off";
+      status.title = btn.title;
+    }
   }
 }
 
 function applyNotifSettingsToUi() {
-  $("notif-days-select").value = String(notifSettings.daysBefore);
-  $("notif-hour-select").value = String(notifSettings.hour);
+  if ($("notif-days-select")) $("notif-days-select").value = String(notifSettings.daysBefore);
+  if ($("notif-hour-select")) $("notif-hour-select").value = String(notifSettings.hour);
 }
 
 function saveNotifSettings(userId) {
@@ -2256,18 +2366,22 @@ function initNotifications(userId) {
     }
   };
 
-  $("notif-days-select").onchange = () => {
-    notifSettings.daysBefore = parseInt($("notif-days-select").value, 10);
-    saveNotifSettings(userId);
-    showToast(`Erinnerung: ${formatReminderTiming(notifSettings.daysBefore)}.`);
-    checkNotifications();
-  };
-  $("notif-hour-select").onchange = () => {
-    notifSettings.hour = parseInt($("notif-hour-select").value, 10);
-    saveNotifSettings(userId);
-    showToast(`Erinnerungszeit: ${String(notifSettings.hour).padStart(2, "0")}:00.`);
-    checkNotifications();
-  };
+  if ($("notif-days-select")) {
+    $("notif-days-select").onchange = () => {
+      notifSettings.daysBefore = parseInt($("notif-days-select").value, 10);
+      saveNotifSettings(userId);
+      showToast(`Erinnerung: ${formatReminderTiming(notifSettings.daysBefore)}.`);
+      checkNotifications();
+    };
+  }
+  if ($("notif-hour-select")) {
+    $("notif-hour-select").onchange = () => {
+      notifSettings.hour = parseInt($("notif-hour-select").value, 10);
+      saveNotifSettings(userId);
+      showToast(`Erinnerungszeit: ${String(notifSettings.hour).padStart(2, "0")}:00.`);
+      checkNotifications();
+    };
+  }
 
   if (unsubscribeNotifSettingsFunc) unsubscribeNotifSettingsFunc();
   unsubscribeNotifSettingsFunc = db.doc(`users/${userId}/settings/notifications`).onSnapshot(snap => {
@@ -2318,27 +2432,20 @@ function checkNotifications() {
 
   ordnerCache.forEach(({ name, todos }) => {
     todos.forEach(t => {
-      if (!t.faellig || t.status === "erledigt") return;
-      const due = parseDueDateLocal(t.faellig);
-      if (!due) return;
-
-      const trigger = new Date(
-        due.getFullYear(),
-        due.getMonth(),
-        due.getDate() - notifSettings.daysBefore,
-        notifSettings.hour,
-        0,
-        0,
-        0
-      );
+      if (t.status === "erledigt") return;
+      if (!t.reminderAt) return;
+      const trigger = parseReminderDateTimeLocal(t.reminderAt);
+      if (!trigger) return;
       if (now < trigger) return;
 
-      const token = `${t.id}|${t.faellig}|${notifSettings.daysBefore}|${notifSettings.hour}`;
+      const token = `${t.id}|${t.reminderAt}`;
       if (notifiedMap[token]) return;
 
-      const dueLabel = formatDueDate(t.faellig);
-      new Notification("Aufgabe fällig", {
-        body: `${t.text} (${name}) - fällig am ${dueLabel}`,
+      const reminderLabel = formatReminderDateTime(t.reminderAt);
+      new Notification("Erinnerung für To-do", {
+        body: `${t.text} (${name}) - Erinnerung: ${reminderLabel}`,
+        requireInteraction: true,
+        tag: `todo-reminder-${t.id}`,
         icon: "/organizer-icon.svg"
       });
       notifiedMap[token] = Date.now();
@@ -2697,16 +2804,25 @@ function initTodos(userId) {
       showToast("Ungültige Uhrzeit. Bitte HH:MM nutzen (z. B. 08:30).", "error");
       return;
     }
+    const reminderDateRaw = $("todo-reminder-date-input").value;
+    const reminderTimeRaw = $("todo-reminder-time-input").value;
+    const reminderResult = normalizeReminderDateTimeInput(reminderDateRaw, reminderTimeRaw);
+    if (reminderResult.error) {
+      showToast(reminderResult.error, "error");
+      return;
+    }
     db.collection(`users/${userId}/todoOrdner/${zielId}/todos`).add({
       text, status:"offen",
       prioritaet: prio !== "none" ? prio : "",
       faellig: faellig || "",
       faelligZeit: faelligZeit || "",
+      reminderAt: reminderResult.value || "",
       farbe: "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     saveAutocomplete(text);
     $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
+    $("todo-reminder-date-input").value=""; $("todo-reminder-time-input").value="";
   }
   $("btn-todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key==="Enter") addTodo(); });
@@ -3078,6 +3194,76 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     renderDateBadge();
     controls.appendChild(dateWrap);
 
+    const reminderWrap = document.createElement("span");
+    function renderReminderBadge() {
+      reminderWrap.innerHTML = "";
+      if (todo.reminderAt) {
+        const badge = document.createElement("span");
+        badge.className = "due-badge";
+        badge.title = "Klicken zum Ändern";
+        badge.textContent = "⏰ " + formatReminderDateTime(todo.reminderAt);
+        badge.addEventListener("click", openReminderEdit);
+        reminderWrap.appendChild(badge);
+      } else {
+        const add = document.createElement("span");
+        add.className = "todo-add-meta";
+        add.textContent = "⏰ Erinnerung";
+        add.addEventListener("click", openReminderEdit);
+        reminderWrap.appendChild(add);
+      }
+    }
+    function openReminderEdit() {
+      reminderWrap.innerHTML = "";
+      const inpDate = document.createElement("input");
+      inpDate.type = "text";
+      inpDate.className = "todo-inline-date";
+      inpDate.placeholder = "TT.MM.JJJJ";
+      inpDate.value = todo.reminderAt ? formatDueDate(todo.reminderAt.slice(0, 10)) : "";
+      const inpTime = document.createElement("input");
+      inpTime.type = "text";
+      inpTime.className = "todo-inline-prio";
+      inpTime.placeholder = "HH:MM";
+      inpTime.value = todo.reminderAt ? formatDueTime(todo.reminderAt.slice(11)) : "";
+      reminderWrap.appendChild(inpDate);
+      reminderWrap.appendChild(inpTime);
+      inpDate.focus();
+      let saved = false;
+      function saveReminder() {
+        const result = normalizeReminderDateTimeInput(inpDate.value || "", inpTime.value || "");
+        if (result.error) {
+          showToast(result.error, "error");
+          return;
+        }
+        saved = true;
+        todo.reminderAt = result.value || "";
+        if (todoOrdnerId && todo.id) {
+          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
+            .doc(todo.id).update({ reminderAt: todo.reminderAt })
+            .catch(err => console.warn("saveReminder:", err));
+        }
+        renderReminderBadge();
+        checkNotifications();
+      }
+      inpDate.addEventListener("change", saveReminder);
+      inpTime.addEventListener("change", saveReminder);
+      const onBlur = () => {
+        setTimeout(() => {
+          const active = document.activeElement;
+          if (!saved && active !== inpDate && active !== inpTime && reminderWrap.contains(inpDate)) renderReminderBadge();
+        }, 250);
+      };
+      inpDate.addEventListener("blur", onBlur);
+      inpTime.addEventListener("blur", onBlur);
+      inpDate.addEventListener("keydown", e => {
+        if (e.key === "Enter") { e.preventDefault(); saveReminder(); }
+      });
+      inpTime.addEventListener("keydown", e => {
+        if (e.key === "Enter") { e.preventDefault(); saveReminder(); }
+      });
+    }
+    renderReminderBadge();
+    controls.appendChild(reminderWrap);
+
     // ── Priorität-Badge (klickbar zum Bearbeiten) ──
     const prioWrap = document.createElement("span");
     function renderPrioBadge() {
@@ -3301,7 +3487,7 @@ function exportTodosExcel(userId) {
 
   const data = allTodos.map((t,i) => {
     const d = t.createdAt ? (t.createdAt.toDate ? t.createdAt.toDate() : new Date(t.createdAt)) : null;
-    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Priorität":t.prioritaet||"","Fälligkeit":t.faellig||"","Uhrzeit":t.faelligZeit||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
+    return {"Nr.":i+1,"Aufgabe":t.text,"Status":t.status==="offen"?"Offen":t.status==="progress"?"In Bearbeitung":"Erledigt","Priorität":t.prioritaet||"","Fälligkeit":t.faellig||"","Uhrzeit":t.faelligZeit||"","Erinnerung":t.reminderAt||"","Ordner":t._ordnerName||"","Erstellt":d?d.toLocaleDateString("de-DE"):""};
   });
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -3983,8 +4169,15 @@ function cleanupAll() {
   if ($("notif-badge")) $("notif-badge").classList.add("hidden");
   if ($("btn-notif")) {
     $("btn-notif").innerHTML = NOTIF_ICON_OFF;
-    $("btn-notif").style.color = "#6b7280";
+    $("btn-notif").style.color = "#991b1b";
+    $("btn-notif").style.background = "#fee2e2";
+    $("btn-notif").style.borderColor = "#fca5a5";
     $("btn-notif").title = "Glocke aus (klicken zum Aktivieren)";
+  }
+  if ($("notif-status")) {
+    $("notif-status").textContent = "Push aus";
+    $("notif-status").className = "notif-status is-off";
+    $("notif-status").title = "Glocke aus (klicken zum Aktivieren)";
   }
   currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId=null;
 }

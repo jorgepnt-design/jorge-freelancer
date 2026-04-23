@@ -19,9 +19,12 @@ messaging.onBackgroundMessage((payload) => {
   const body = n.body || "Neue Erinnerung";
   const icon = n.icon || "/organizer-icon.svg";
   const clickAction = n.click_action || "/organizer.html";
+  const tag = payload?.data?.todoId ? `todo-reminder-${payload.data.todoId}` : "organizer-push";
   self.registration.showNotification(title, {
     body,
     icon,
+    requireInteraction: true,
+    tag,
     data: { clickAction }
   });
 });
