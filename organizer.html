@@ -515,6 +515,7 @@
       background: var(--surface); border: 1.5px solid var(--border);
       border-left-width: 4px; border-radius: var(--radius);
       padding: 10px 12px; display: flex; align-items: center; gap: 9px;
+      flex-wrap: wrap;
       transition: border-color 0.2s;
     }
     .todo-item.status-offen    { border-left-color: var(--status-open); }
@@ -715,6 +716,55 @@
       cursor: pointer; transition: border-color 0.15s, color 0.15s;
     }
     .notiz-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ── SUBTASKS ── */
+    .subtask-section {
+      width: 100%; margin-top: 4px; border-top: 1px solid var(--border); padding-top: 6px;
+    }
+    .subtask-toggle {
+      display: flex; align-items: center; gap: 6px; background: none; border: none;
+      cursor: pointer; padding: 2px 0; font-size: 0.78rem; color: var(--text-muted);
+      transition: color 0.15s;
+    }
+    .subtask-toggle:hover { color: var(--primary); }
+    .subtask-toggle-chevron { font-size: 0.65rem; transition: transform 0.2s; display: inline-block; }
+    .subtask-toggle.open .subtask-toggle-chevron { transform: rotate(90deg); }
+    .subtask-progress-badge {
+      font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; font-weight: 600;
+      background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border);
+    }
+    .subtask-progress-badge.all-done { background: #dcfce7; color: #16a34a; border-color: #86efac; }
+    [data-theme="dark"] .subtask-progress-badge.all-done { background: #14532d; color: #86efac; border-color: #166534; }
+    .subtask-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .subtask-list.hidden { display: none; }
+    .subtask-item {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.82rem; color: var(--text); padding: 2px 0;
+    }
+    .subtask-cb { width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
+    .subtask-text { flex: 1; line-height: 1.35; word-break: break-word; }
+    .subtask-text.done { text-decoration: line-through; color: var(--text-muted); }
+    .subtask-del {
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      font-size: 1rem; padding: 0 2px; line-height: 1; opacity: 0.5; flex-shrink: 0;
+      transition: opacity 0.15s, color 0.15s;
+    }
+    .subtask-del:hover { opacity: 1; color: #ef4444; }
+    .subtask-add-row {
+      display: flex; align-items: center; gap: 6px; margin-top: 5px;
+    }
+    .subtask-add-input {
+      flex: 1; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px;
+      border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+      outline: none; transition: border-color 0.15s;
+    }
+    .subtask-add-input:focus { border-color: var(--primary); }
+    .subtask-add-btn {
+      background: var(--primary); color: #fff; border: none; border-radius: 6px;
+      padding: 4px 10px; font-size: 0.82rem; cursor: pointer; font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    .subtask-add-btn:hover { opacity: 0.85; }
 
     /* ── MODAL ── */
     .modal-overlay {
@@ -3814,6 +3864,149 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     controls.appendChild(delBtn);
 
     item.appendChild(controls);
+
+    /* ── Subtasks ── */
+    const subtasks = Array.isArray(todo.subtasks) ? todo.subtasks : [];
+    const subtaskSection = document.createElement("div");
+    subtaskSection.className = "subtask-section";
+
+    // Toggle button
+    const subtaskToggle = document.createElement("button");
+    subtaskToggle.type = "button";
+    subtaskToggle.className = "subtask-toggle";
+
+    const chevron = document.createElement("span");
+    chevron.className = "subtask-toggle-chevron";
+    chevron.textContent = "▶";
+
+    const toggleLabel = document.createElement("span");
+    toggleLabel.textContent = "Unteraufgaben";
+
+    const progressBadge = document.createElement("span");
+    progressBadge.className = "subtask-progress-badge";
+
+    function updateProgressBadge(list) {
+      const total = list.length;
+      const done = list.filter(s => s.done).length;
+      if (total === 0) {
+        progressBadge.textContent = "0";
+        progressBadge.classList.remove("all-done");
+      } else if (done === total) {
+        progressBadge.textContent = "✓ alle";
+        progressBadge.classList.add("all-done");
+      } else {
+        progressBadge.textContent = `${done}/${total}`;
+        progressBadge.classList.remove("all-done");
+      }
+    }
+    updateProgressBadge(subtasks);
+
+    subtaskToggle.appendChild(chevron);
+    subtaskToggle.appendChild(toggleLabel);
+    subtaskToggle.appendChild(progressBadge);
+
+    // Collapsible list
+    const subtaskListEl = document.createElement("div");
+    subtaskListEl.className = "subtask-list hidden";
+
+    function getSubtasksFromCache() {
+      const folder = ordnerCache.get(todoOrdnerId);
+      if (!folder) return [];
+      const t = folder.todos.find(x => x.id === todo.id);
+      return Array.isArray(t?.subtasks) ? [...t.subtasks] : [];
+    }
+
+    function saveSubtasks(newList) {
+      db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
+        .doc(todo.id).update({ subtasks: newList }).catch(e => console.error("Subtask save error", e));
+    }
+
+    function renderSubtaskItems(currentList) {
+      subtaskListEl.innerHTML = "";
+      currentList.forEach((sub, idx) => {
+        const row = document.createElement("div");
+        row.className = "subtask-item";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.className = "subtask-cb";
+        cb.checked = !!sub.done;
+        cb.addEventListener("change", () => {
+          const list = getSubtasksFromCache();
+          const i = list.findIndex(s => s.id === sub.id);
+          if (i !== -1) { list[i].done = cb.checked; saveSubtasks(list); }
+        });
+
+        const txt = document.createElement("span");
+        txt.className = "subtask-text" + (sub.done ? " done" : "");
+        txt.textContent = sub.text;
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "subtask-del";
+        del.title = "Löschen";
+        del.textContent = "×";
+        del.addEventListener("click", () => {
+          const list = getSubtasksFromCache().filter(s => s.id !== sub.id);
+          saveSubtasks(list);
+        });
+
+        row.appendChild(cb);
+        row.appendChild(txt);
+        row.appendChild(del);
+        subtaskListEl.appendChild(row);
+      });
+
+      // Add-row
+      const addRow = document.createElement("div");
+      addRow.className = "subtask-add-row";
+
+      const addInput = document.createElement("input");
+      addInput.type = "text";
+      addInput.className = "subtask-add-input";
+      addInput.placeholder = "Neue Unteraufgabe…";
+      addInput.maxLength = 200;
+
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "subtask-add-btn";
+      addBtn.textContent = "+";
+
+      function addSubtask() {
+        const text = addInput.value.trim();
+        if (!text) return;
+        const list = getSubtasksFromCache();
+        list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, done: false });
+        saveSubtasks(list);
+        addInput.value = "";
+      }
+
+      addBtn.addEventListener("click", addSubtask);
+      addInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addSubtask(); } });
+
+      addRow.appendChild(addInput);
+      addRow.appendChild(addBtn);
+      subtaskListEl.appendChild(addRow);
+    }
+
+    renderSubtaskItems(subtasks);
+
+    // Toggle expand/collapse
+    subtaskToggle.addEventListener("click", () => {
+      const isOpen = subtaskToggle.classList.toggle("open");
+      subtaskListEl.classList.toggle("hidden", !isOpen);
+    });
+
+    // Auto-open if there are subtasks
+    if (subtasks.length > 0) {
+      subtaskToggle.classList.add("open");
+      subtaskListEl.classList.remove("hidden");
+    }
+
+    subtaskSection.appendChild(subtaskToggle);
+    subtaskSection.appendChild(subtaskListEl);
+    item.appendChild(subtaskSection);
+
     list.appendChild(item);
   });
 }
