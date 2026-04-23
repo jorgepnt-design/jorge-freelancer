@@ -399,8 +399,65 @@
     /* ── ADD TODO FORM ── */
     .add-todo { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
     .add-todo input[type="text"] { flex: 1; min-width: 140px; }
-    .add-todo-extra { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .add-todo-extra select, .add-todo-extra input[type="date"], .add-todo-extra input[type="time"] { flex: 1; min-width: 120px; padding: 7px 10px; font-size: 0.85rem; }
+    .add-todo-extra {
+      display: grid;
+      grid-template-columns: minmax(150px, 190px) 1fr;
+      gap: 8px 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .add-todo-extra select,
+    .add-todo-extra input[type="text"],
+    .add-todo-extra input[type="date"],
+    .add-todo-extra input[type="time"] {
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 0.85rem;
+    }
+    .todo-date-row {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr) 96px;
+      gap: 8px;
+      align-items: center;
+    }
+    .todo-date-row-label {
+      font-size: 0.77rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .todo-date-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .todo-date-toggle.active {
+      border-style: solid;
+      border-color: #93c5fd;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .todo-date-panel.hidden,
+    .todo-reminder-panel.hidden {
+      display: none;
+    }
+    .todo-inline-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
 
     /* ── TODO LIST ── */
     .todo-list { display: flex; flex-direction: column; gap: 7px; }
@@ -610,6 +667,15 @@
       .todo-status select { font-size: 0.76rem; padding: 4px 6px; min-width: 90px; }
       .ordner-badge { font-size: 0.68rem; padding: 2px 5px; }
       .notiz-grid { grid-template-columns: 1fr; }
+      .add-todo-extra {
+        grid-template-columns: 1fr;
+      }
+      .todo-date-row {
+        grid-template-columns: 72px minmax(0, 1fr) 88px;
+      }
+      .todo-inline-hint {
+        display: none;
+      }
     }
     @media (max-width: 480px) {
       .grid-2 { grid-template-columns: 1fr; }
@@ -1222,10 +1288,19 @@
         <option value="mittel">→ Mittel</option>
         <option value="niedrig">↓ Niedrig</option>
       </select>
-      <input type="text" id="todo-faellig-input" title="Fälligkeitsdatum" placeholder="TT.MM.JJJJ oder JJJJ-MM-TT" />
-      <input type="text" id="todo-uhrzeit-input" title="Uhrzeit (optional)" placeholder="HH:MM" />
-      <input type="text" id="todo-reminder-date-input" title="Erinnerung am" placeholder="Erinnerung: TT.MM.JJJJ oder JJJJ-MM-TT" />
-      <input type="text" id="todo-reminder-time-input" title="Erinnerungszeit" placeholder="Erinnerung: HH:MM" />
+      <button type="button" class="todo-date-toggle" id="todo-date-toggle">📅 Fälligkeit setzen</button>
+      <div class="todo-date-row todo-date-panel hidden" id="todo-date-panel">
+        <span class="todo-date-row-label">Fällig</span>
+        <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <input type="time" id="todo-uhrzeit-input" title="Uhrzeit (optional)" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      </div>
+      <button type="button" class="todo-date-toggle" id="todo-reminder-toggle">⏰ Erinnerung setzen</button>
+      <div class="todo-date-row todo-reminder-panel hidden" id="todo-reminder-panel">
+        <span class="todo-date-row-label">Erinnerung</span>
+        <input type="date" id="todo-reminder-date-input" title="Erinnerung am" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <input type="time" id="todo-reminder-time-input" title="Erinnerungszeit" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      </div>
+      <span class="todo-inline-hint" id="todo-reminder-hint">Datum + Uhrzeit der Erinnerung zusammen setzen</span>
     </div>
     <div id="todo-list" class="todo-list">
       <div class="empty-state" id="todo-empty">Noch keine Aufgaben.</div>
@@ -2111,6 +2186,16 @@ function formatDueTime(timeStr) {
   return t === null ? (timeStr || "") : t;
 }
 
+function toDateInputValue(raw) {
+  const v = normalizeDueDateInput(raw || "");
+  return v === null ? "" : v;
+}
+
+function toTimeInputValue(raw) {
+  const v = normalizeDueTimeInput(raw || "");
+  return v === null ? "" : v;
+}
+
 function formatReminderDateTime(reminderAt) {
   const m = (reminderAt || "").match(/^(\d{4}-\d{2}-\d{2})T(.+)$/);
   if (!m) return reminderAt || "";
@@ -2774,11 +2859,80 @@ function saveColorLabels(userId) {
     });
 }
 
+function updateTodoDateToggle(toggleId, panelId, dateId, timeId, inactiveLabel, activeLabel) {
+  const panel = $(panelId);
+  const toggle = $(toggleId);
+  if (!panel || !toggle) return;
+  const hasValues = !!(($(dateId)?.value || "").trim() || ($(timeId)?.value || "").trim());
+  const isOpen = !panel.classList.contains("hidden");
+  toggle.classList.toggle("active", isOpen || hasValues);
+  toggle.textContent = isOpen || hasValues ? activeLabel : inactiveLabel;
+}
+
+function updateTodoReminderUi() {
+  const hint = $("todo-reminder-hint");
+  const hasValues = !!(($("todo-reminder-date-input")?.value || "").trim() || ($("todo-reminder-time-input")?.value || "").trim());
+  const isOpen = !$("todo-reminder-panel")?.classList.contains("hidden");
+  updateTodoDateToggle("todo-reminder-toggle", "todo-reminder-panel", "todo-reminder-date-input", "todo-reminder-time-input", "⏰ Erinnerung setzen", "⏰ Erinnerung aktiv");
+  if (hint) hint.style.display = isOpen || hasValues ? "" : "none";
+}
+
+function updateTodoDateUi() {
+  updateTodoDateToggle("todo-date-toggle", "todo-date-panel", "todo-faellig-input", "todo-uhrzeit-input", "📅 Fälligkeit setzen", "📅 Fälligkeit aktiv");
+}
+
+function setTodoPanel(panelId, open, updateFn) {
+  const panel = $(panelId);
+  if (!panel) return;
+  panel.classList.toggle("hidden", !open);
+  if (typeof updateFn === "function") updateFn();
+}
+
+function setTodoReminderPanel(open) {
+  setTodoPanel("todo-reminder-panel", open, updateTodoReminderUi);
+}
+
+function setTodoDatePanel(open) {
+  setTodoPanel("todo-date-panel", open, updateTodoDateUi);
+}
+
 function initTodos(userId) {
   const ordnerRef = db.collection(`users/${userId}/todoOrdner`).orderBy("createdAt","asc");
 
   $("btn-new-ordner").addEventListener("click", () => createOrdner(userId));
   initSharing(userId);
+  if ($("todo-date-toggle")) {
+    $("todo-date-toggle").addEventListener("click", () => {
+      const panel = $("todo-date-panel");
+      setTodoDatePanel(panel?.classList.contains("hidden"));
+    });
+  }
+  if ($("todo-reminder-toggle")) {
+    $("todo-reminder-toggle").addEventListener("click", () => {
+      const panel = $("todo-reminder-panel");
+      setTodoReminderPanel(panel?.classList.contains("hidden"));
+    });
+  }
+  ["todo-faellig-input", "todo-uhrzeit-input"].forEach(id => {
+    if ($(id)) {
+      $(id).addEventListener("input", () => {
+        const hasValues = !!(($("todo-faellig-input")?.value || "").trim() || ($("todo-uhrzeit-input")?.value || "").trim());
+        if (hasValues) setTodoDatePanel(true);
+        else updateTodoDateUi();
+      });
+    }
+  });
+  ["todo-reminder-date-input", "todo-reminder-time-input"].forEach(id => {
+    if ($(id)) {
+      $(id).addEventListener("input", () => {
+        const hasValues = !!(($("todo-reminder-date-input")?.value || "").trim() || ($("todo-reminder-time-input")?.value || "").trim());
+        if (hasValues) setTodoReminderPanel(true);
+        else updateTodoReminderUi();
+      });
+    }
+  });
+  setTodoDatePanel(false);
+  setTodoReminderPanel(false);
   $("btn-hide-done").addEventListener("click", () => {
     hideDone = !hideDone;
     $("btn-hide-done").classList.toggle("active", hideDone);
@@ -2823,6 +2977,8 @@ function initTodos(userId) {
     saveAutocomplete(text);
     $("todo-input").value=""; $("todo-prio-input").value="none"; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
     $("todo-reminder-date-input").value=""; $("todo-reminder-time-input").value="";
+    setTodoDatePanel(false);
+    setTodoReminderPanel(false);
   }
   $("btn-todo-add").addEventListener("click", addTodo);
   $("todo-input").addEventListener("keydown", e => { if (e.key==="Enter") addTodo(); });
@@ -3139,13 +3295,17 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     function openDateEdit() {
       dateWrap.innerHTML = "";
       const inpDate = document.createElement("input");
-      inpDate.type = "text"; inpDate.className = "todo-inline-date";
-      inpDate.placeholder = "TT.MM.JJJJ";
-      inpDate.value = todo.faellig ? formatDueDate(todo.faellig) : "";
+      inpDate.type = "date"; inpDate.className = "todo-inline-date";
+      inpDate.autocomplete = "off";
+      inpDate.autocapitalize = "off";
+      inpDate.spellcheck = false;
+      inpDate.value = todo.faellig ? toDateInputValue(todo.faellig) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = "text"; inpTime.className = "todo-inline-prio";
-      inpTime.placeholder = "HH:MM";
-      inpTime.value = todo.faelligZeit ? formatDueTime(todo.faelligZeit) : "";
+      inpTime.type = "time"; inpTime.className = "todo-inline-prio";
+      inpTime.autocomplete = "off";
+      inpTime.autocapitalize = "off";
+      inpTime.spellcheck = false;
+      inpTime.value = todo.faelligZeit ? toTimeInputValue(todo.faelligZeit) : "";
       dateWrap.appendChild(inpDate);
       dateWrap.appendChild(inpTime);
       inpDate.focus();
@@ -3215,15 +3375,19 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     function openReminderEdit() {
       reminderWrap.innerHTML = "";
       const inpDate = document.createElement("input");
-      inpDate.type = "text";
+      inpDate.type = "date";
       inpDate.className = "todo-inline-date";
-      inpDate.placeholder = "TT.MM.JJJJ";
-      inpDate.value = todo.reminderAt ? formatDueDate(todo.reminderAt.slice(0, 10)) : "";
+      inpDate.autocomplete = "off";
+      inpDate.autocapitalize = "off";
+      inpDate.spellcheck = false;
+      inpDate.value = todo.reminderAt ? toDateInputValue(todo.reminderAt.slice(0, 10)) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = "text";
+      inpTime.type = "time";
       inpTime.className = "todo-inline-prio";
-      inpTime.placeholder = "HH:MM";
-      inpTime.value = todo.reminderAt ? formatDueTime(todo.reminderAt.slice(11)) : "";
+      inpTime.autocomplete = "off";
+      inpTime.autocapitalize = "off";
+      inpTime.spellcheck = false;
+      inpTime.value = todo.reminderAt ? toTimeInputValue(todo.reminderAt.slice(11)) : "";
       reminderWrap.appendChild(inpDate);
       reminderWrap.appendChild(inpTime);
       inpDate.focus();
