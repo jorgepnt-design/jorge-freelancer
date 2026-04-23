@@ -416,8 +416,8 @@
     }
     .todo-date-row {
       display: grid;
-      grid-template-columns: 88px minmax(0, 1fr) 96px;
-      gap: 8px;
+      grid-template-columns: 88px minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
       align-items: center;
     }
     .todo-date-row-label {
@@ -426,6 +426,29 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--text-muted);
+    }
+    .todo-date-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .todo-date-field span {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .todo-date-row input[type="date"],
+    .todo-date-row input[type="time"],
+    .todo-inline-date[type="date"],
+    .todo-inline-prio[type="time"] {
+      min-width: 0;
+      min-height: 38px;
+      box-sizing: border-box;
+      appearance: auto;
+      -webkit-appearance: auto;
     }
     .todo-date-toggle {
       display: inline-flex;
@@ -516,6 +539,10 @@
       font-size: 0.78rem; border: 1.5px solid var(--primary); border-radius: 6px;
       padding: 2px 6px; background: var(--surface); color: var(--text);
       outline: none; cursor: pointer;
+      width: 124px;
+      min-width: 124px;
+      min-height: 38px;
+      box-sizing: border-box;
     }
 
     /* Color picker */
@@ -671,10 +698,18 @@
         grid-template-columns: 1fr;
       }
       .todo-date-row {
-        grid-template-columns: 72px minmax(0, 1fr) 88px;
+        grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr);
+        gap: 10px;
       }
       .todo-inline-hint {
         display: none;
+      }
+      .todo-date-field span {
+        font-size: 0.64rem;
+      }
+      .todo-inline-date, .todo-inline-prio {
+        width: 116px;
+        min-width: 116px;
       }
     }
     @media (max-width: 480px) {
@@ -1291,14 +1326,26 @@
       <button type="button" class="todo-date-toggle" id="todo-date-toggle">📅 Fälligkeit setzen</button>
       <div class="todo-date-row todo-date-panel hidden" id="todo-date-panel">
         <span class="todo-date-row-label">Fällig</span>
-        <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" autocomplete="off" autocapitalize="off" spellcheck="false" />
-        <input type="time" id="todo-uhrzeit-input" title="Uhrzeit (optional)" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <label class="todo-date-field">
+          <span>Datum</span>
+          <input type="date" id="todo-faellig-input" title="Fälligkeitsdatum" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </label>
+        <label class="todo-date-field">
+          <span>Zeit</span>
+          <input type="time" id="todo-uhrzeit-input" title="Uhrzeit (optional)" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </label>
       </div>
       <button type="button" class="todo-date-toggle" id="todo-reminder-toggle">⏰ Erinnerung setzen</button>
       <div class="todo-date-row todo-reminder-panel hidden" id="todo-reminder-panel">
         <span class="todo-date-row-label">Erinnerung</span>
-        <input type="date" id="todo-reminder-date-input" title="Erinnerung am" autocomplete="off" autocapitalize="off" spellcheck="false" />
-        <input type="time" id="todo-reminder-time-input" title="Erinnerungszeit" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        <label class="todo-date-field">
+          <span>Datum</span>
+          <input type="date" id="todo-reminder-date-input" title="Erinnerung am" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </label>
+        <label class="todo-date-field">
+          <span>Zeit</span>
+          <input type="time" id="todo-reminder-time-input" title="Erinnerungszeit" autocomplete="off" autocapitalize="off" spellcheck="false" />
+        </label>
       </div>
       <span class="todo-inline-hint" id="todo-reminder-hint">Datum + Uhrzeit der Erinnerung zusammen setzen</span>
     </div>
