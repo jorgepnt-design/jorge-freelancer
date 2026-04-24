@@ -4802,6 +4802,7 @@ function initEinkauf(userId) {
 function renderEinkaufList(userId) {
   const list  = $("einkauf-list");
   const empty = $("einkauf-empty");
+  const savedScroll = window.scrollY;
   Array.from(list.children).forEach(c => { if (c !== empty) list.removeChild(c); });
 
   if (einkaufItems.length === 0) {
@@ -4854,6 +4855,7 @@ function renderEinkaufList(userId) {
   const done  = einkaufItems.filter(i =>  i.checked).length;
   const total = einkaufItems.length;
   $("einkauf-count").textContent = `${done} von ${total} erledigt`;
+  requestAnimationFrame(() => window.scrollTo(0, savedScroll));
 }
 
 function renderKatalogChips(userId) {
