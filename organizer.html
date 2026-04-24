@@ -515,7 +515,6 @@
       background: var(--surface); border: 1.5px solid var(--border);
       border-left-width: 4px; border-radius: var(--radius);
       padding: 10px 12px; display: flex; align-items: center; gap: 9px;
-      flex-wrap: wrap;
       transition: border-color 0.2s;
     }
     .todo-item.status-offen    { border-left-color: var(--status-open); }
@@ -530,9 +529,8 @@
     .todo-item[data-color="lila"]   { border-left-color: #a855f7; }
 
     .todo-text {
-      flex: 1; font-size: 0.95rem; line-height: 1.4;
+      flex: 1; font-size: 0.92rem; line-height: 1.4;
       word-break: break-word; color: var(--text);
-      font-weight: 500;
     }
     .todo-item.status-erledigt .todo-text { text-decoration: line-through; color: var(--text-muted); }
 
@@ -718,55 +716,6 @@
     }
     .notiz-add-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-    /* ── SUBTASKS ── */
-    .subtask-section {
-      width: 100%; margin-top: 4px; border-top: 1px solid var(--border); padding-top: 6px;
-    }
-    .subtask-toggle {
-      display: flex; align-items: center; gap: 6px; background: none; border: none;
-      cursor: pointer; padding: 2px 0; font-size: 0.78rem; color: var(--text-muted);
-      transition: color 0.15s;
-    }
-    .subtask-toggle:hover { color: var(--primary); }
-    .subtask-toggle-chevron { font-size: 0.65rem; transition: transform 0.2s; display: inline-block; }
-    .subtask-toggle.open .subtask-toggle-chevron { transform: rotate(90deg); }
-    .subtask-progress-badge {
-      font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; font-weight: 600;
-      background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border);
-    }
-    .subtask-progress-badge.all-done { background: #dcfce7; color: #16a34a; border-color: #86efac; }
-    [data-theme="dark"] .subtask-progress-badge.all-done { background: #14532d; color: #86efac; border-color: #166534; }
-    .subtask-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-    .subtask-list.hidden { display: none; }
-    .subtask-item {
-      display: flex; align-items: center; gap: 7px;
-      font-size: 0.82rem; color: var(--text); padding: 2px 0;
-    }
-    .subtask-cb { width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
-    .subtask-text { flex: 1; line-height: 1.35; word-break: break-word; }
-    .subtask-text.done { text-decoration: line-through; color: var(--text-muted); }
-    .subtask-del {
-      background: none; border: none; cursor: pointer; color: var(--text-muted);
-      font-size: 1rem; padding: 0 2px; line-height: 1; opacity: 0.5; flex-shrink: 0;
-      transition: opacity 0.15s, color 0.15s;
-    }
-    .subtask-del:hover { opacity: 1; color: #ef4444; }
-    .subtask-add-row {
-      display: flex; align-items: center; gap: 6px; margin-top: 5px;
-    }
-    .subtask-add-input {
-      flex: 1; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px;
-      border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
-      outline: none; transition: border-color 0.15s;
-    }
-    .subtask-add-input:focus { border-color: var(--primary); }
-    .subtask-add-btn {
-      background: var(--primary); color: #fff; border: none; border-radius: 6px;
-      padding: 4px 10px; font-size: 0.82rem; cursor: pointer; font-weight: 600;
-      transition: opacity 0.15s;
-    }
-    .subtask-add-btn:hover { opacity: 0.85; }
-
     /* ── MODAL ── */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
@@ -787,57 +736,6 @@
 
     /* ── UTILS ── */
     .hidden { display: none !important; }
-
-    /* ── FLOATING ACTION BUTTON ── */
-    #fab-wrap {
-      display: none;
-      position: fixed; bottom: 24px; right: 20px; z-index: 49;
-      flex-direction: column; align-items: flex-end; gap: 10px;
-    }
-    #fab-btn {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: var(--primary); color: #fff; border: none;
-      cursor: pointer; box-shadow: 0 4px 16px rgba(37,99,235,0.4);
-      transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), background 0.15s;
-      display: flex; align-items: center; justify-content: center;
-      user-select: none;
-    }
-    #fab-btn:hover { background: var(--primary-hover); }
-    #fab-btn.open { transform: rotate(45deg); }
-    #fab-menu { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
-    #fab-menu.hidden { display: none; }
-    .fab-option {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 16px 8px 12px; border-radius: 20px;
-      background: var(--surface); border: 1.5px solid var(--border);
-      color: var(--text); font-size: 0.88rem; font-weight: 500;
-      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      white-space: nowrap; transition: border-color 0.15s, background 0.15s, transform 0.15s;
-    }
-    .fab-option:hover { border-color: var(--primary); background: var(--primary-light); transform: translateX(-3px); }
-
-    /* ── BOTTOM NAV (mobile) ── */
-    .bottom-nav { display: none; }
-    @media (max-width: 600px) {
-      .tabs { display: none; }
-      .bottom-nav {
-        display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-        height: 60px; background: var(--surface); border-top: 1px solid var(--border);
-        z-index: 20; padding-bottom: env(safe-area-inset-bottom, 0px);
-      }
-      .bottom-nav-btn {
-        flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 3px; border: none; background: transparent; color: var(--text-muted);
-        font-size: 0.6rem; font-weight: 600; cursor: pointer; padding: 4px 2px;
-        transition: color 0.15s; letter-spacing: 0.02em; line-height: 1.1;
-      }
-      .bottom-nav-btn.active { color: var(--primary); }
-      .bottom-nav-btn svg { transition: transform 0.15s; flex-shrink: 0; }
-      .bottom-nav-btn.active svg { transform: scale(1.15); }
-      .tab-content { padding-bottom: 160px; }
-      body { padding-bottom: 160px; }
-      #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 14px); }
-    }
 
     /* ── MOBILE TODO LAYOUT ── */
     .todo-controls-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
@@ -2251,28 +2149,21 @@ auth.onAuthStateChanged(user => {
     initNotifications(user.uid);
     initColorLabels(user.uid);
     initEinkauf(user.uid);
-    initFab(user.uid);
   } else {
     $("login-screen").style.display = "flex";
     $("app").style.display = "none";
-    if ($("fab-wrap")) $("fab-wrap").style.display = "none";
     cleanupAll();
   }
 });
 
 // ── MAIN TABS ────────────────────────────────────────────────
-function switchTab(tabName) {
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
-  document.querySelectorAll(".bottom-nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
-  document.querySelectorAll(".tab-content").forEach(c => c.classList.toggle("active", c.id === "tab-" + tabName));
-}
 document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
-});
-// Bottom nav wird nach dem Script-Tag ins DOM eingefügt → Event-Delegation statt querySelectorAll
-document.addEventListener("click", e => {
-  const btn = e.target.closest(".bottom-nav-btn");
-  if (btn && btn.dataset.tab) switchTab(btn.dataset.tab);
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    $("tab-" + btn.dataset.tab).classList.add("active");
+  });
 });
 
 // ── PWA SERVICE WORKER ───────────────────────────────────────
@@ -2417,6 +2308,10 @@ function toTimeInputValue(raw) {
 
 function isNativeMobilePickerPreferred() {
   return _isIOS;
+}
+
+function useNativeTodoPicker() {
+  return true;
 }
 
 function formatReminderDateTime(reminderAt) {
@@ -3143,7 +3038,7 @@ function createInlineEditActions(onSave, onCancel) {
 }
 
 function configureTodoDateInputs() {
-  const useNative = isNativeMobilePickerPreferred();
+  const useNative = useNativeTodoPicker();
   [
     ["todo-faellig-input", useNative ? "date" : "text", "26.04.2026", "numeric"],
     ["todo-uhrzeit-input", useNative ? "time" : "text", "20:00", "numeric"],
@@ -3558,8 +3453,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       dateWrap.innerHTML = "";
       dateWrap.className = "todo-inline-edit-row";
       const requireExplicitSave = isNativeMobilePickerPreferred();
+      const useNative = useNativeTodoPicker();
       const inpDate = document.createElement("input");
-      inpDate.type = isNativeMobilePickerPreferred() ? "date" : "text"; inpDate.className = "todo-inline-date";
+      inpDate.type = useNative ? "date" : "text"; inpDate.className = "todo-inline-date";
       inpDate.autocomplete = "off";
       inpDate.autocapitalize = "off";
       inpDate.spellcheck = false;
@@ -3567,7 +3463,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       if (inpDate.type === "text") inpDate.placeholder = "26.04.2026";
       inpDate.value = todo.faellig ? (inpDate.type === "date" ? toDateInputValue(todo.faellig) : formatDueDate(todo.faellig)) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = isNativeMobilePickerPreferred() ? "time" : "text"; inpTime.className = "todo-inline-time";
+      inpTime.type = useNative ? "time" : "text"; inpTime.className = "todo-inline-time";
       inpTime.autocomplete = "off";
       inpTime.autocapitalize = "off";
       inpTime.spellcheck = false;
@@ -3651,8 +3547,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       reminderWrap.innerHTML = "";
       reminderWrap.className = "todo-inline-edit-row";
       const requireExplicitSave = isNativeMobilePickerPreferred();
+      const useNative = useNativeTodoPicker();
       const inpDate = document.createElement("input");
-      inpDate.type = isNativeMobilePickerPreferred() ? "date" : "text";
+      inpDate.type = useNative ? "date" : "text";
       inpDate.className = "todo-inline-date";
       inpDate.autocomplete = "off";
       inpDate.autocapitalize = "off";
@@ -3661,7 +3558,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       if (inpDate.type === "text") inpDate.placeholder = "23.04.2026";
       inpDate.value = todo.reminderAt ? (inpDate.type === "date" ? toDateInputValue(todo.reminderAt.slice(0, 10)) : formatDueDate(todo.reminderAt.slice(0, 10))) : "";
       const inpTime = document.createElement("input");
-      inpTime.type = isNativeMobilePickerPreferred() ? "time" : "text";
+      inpTime.type = useNative ? "time" : "text";
       inpTime.className = "todo-inline-time";
       inpTime.autocomplete = "off";
       inpTime.autocapitalize = "off";
@@ -3866,154 +3763,6 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     controls.appendChild(delBtn);
 
     item.appendChild(controls);
-
-    /* ── Subtasks ── */
-    const subtasks = Array.isArray(todo.subtasks) ? todo.subtasks : [];
-    const subtaskSection = document.createElement("div");
-    subtaskSection.className = "subtask-section";
-
-    // Toggle button
-    const subtaskToggle = document.createElement("button");
-    subtaskToggle.type = "button";
-    subtaskToggle.className = "subtask-toggle";
-
-    const chevron = document.createElement("span");
-    chevron.className = "subtask-toggle-chevron";
-    chevron.textContent = "▶";
-
-    const toggleLabel = document.createElement("span");
-    toggleLabel.textContent = "Unteraufgaben";
-
-    const progressBadge = document.createElement("span");
-    progressBadge.className = "subtask-progress-badge";
-
-    function updateProgressBadge(list) {
-      const total = list.length;
-      const done = list.filter(s => s.done).length;
-      if (total === 0) {
-        progressBadge.textContent = "0";
-        progressBadge.classList.remove("all-done");
-      } else if (done === total) {
-        progressBadge.textContent = "✓ alle";
-        progressBadge.classList.add("all-done");
-      } else {
-        progressBadge.textContent = `${done}/${total}`;
-        progressBadge.classList.remove("all-done");
-      }
-    }
-    updateProgressBadge(subtasks);
-
-    subtaskToggle.appendChild(chevron);
-    subtaskToggle.appendChild(toggleLabel);
-    subtaskToggle.appendChild(progressBadge);
-
-    // Collapsible list
-    const subtaskListEl = document.createElement("div");
-    subtaskListEl.className = "subtask-list hidden";
-
-    function getSubtasksFromCache() {
-      const folder = ordnerCache.get(todoOrdnerId);
-      if (!folder) return [];
-      const t = folder.todos.find(x => x.id === todo.id);
-      return Array.isArray(t?.subtasks) ? [...t.subtasks] : [];
-    }
-
-    function saveSubtasks(newList) {
-      db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
-        .doc(todo.id).update({ subtasks: newList }).catch(e => console.error("Subtask save error", e));
-    }
-
-    function renderSubtaskItems(currentList) {
-      subtaskListEl.innerHTML = "";
-      currentList.forEach((sub, idx) => {
-        const row = document.createElement("div");
-        row.className = "subtask-item";
-
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.className = "subtask-cb";
-        cb.checked = !!sub.done;
-        cb.addEventListener("change", () => {
-          const list = getSubtasksFromCache();
-          const i = list.findIndex(s => s.id === sub.id);
-          if (i !== -1) { list[i].done = cb.checked; saveSubtasks(list); }
-        });
-
-        const txt = document.createElement("span");
-        txt.className = "subtask-text" + (sub.done ? " done" : "");
-        txt.textContent = sub.text;
-
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "subtask-del";
-        del.title = "Löschen";
-        del.textContent = "×";
-        del.addEventListener("click", () => {
-          const list = getSubtasksFromCache().filter(s => s.id !== sub.id);
-          saveSubtasks(list);
-        });
-
-        row.appendChild(cb);
-        row.appendChild(txt);
-        row.appendChild(del);
-        subtaskListEl.appendChild(row);
-      });
-
-      // Add-row
-      const addRow = document.createElement("div");
-      addRow.className = "subtask-add-row";
-
-      const addInput = document.createElement("input");
-      addInput.type = "text";
-      addInput.className = "subtask-add-input";
-      addInput.placeholder = "Neue Unteraufgabe…";
-      addInput.maxLength = 200;
-
-      const addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.className = "subtask-add-btn";
-      addBtn.textContent = "+";
-
-      function addSubtask() {
-        const text = addInput.value.trim();
-        if (!text) return;
-        const list = getSubtasksFromCache();
-        list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text, done: false });
-        saveSubtasks(list);
-        addInput.value = "";
-      }
-
-      addBtn.addEventListener("click", addSubtask);
-      addInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addSubtask(); } });
-      addInput.addEventListener("focus", () => {
-        // iOS: keyboard opens ~300ms, then page may auto-scroll — counter both
-        setTimeout(() => { addInput.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 350);
-        setTimeout(() => { addInput.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 650);
-      });
-
-      addRow.appendChild(addInput);
-      addRow.appendChild(addBtn);
-      subtaskListEl.appendChild(addRow);
-    }
-
-    renderSubtaskItems(subtasks);
-
-    // Toggle expand/collapse
-    subtaskToggle.addEventListener("click", () => {
-      const isOpen = subtaskToggle.classList.toggle("open");
-      subtaskListEl.classList.toggle("hidden", !isOpen);
-    });
-
-    // Auto-open if there are subtasks
-    if (subtasks.length > 0) {
-      subtaskToggle.classList.add("open");
-      subtaskListEl.classList.remove("hidden");
-    }
-
-    subtaskSection.appendChild(subtaskToggle);
-    subtaskSection.appendChild(subtaskListEl);
-    item.appendChild(subtaskSection);
-
     list.appendChild(item);
   });
 }
@@ -4703,101 +4452,6 @@ function updateEinkaufSuggestions() {
   });
 }
 
-// ════════════════════════════════════════════════════════════
-// FLOATING ACTION BUTTON
-// ════════════════════════════════════════════════════════════
-let fabOpen = false;
-
-function initFab(userId) {
-  const wrap = $("fab-wrap");
-  wrap.style.display = "flex";
-
-  $("fab-btn").addEventListener("click", e => {
-    e.stopPropagation();
-    fabOpen = !fabOpen;
-    $("fab-btn").classList.toggle("open", fabOpen);
-    $("fab-menu").classList.toggle("hidden", !fabOpen);
-  });
-
-  document.addEventListener("click", e => {
-    if (fabOpen && !wrap.contains(e.target)) {
-      fabOpen = false;
-      $("fab-btn").classList.remove("open");
-      $("fab-menu").classList.add("hidden");
-    }
-  });
-
-  $("fab-opt-todo").addEventListener("click", () => { closeFabMenu(); openFabTodoModal(); });
-  $("fab-opt-notiz").addEventListener("click", () => { closeFabMenu(); openFabNotizQuick(userId); });
-
-  $("fab-todo-close").addEventListener("click", closeFabTodoModal);
-  $("fab-todo-cancel").addEventListener("click", closeFabTodoModal);
-  $("fab-todo-modal").addEventListener("click", e => { if (e.target === $("fab-todo-modal")) closeFabTodoModal(); });
-  $("fab-todo-save").addEventListener("click", () => saveFabTodo(userId));
-  $("fab-todo-input").addEventListener("keydown", e => { if (e.key === "Enter") saveFabTodo(userId); });
-}
-
-function closeFabMenu() {
-  fabOpen = false;
-  $("fab-btn").classList.remove("open");
-  $("fab-menu").classList.add("hidden");
-}
-
-function openFabTodoModal() {
-  const sel = $("fab-todo-folder");
-  sel.innerHTML = "";
-  ordnerCache.forEach((data, id) => {
-    const opt = document.createElement("option");
-    opt.value = id; opt.textContent = data.name;
-    if (id === currentOrdnerId) opt.selected = true;
-    sel.appendChild(opt);
-  });
-  if (!sel.options.length) {
-    const opt = document.createElement("option"); opt.value = ""; opt.textContent = "Kein Ordner";
-    sel.appendChild(opt);
-  }
-  $("fab-todo-input").value = "";
-  $("fab-todo-modal").classList.remove("hidden");
-  setTimeout(() => $("fab-todo-input").focus(), 80);
-}
-
-function closeFabTodoModal() {
-  $("fab-todo-modal").classList.add("hidden");
-}
-
-function saveFabTodo(userId) {
-  const text = $("fab-todo-input").value.trim();
-  if (!text) { $("fab-todo-input").focus(); return; }
-  const folderId = $("fab-todo-folder").value;
-  if (!folderId) { showToast("Bitte zuerst einen Ordner anlegen.", "error"); return; }
-  db.collection(`users/${userId}/todoOrdner/${folderId}/todos`).add({
-    text, status: "offen",
-    prioritaet: "",
-    faellig: "", faelligZeit: "", reminderAt: "", farbe: "",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    showToast("Aufgabe hinzugefügt ✓");
-    closeFabTodoModal();
-  }).catch(() => showToast("Fehler beim Speichern.", "error"));
-  if (typeof saveAutocomplete === "function") saveAutocomplete(text);
-}
-
-async function openFabNotizQuick(userId) {
-  let ordnerId = currentNotizenOrdnerId;
-  if (!ordnerId) {
-    const first = [...notizenOrdnerCache.keys()][0];
-    if (!first) { showToast("Kein Notiz-Ordner vorhanden.", "error"); return; }
-    ordnerId = first;
-  }
-  switchTab("notizen");
-  const ref = await db.collection(`users/${userId}/notizenOrdner/${ordnerId}/notizen`).add({
-    titel: "Neue Notiz", text: "",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  openNotizModal(ref.id, "Neue Notiz", "");
-}
-
 function cleanupAll() {
   if (unsubscribeTabellenFunc)       { unsubscribeTabellenFunc(); unsubscribeTabellenFunc = null; }
   if (unsubscribeErgebnisseFunc)     { unsubscribeErgebnisseFunc(); unsubscribeErgebnisseFunc = null; }
@@ -4827,59 +4481,6 @@ function cleanupAll() {
   currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId=null;
 }
 </script>
-
-<!-- ── FLOATING ACTION BUTTON ── -->
-<div id="fab-wrap">
-  <div id="fab-menu" class="hidden">
-    <button class="fab-option" id="fab-opt-notiz">📝 Neue Notiz</button>
-    <button class="fab-option" id="fab-opt-todo">✅ Neues Todo</button>
-  </div>
-  <button id="fab-btn" title="Schnell hinzufügen" aria-label="Schnell hinzufügen">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </button>
-</div>
-
-<!-- FAB: Schnell-Todo Modal -->
-<div class="modal-overlay hidden" id="fab-todo-modal">
-  <div class="modal" style="max-width:400px;">
-    <div class="modal-header">
-      <h3>✅ Neue Aufgabe</h3>
-      <button class="btn-icon" id="fab-todo-close">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <input type="text" id="fab-todo-input" placeholder="Aufgabe …" autocomplete="off" />
-    <select id="fab-todo-folder" style="width:100%;"></select>
-    <div style="display:flex; justify-content:flex-end; gap:8px;">
-      <button class="btn-secondary" id="fab-todo-cancel">Abbrechen</button>
-      <button class="btn-primary" id="fab-todo-save">Hinzufügen</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── BOTTOM NAV (mobile only) ── -->
-<nav class="bottom-nav" id="bottom-nav">
-  <button class="bottom-nav-btn active" data-tab="dashboard">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-    Start
-  </button>
-  <button class="bottom-nav-btn" data-tab="dichte">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="3" x2="9" y2="21"/><path d="M3 9h12a3 3 0 0 1 0 6H3"/></svg>
-    Dichte
-  </button>
-  <button class="bottom-nav-btn" data-tab="todos">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    Todos
-  </button>
-  <button class="bottom-nav-btn" data-tab="notizen">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-    Notizen
-  </button>
-  <button class="bottom-nav-btn" data-tab="einkauf">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-    Einkauf
-  </button>
-</nav>
 
 <!-- Toast -->
 <div id="toast-container"></div>
