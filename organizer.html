@@ -3494,7 +3494,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     }
 
     // Drag-Handle (nur im Ordner-View, nicht in "Alle")
-    if (!zeigeBadge) {
+    if (true) {
       item.draggable = true;
       const handle = document.createElement("span");
       handle.className = "drag-handle";
