@@ -717,6 +717,36 @@
     }
     .notiz-add-btn:hover { border-color: var(--primary); color: var(--primary); }
 
+    /* ── TODO-NOTIZ ── */
+    .todo-notiz-section {
+      width: 100%; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px;
+    }
+    .todo-notiz-textarea {
+      width: 100%; box-sizing: border-box;
+      font-size: 0.82rem; line-height: 1.5; padding: 7px 10px;
+      border: 1.5px solid var(--border); border-radius: 7px;
+      background: var(--surface2); color: var(--text);
+      resize: vertical; min-height: 60px; max-height: 200px;
+      outline: none; transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    .todo-notiz-textarea:focus { border-color: var(--primary); }
+    .todo-notiz-textarea::placeholder { color: var(--text-muted); }
+    .todo-notiz-saved {
+      font-size: 0.68rem; color: var(--text-muted); margin-top: 3px;
+      opacity: 0; transition: opacity 0.4s; text-align: right;
+    }
+    .todo-notiz-saved.show { opacity: 1; }
+    .todo-notiz-btn {
+      background: none; border: none; cursor: pointer; padding: 3px 5px;
+      border-radius: 5px; font-size: 0.78rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 3px;
+      transition: color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+    .todo-notiz-btn:hover { color: var(--primary); background: var(--surface2); }
+    .todo-notiz-btn.has-notiz { color: var(--primary); font-weight: 600; }
+
     /* ── SUBTASKS ── */
     .subtask-section {
       width: 100%; margin-top: 4px; border-top: 1px solid var(--border); padding-top: 6px;
@@ -4002,7 +4032,60 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     });
     controls.appendChild(delBtn);
 
+    // Notiz-Toggle-Button in Controls
+    const notizBtn = document.createElement("button");
+    notizBtn.type = "button";
+    notizBtn.className = "todo-notiz-btn" + (todo.todoNotiz ? " has-notiz" : "");
+    notizBtn.title = "Notiz";
+    notizBtn.innerHTML = `<span>📝</span><span>${todo.todoNotiz ? "Notiz" : "Notiz"}</span>`;
+    controls.appendChild(notizBtn);
+
     item.appendChild(controls);
+
+    /* ── Todo-Notiz ── */
+    const notizSection = document.createElement("div");
+    notizSection.className = "todo-notiz-section";
+    notizSection.style.display = todo.todoNotiz ? "block" : "none";
+
+    const notizTextarea = document.createElement("textarea");
+    notizTextarea.className = "todo-notiz-textarea";
+    notizTextarea.placeholder = "Notiz zu dieser Aufgabe…";
+    notizTextarea.value = todo.todoNotiz || "";
+
+    const notizSaved = document.createElement("div");
+    notizSaved.className = "todo-notiz-saved";
+    notizSaved.textContent = "✓ gespeichert";
+
+    let notizTimer = null;
+    function saveNotiz() {
+      const val = notizTextarea.value;
+      if (!todoOrdnerId || !todo.id) return;
+      db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
+        .doc(todo.id).update({ todoNotiz: val }).then(() => {
+          notizSaved.classList.add("show");
+          notizBtn.classList.toggle("has-notiz", !!val.trim());
+          setTimeout(() => notizSaved.classList.remove("show"), 1800);
+        }).catch(e => console.error("Notiz save error", e));
+    }
+
+    notizTextarea.addEventListener("input", () => {
+      clearTimeout(notizTimer);
+      notizTimer = setTimeout(saveNotiz, 900);
+    });
+    notizTextarea.addEventListener("blur", () => {
+      clearTimeout(notizTimer);
+      saveNotiz();
+    });
+
+    notizBtn.addEventListener("click", () => {
+      const open = notizSection.style.display === "none";
+      notizSection.style.display = open ? "block" : "none";
+      if (open) setTimeout(() => notizTextarea.focus(), 50);
+    });
+
+    notizSection.appendChild(notizTextarea);
+    notizSection.appendChild(notizSaved);
+    item.appendChild(notizSection);
 
     /* ── Subtasks ── */
     const subtasks = Array.isArray(todo.subtasks) ? todo.subtasks : [];
