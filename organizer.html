@@ -1158,7 +1158,17 @@
       font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px;
     }
-    .katalog-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .katalog-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; background: none; border: none; cursor: pointer;
+      font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+      padding: 6px 0; margin-bottom: 0;
+    }
+    .katalog-toggle:hover { color: var(--primary); }
+    .katalog-toggle-chevron { font-size: 0.6rem; transition: transform 0.2s; }
+    .katalog-toggle.open .katalog-toggle-chevron { transform: rotate(90deg); }
+    .katalog-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 6px; }
     .katalog-chip {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 4px 11px; border: 1.5px solid var(--border);
@@ -1594,7 +1604,7 @@
   <!-- ══ TAB: EINKAUF ══ -->
   <div id="tab-einkauf" class="tab-content">
 
-    <!-- Artikel hinzufügen + Frühere Artikel (sticky) -->
+    <!-- Artikel hinzufügen (sticky) -->
     <div class="einkauf-sticky-top">
       <div class="einkauf-add-row">
         <input type="text" id="einkauf-input" placeholder="Artikel hinzufügen …"
@@ -1604,13 +1614,17 @@
           Hinzufügen
         </button>
       </div>
-      <!-- Frühere Artikel (Katalog) — sticky damit immer sichtbar -->
-      <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
-        <div class="katalog-title">Frühere Artikel</div>
-        <div class="katalog-chips" id="katalog-chips"></div>
-      </div>
     </div>
     <datalist id="einkauf-suggestions"></datalist>
+
+    <!-- Frühere Artikel (Katalog) — ausklappbar -->
+    <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
+      <button class="katalog-toggle" id="katalog-toggle">
+        <span>Frühere Artikel</span>
+        <span class="katalog-toggle-chevron">▶</span>
+      </button>
+      <div class="katalog-chips" id="katalog-chips" style="display:none;"></div>
+    </div>
 
     <!-- Aktuelle Liste -->
     <div id="einkauf-list" class="einkauf-list">
@@ -4785,6 +4799,14 @@ function initEinkauf(userId) {
   $("einkauf-input").addEventListener("keydown", e => { if (e.key === "Enter") addArtikel(); });
   $("btn-einkauf-pdf").addEventListener("click", printEinkauf);
 
+  // Frühere Artikel Toggle
+  $("katalog-toggle").addEventListener("click", () => {
+    const btn = $("katalog-toggle");
+    const chips = $("katalog-chips");
+    const open = btn.classList.toggle("open");
+    chips.style.display = open ? "flex" : "none";
+  });
+
   // Erledigte entfernen
   $("btn-clear-checked").addEventListener("click", () => {
     const checked = einkaufItems.filter(i => i.checked);
@@ -4801,7 +4823,6 @@ function initEinkauf(userId) {
 function renderEinkaufList(userId) {
   const list  = $("einkauf-list");
   const empty = $("einkauf-empty");
-  const savedScroll = window.scrollY;
   Array.from(list.children).forEach(c => { if (c !== empty) list.removeChild(c); });
 
   if (einkaufItems.length === 0) {
@@ -4854,9 +4875,6 @@ function renderEinkaufList(userId) {
   const done  = einkaufItems.filter(i =>  i.checked).length;
   const total = einkaufItems.length;
   $("einkauf-count").textContent = `${done} von ${total} erledigt`;
-  // iOS Safari resets scroll after touch events — setTimeout fires after that reset
-  setTimeout(() => window.scrollTo({ top: savedScroll, behavior: "instant" }), 80);
-  setTimeout(() => window.scrollTo({ top: savedScroll, behavior: "instant" }), 200);
 }
 
 function renderKatalogChips(userId) {
