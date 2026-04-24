@@ -1145,15 +1145,18 @@
       top: 101px; /* 56px header + ~45px tabs */
       background: var(--bg);
       z-index: 8;
-      padding: 10px 0 8px;
+      padding: 10px 0 4px;
       margin-bottom: 4px;
+    }
+    @media (max-width: 600px) {
+      .einkauf-sticky-top { top: 58px; } /* nur Header, keine Tabs auf Mobile */
     }
     .einkauf-add-row {
       display: flex; gap: 8px;
     }
     .einkauf-add-row input { flex: 1; }
 
-    .katalog-wrap { margin-bottom: 14px; }
+    .katalog-wrap { margin-bottom: 6px; }
     .katalog-title {
       font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 7px;
@@ -1163,12 +1166,25 @@
       width: 100%; background: none; border: none; cursor: pointer;
       font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: 0.05em;
-      padding: 6px 0; margin-bottom: 0;
+      padding: 4px 0 2px; margin-bottom: 0;
     }
     .katalog-toggle:hover { color: var(--primary); }
     .katalog-toggle-chevron { font-size: 0.6rem; transition: transform 0.2s; }
     .katalog-toggle.open .katalog-toggle-chevron { transform: rotate(90deg); }
-    .katalog-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 6px; }
+    .katalog-chips {
+      display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 6px;
+      /* Mobile: single scrollable row */
+    }
+    @media (max-width: 600px) {
+      .katalog-chips {
+        flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .katalog-chips::-webkit-scrollbar { display: none; }
+    }
+    /* Disable scroll anchoring — prevents iOS from jumping when list rebuilds */
+    #tab-einkauf { overflow-anchor: none; }
+    #einkauf-list { overflow-anchor: none; min-height: 60px; }
     .katalog-chip {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 4px 11px; border: 1.5px solid var(--border);
@@ -1604,7 +1620,7 @@
   <!-- ══ TAB: EINKAUF ══ -->
   <div id="tab-einkauf" class="tab-content">
 
-    <!-- Artikel hinzufügen (sticky) -->
+    <!-- Artikel hinzufügen + Frühere Artikel (sticky) -->
     <div class="einkauf-sticky-top">
       <div class="einkauf-add-row">
         <input type="text" id="einkauf-input" placeholder="Artikel hinzufügen …"
@@ -1614,17 +1630,16 @@
           Hinzufügen
         </button>
       </div>
+      <!-- Frühere Artikel: ausklappbar, horizontal scrollbar auf Mobile -->
+      <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
+        <button class="katalog-toggle" id="katalog-toggle">
+          <span>Frühere Artikel</span>
+          <span class="katalog-toggle-chevron">▶</span>
+        </button>
+        <div class="katalog-chips" id="katalog-chips" style="display:none;"></div>
+      </div>
     </div>
     <datalist id="einkauf-suggestions"></datalist>
-
-    <!-- Frühere Artikel (Katalog) — ausklappbar -->
-    <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
-      <button class="katalog-toggle" id="katalog-toggle">
-        <span>Frühere Artikel</span>
-        <span class="katalog-toggle-chevron">▶</span>
-      </button>
-      <div class="katalog-chips" id="katalog-chips" style="display:none;"></div>
-    </div>
 
     <!-- Aktuelle Liste -->
     <div id="einkauf-list" class="einkauf-list">
