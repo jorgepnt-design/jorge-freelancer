@@ -794,42 +794,11 @@
       .dichte-layout { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
-      /* ── Kompaktere Mobile Todo-Items ── */
-      .todo-item {
-        flex-direction: row;
-        align-items: center;
-        flex-wrap: nowrap;
-        gap: 6px;
-        padding: 7px 9px;
-      }
-      .todo-text {
-        font-size: 0.88rem;
-        line-height: 1.3;
-      }
-      .todo-controls {
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 3px;
-        flex-shrink: 0;
-        flex-wrap: nowrap;
-      }
-      .todo-controls-row {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .todo-status select { font-size: 0.72rem; padding: 3px 5px; min-width: 82px; }
-      .ordner-badge { font-size: 0.65rem; padding: 2px 5px; }
-      .due-badge { font-size: 0.68rem; padding: 2px 5px; }
-      .todo-add-meta { font-size: 0.66rem; padding: 2px 5px; }
-      .btn-delete, .btn-edit { padding: 3px; }
+      .todo-item { flex-direction: column; align-items: stretch; gap: 7px; padding: 9px 11px; }
+      .todo-controls { flex-wrap: wrap; gap: 5px; }
+      .todo-status select { font-size: 0.76rem; padding: 4px 6px; min-width: 90px; }
+      .ordner-badge { font-size: 0.68rem; padding: 2px 5px; }
       .drag-handle { padding: 1px 2px; }
-      /* Subtasks kompakter */
-      .subtask-section { padding-top: 4px; margin-top: 3px; }
-      .subtask-item { font-size: 0.78rem; }
-      /* Stat-Pills kleiner */
-      .todo-stats { gap: 5px; }
-      .stat-pill { font-size: 0.72rem; padding: 3px 8px; }
       .notiz-grid { grid-template-columns: 1fr; }
       .add-todo-extra {
         grid-template-columns: 1fr;
@@ -895,8 +864,8 @@
       .bottom-nav-btn.active { color: var(--primary); }
       .bottom-nav-btn svg { transition: transform 0.15s; flex-shrink: 0; }
       .bottom-nav-btn.active svg { transform: scale(1.15); }
-      .tab-content { padding-bottom: 90px; }
-      body { padding-bottom: 90px; }
+      .tab-content { padding-bottom: 160px; }
+      body { padding-bottom: 160px; }
       #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 14px); }
     }
 
