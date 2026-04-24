@@ -1594,7 +1594,7 @@
   <!-- ══ TAB: EINKAUF ══ -->
   <div id="tab-einkauf" class="tab-content">
 
-    <!-- Artikel hinzufügen (sticky) -->
+    <!-- Artikel hinzufügen + Frühere Artikel (sticky) -->
     <div class="einkauf-sticky-top">
       <div class="einkauf-add-row">
         <input type="text" id="einkauf-input" placeholder="Artikel hinzufügen …"
@@ -1604,14 +1604,13 @@
           Hinzufügen
         </button>
       </div>
+      <!-- Frühere Artikel (Katalog) — sticky damit immer sichtbar -->
+      <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
+        <div class="katalog-title">Frühere Artikel</div>
+        <div class="katalog-chips" id="katalog-chips"></div>
+      </div>
     </div>
     <datalist id="einkauf-suggestions"></datalist>
-
-    <!-- Frühere Artikel (Katalog) -->
-    <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
-      <div class="katalog-title">Frühere Artikel</div>
-      <div class="katalog-chips" id="katalog-chips"></div>
-    </div>
 
     <!-- Aktuelle Liste -->
     <div id="einkauf-list" class="einkauf-list">
