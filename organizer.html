@@ -1176,11 +1176,7 @@
       /* Mobile: single scrollable row */
     }
     @media (max-width: 600px) {
-      .katalog-chips {
-        flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px;
-        -webkit-overflow-scrolling: touch;
-      }
-      .katalog-chips::-webkit-scrollbar { display: none; }
+      .katalog-chips { flex-wrap: wrap; }
     }
     /* Disable scroll anchoring — prevents iOS from jumping when list rebuilds */
     #tab-einkauf { overflow-anchor: none; }
