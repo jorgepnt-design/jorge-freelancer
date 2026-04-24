@@ -4855,7 +4855,9 @@ function renderEinkaufList(userId) {
   const done  = einkaufItems.filter(i =>  i.checked).length;
   const total = einkaufItems.length;
   $("einkauf-count").textContent = `${done} von ${total} erledigt`;
-  requestAnimationFrame(() => window.scrollTo(0, savedScroll));
+  // iOS Safari resets scroll after touch events — setTimeout fires after that reset
+  setTimeout(() => window.scrollTo({ top: savedScroll, behavior: "instant" }), 80);
+  setTimeout(() => window.scrollTo({ top: savedScroll, behavior: "instant" }), 200);
 }
 
 function renderKatalogChips(userId) {
