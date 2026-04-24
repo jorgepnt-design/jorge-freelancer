@@ -794,10 +794,42 @@
       .dichte-layout { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
-      .todo-item { flex-direction: column; align-items: stretch; gap: 7px; padding: 9px 11px; }
-      .todo-controls { flex-wrap: wrap; gap: 5px; }
-      .todo-status select { font-size: 0.76rem; padding: 4px 6px; min-width: 90px; }
-      .ordner-badge { font-size: 0.68rem; padding: 2px 5px; }
+      /* ── Kompaktere Mobile Todo-Items ── */
+      .todo-item {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 7px 9px;
+      }
+      .todo-text {
+        font-size: 0.88rem;
+        line-height: 1.3;
+      }
+      .todo-controls {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 3px;
+        flex-shrink: 0;
+        flex-wrap: nowrap;
+      }
+      .todo-controls-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .todo-status select { font-size: 0.72rem; padding: 3px 5px; min-width: 82px; }
+      .ordner-badge { font-size: 0.65rem; padding: 2px 5px; }
+      .due-badge { font-size: 0.68rem; padding: 2px 5px; }
+      .todo-add-meta { font-size: 0.66rem; padding: 2px 5px; }
+      .btn-delete, .btn-edit { padding: 3px; }
+      .drag-handle { padding: 1px 2px; }
+      /* Subtasks kompakter */
+      .subtask-section { padding-top: 4px; margin-top: 3px; }
+      .subtask-item { font-size: 0.78rem; }
+      /* Stat-Pills kleiner */
+      .todo-stats { gap: 5px; }
+      .stat-pill { font-size: 0.72rem; padding: 3px 8px; }
       .notiz-grid { grid-template-columns: 1fr; }
       .add-todo-extra {
         grid-template-columns: 1fr;
@@ -863,8 +895,8 @@
       .bottom-nav-btn.active { color: var(--primary); }
       .bottom-nav-btn svg { transition: transform 0.15s; flex-shrink: 0; }
       .bottom-nav-btn.active svg { transform: scale(1.15); }
-      .tab-content { padding-bottom: 160px; }
-      body { padding-bottom: 160px; }
+      .tab-content { padding-bottom: 90px; }
+      body { padding-bottom: 90px; }
       #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 14px); }
     }
 
@@ -1035,11 +1067,23 @@
     .drag-handle {
       cursor: grab; color: var(--border); flex-shrink: 0;
       line-height: 0; padding: 2px 3px; border-radius: 3px;
-      transition: color 0.12s; user-select: none;
+      transition: color 0.12s; user-select: none; touch-action: none;
     }
-    .drag-handle:hover { color: var(--text-muted); }
+    .drag-handle:hover, .drag-handle:active { color: var(--text-muted); cursor: grabbing; }
     .todo-item.is-dragging { opacity: 0.35; }
-    .todo-item.drag-target { outline: 2px dashed var(--primary); outline-offset: 1px; }
+    .todo-item.drag-target {
+      outline: 2px dashed var(--primary); outline-offset: 1px;
+      background: var(--primary-light);
+    }
+    /* Mobile: größeres Touch-Target für Handle */
+    @media (max-width: 600px) {
+      .drag-handle {
+        padding: 6px 5px;
+        min-width: 28px; min-height: 28px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--text-muted);
+      }
+    }
 
     /* ── PIN NOTIZEN ── */
     .notiz-card-top {
@@ -3490,6 +3534,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       handle.addEventListener("mousedown", () => { item.draggable = true; });
       item.appendChild(handle);
 
+      // ── Mouse Drag ──
       item.addEventListener("dragstart", e => {
         dragSrcId = todo.id;
         dragSrcOrdnerId = todoOrdnerId;
@@ -3521,6 +3566,112 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         saveTodoOrder(todoOrdnerId, userId, sorted);
         dragSrcId = null;
       });
+
+      // ── Touch Drag (Mobile) ──
+      let touchDragActive = false;
+      let touchClone = null;
+      let touchOffsetY = 0;
+      let touchScrollInterval = null;
+
+      handle.addEventListener("touchstart", e => {
+        if (e.touches.length !== 1) return;
+        touchDragActive = false;
+        const touch = e.touches[0];
+        const rect = item.getBoundingClientRect();
+        touchOffsetY = touch.clientY - rect.top;
+
+        // Kurz warten ob es ein Scroll ist
+        const startY = touch.clientY;
+        let moved = false;
+
+        const onTouchMoveStart = (ev) => {
+          if (Math.abs(ev.touches[0].clientY - startY) > 6 || Math.abs(ev.touches[0].clientX - touch.clientX) > 6) {
+            moved = true;
+          }
+        };
+        handle.addEventListener("touchmove", onTouchMoveStart, { once: true });
+
+        setTimeout(() => {
+          handle.removeEventListener("touchmove", onTouchMoveStart);
+          touchDragActive = true;
+          dragSrcId = todo.id;
+          dragSrcOrdnerId = todoOrdnerId;
+          item.classList.add("is-dragging");
+
+          // Ghost-Clone erstellen
+          touchClone = item.cloneNode(true);
+          touchClone.style.cssText = `
+            position: fixed; left: ${rect.left}px; top: ${rect.top}px;
+            width: ${rect.width}px; opacity: 0.85; z-index: 9999;
+            pointer-events: none; transform: scale(1.02) rotate(1deg);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            border-radius: 8px; transition: none;
+          `;
+          document.body.appendChild(touchClone);
+        }, 180);
+      }, { passive: true });
+
+      handle.addEventListener("touchmove", e => {
+        if (!touchDragActive || !touchClone) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+
+        // Ghost bewegen
+        touchClone.style.top = (touch.clientY - touchOffsetY) + "px";
+
+        // Auto-scroll
+        clearInterval(touchScrollInterval);
+        const scrollZone = 80;
+        const vh = window.innerHeight;
+        if (touch.clientY < scrollZone) {
+          touchScrollInterval = setInterval(() => window.scrollBy(0, -6), 16);
+        } else if (touch.clientY > vh - scrollZone - 60) {
+          touchScrollInterval = setInterval(() => window.scrollBy(0, 6), 16);
+        }
+
+        // Ziel-Element highlighten
+        document.querySelectorAll(".todo-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+        const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+        const target = els.find(el => el.classList.contains("todo-item") && el !== item);
+        if (target) target.classList.add("drag-target");
+
+      }, { passive: false });
+
+      const endTouchDrag = (e) => {
+        clearInterval(touchScrollInterval);
+        if (!touchDragActive) { touchDragActive = false; return; }
+        touchDragActive = false;
+        item.classList.remove("is-dragging");
+        if (touchClone) { touchClone.remove(); touchClone = null; }
+
+        const touch = (e.changedTouches || e.touches)[0];
+        if (!touch) { dragSrcId = null; return; }
+
+        document.querySelectorAll(".todo-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+        const els = document.elementsFromPoint(touch.clientX, touch.clientY);
+        const target = els.find(el => el.classList.contains("todo-item") && el !== item);
+        if (!target) { dragSrcId = null; return; }
+
+        const targetTodoId = target.dataset.todoId;
+        if (!targetTodoId || targetTodoId === todo.id) { dragSrcId = null; return; }
+
+        const cached = ordnerCache.get(todoOrdnerId);
+        if (!cached) { dragSrcId = null; return; }
+        const sorted = sortTodos(cached.todos);
+        const fromIdx = sorted.findIndex(t => t.id === dragSrcId);
+        const toIdx   = sorted.findIndex(t => t.id === targetTodoId);
+        if (fromIdx === -1 || toIdx === -1) { dragSrcId = null; return; }
+        const [moved] = sorted.splice(fromIdx, 1);
+        sorted.splice(toIdx, 0, moved);
+        saveTodoOrder(todoOrdnerId, userId, sorted);
+        dragSrcId = null;
+      };
+
+      handle.addEventListener("touchend", endTouchDrag);
+      handle.addEventListener("touchcancel", endTouchDrag);
+
+      // data-todoId für Touch-Drop-Target
+      item.dataset.todoId = todo.id;
     }
 
     // Text
