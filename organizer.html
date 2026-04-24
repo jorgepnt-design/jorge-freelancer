@@ -3532,6 +3532,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         if (fromIdx === -1 || toIdx === -1) return;
         const [moved] = sorted.splice(fromIdx, 1);
         sorted.splice(toIdx, 0, moved);
+        // Cache sofort aktualisieren um doppeltes Rendern zu verhindern
+        cached.todos = sorted;
+        ordnerCache.set(todoOrdnerId, cached);
         saveTodoOrder(todoOrdnerId, userId, sorted);
         dragSrcId = null;
       });
@@ -3632,6 +3635,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         if (fromIdx === -1 || toIdx === -1) { dragSrcId = null; return; }
         const [moved] = sorted.splice(fromIdx, 1);
         sorted.splice(toIdx, 0, moved);
+        // Cache sofort aktualisieren um doppeltes Rendern zu verhindern
+        cached.todos = sorted;
+        ordnerCache.set(todoOrdnerId, cached);
         saveTodoOrder(todoOrdnerId, userId, sorted);
         dragSrcId = null;
       };
