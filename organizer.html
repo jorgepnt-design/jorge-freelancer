@@ -903,13 +903,15 @@
       .bottom-nav-btn.active svg { transform: scale(1.15); }
       .tab-content { padding-bottom: 160px; }
       body { padding-bottom: 160px; }
-      #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 28px); }
     }
 
     /* ── FAB ── */
     #fab-wrap {
       position: fixed; bottom: 24px; right: 18px; z-index: 30;
       display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+    }
+    @media (max-width: 600px) {
+      #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 28px); }
     }
     #fab-main {
       width: 54px; height: 54px; border-radius: 50%; background: var(--primary); color: #fff;
