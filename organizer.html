@@ -1744,6 +1744,10 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         PDF
       </button>
+      <button class="btn-export" id="btn-einkauf-share" title="PDF-Datei teilen">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Teilen
+      </button>
       <button class="btn-clear-checked" id="btn-clear-checked">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
         Erledigte entfernen
@@ -1907,6 +1911,7 @@ service cloud.firestore {
 
 <!-- Firebase + SheetJS -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -2088,15 +2093,96 @@ function printArea(html, title) {
   setTimeout(() => { area.style.display = "none"; area.innerHTML = ""; }, 500);
 }
 
-function printEinkauf() {
+async function buildEinkaufPdf() {
+  if (!window.jspdf?.jsPDF) throw new Error("PDF-Library nicht geladen");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const margin = 15;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const maxWidth = pageWidth - margin * 2;
+  let y = 18;
+
   const undone = einkaufItems.filter(i => !i.checked);
-  const done   = einkaufItems.filter(i =>  i.checked);
-  const rows   = [...undone, ...done].map(i =>
-    `<div class="print-item${i.checked ? " checked" : ""}">
-      <span>${i.checked ? "☑" : "☐"}</span>
-      <span>${i.name}</span>
-    </div>`).join("");
-  printArea(rows, "🛒 Einkaufsliste");
+  const done = einkaufItems.filter(i => i.checked);
+  const items = [...undone, ...done];
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("Jorge Organizer - Einkaufsliste", margin, y);
+  y += 8;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(`Erstellt am ${new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}`, margin, y);
+  y += 10;
+
+  if (!items.length) {
+    doc.setFontSize(11);
+    doc.text("Keine Artikel auf der Liste.", margin, y);
+  } else {
+    doc.setFontSize(11);
+    items.forEach((item, index) => {
+      const prefix = item.checked ? "[x]" : "[ ]";
+      const lines = doc.splitTextToSize(`${prefix} ${item.name}`, maxWidth);
+      const neededHeight = lines.length * 6 + 2;
+      if (y + neededHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(lines, margin, y);
+      if (item.checked) {
+        const firstLineWidth = doc.getTextWidth(lines[0] || "");
+        doc.setDrawColor(156, 163, 175);
+        doc.line(margin, y - 1.5, Math.min(margin + firstLineWidth, pageWidth - margin), y - 1.5);
+      }
+      y += neededHeight;
+      if (index === undone.length - 1 && done.length) {
+        y += 2;
+      }
+    });
+  }
+
+  const filename = `Einkaufsliste_${new Date().toISOString().slice(0,10)}.pdf`;
+  const blob = doc.output("blob");
+  let file = null;
+  try {
+    file = new File([blob], filename, { type: "application/pdf" });
+  } catch (_) {
+    file = null;
+  }
+  return { filename, blob, file };
+}
+
+async function downloadEinkaufPdf() {
+  const { filename, blob } = await buildEinkaufPdf();
+  downloadBlob(filename, blob);
+}
+
+async function shareEinkaufPdf() {
+  const { filename, file, blob } = await buildEinkaufPdf();
+  if (!file || typeof navigator.share !== "function") {
+    downloadBlob(filename, blob);
+    showToast("Teilen nicht unterstützt. PDF wurde geladen.");
+    return;
+  }
+  try {
+    const shareData = {
+      files: [file],
+      title: "Einkaufsliste",
+      text: "Einkaufsliste aus Jorge Organizer"
+    };
+    if (typeof navigator.canShare === "function" && !navigator.canShare({ files: [file] })) {
+      downloadBlob(filename, blob);
+      showToast("Datei-Teilen nicht unterstützt. PDF wurde geladen.");
+      return;
+    }
+    await navigator.share(shareData);
+  } catch (err) {
+    if (err && err.name === "AbortError") return;
+    downloadBlob(filename, blob);
+    showToast("Teilen fehlgeschlagen. PDF wurde geladen.");
+  }
 }
 
 function printTodos(ordnerName) {
@@ -5157,7 +5243,12 @@ function initEinkauf(userId) {
 
   $("btn-einkauf-add").addEventListener("click", addArtikel);
   $("einkauf-input").addEventListener("keydown", e => { if (e.key === "Enter") addArtikel(); });
-  $("btn-einkauf-pdf").addEventListener("click", printEinkauf);
+  $("btn-einkauf-pdf").addEventListener("click", () => {
+    downloadEinkaufPdf().catch(err => showToast("PDF-Erstellung fehlgeschlagen: " + err.message, "error"));
+  });
+  $("btn-einkauf-share").addEventListener("click", () => {
+    shareEinkaufPdf().catch(err => showToast("Teilen fehlgeschlagen: " + err.message, "error"));
+  });
 
   // Frühere Artikel Toggle
   $("katalog-toggle").addEventListener("click", () => {
