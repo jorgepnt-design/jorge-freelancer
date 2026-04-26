@@ -1455,6 +1455,9 @@
         <span class="notif-status is-off" id="notif-status">Push aus</span>
         <span class="notif-badge hidden" id="notif-badge">0</span>
       </div>
+      <button class="btn-icon" id="btn-refresh-app" title="Aktualisieren">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 22v-6h6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L3 8"/><path d="M3.51 15A9 9 0 0 0 18.36 18.36L21 16"/></svg>
+      </button>
       <button class="btn-icon" id="btn-darkmode" title="Dark Mode">
         <svg id="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg id="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -2184,6 +2187,10 @@ $("btn-darkmode").addEventListener("click", () => {
   darkMode = !darkMode;
   localStorage.setItem("darkMode", darkMode);
   applyTheme(darkMode);
+});
+$("btn-refresh-app").addEventListener("click", () => {
+  showToast("Aktualisiere …");
+  setTimeout(() => window.location.reload(), 120);
 });
 
 // ── AUTH ─────────────────────────────────────────────────────
