@@ -17,7 +17,7 @@ messaging.onBackgroundMessage((payload) => {
   const n = payload?.notification || {};
   const title = n.title || "Jorge Organizer";
   const body = n.body || "Neue Erinnerung";
-  const icon = n.icon || "/organizer-icon.png";
+  const icon = n.icon || "/organizer-icon-192.png";
   const clickAction = n.click_action || "/organizer.html";
   const tag = payload?.data?.todoId ? `todo-reminder-${payload.data.todoId}` : "organizer-push";
   self.registration.showNotification(title, {
