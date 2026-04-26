@@ -1009,7 +1009,8 @@
     .dash-stat-card.s-overdue  .dash-stat-value { color: #dc2626; }
     .dash-stat-card.s-overdue  { border-color: #fca5a5; }
 
-    .dash-lower { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .dash-lower { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .dash-secondary { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 12px; margin-top: 12px; }
     .dash-panel {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 14px;
@@ -1027,6 +1028,8 @@
     .dash-due { font-size: 0.72rem; white-space: nowrap; color: var(--text-muted); }
     .dash-due.overdue { color: #dc2626; font-weight: 600; }
     .dash-due.today   { color: #ea580c; font-weight: 600; }
+    .dash-row-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .dash-row-meta { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .dash-note-row {
       padding: 6px 0; border-bottom: 1px solid var(--border);
       font-size: 0.84rem; cursor: pointer;
@@ -1036,6 +1039,36 @@
     .dash-note-title { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .dash-note-meta  { font-size: 0.71rem; color: var(--text-muted); margin-top: 1px; }
     .dash-empty { font-size: 0.82rem; color: var(--text-muted); padding: 6px 0; }
+    .dash-search-field {
+      width: 100%; padding: 9px 11px; border: 1.5px solid var(--border);
+      border-radius: 8px; font-size: 0.88rem; background: var(--surface2); color: var(--text);
+      margin-bottom: 10px;
+    }
+    .dash-search-field:focus { outline: none; border-color: var(--primary); background: var(--surface); }
+    .dash-search-results { display: flex; flex-direction: column; gap: 4px; min-height: 48px; }
+    .dash-search-group { padding-top: 4px; }
+    .dash-search-group:first-child { padding-top: 0; }
+    .dash-search-label {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px;
+    }
+    .dash-search-row {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--surface2);
+      padding: 8px 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      width: 100%; text-align: left; font: inherit;
+    }
+    .dash-search-row:hover { border-color: var(--primary-border); background: var(--surface); }
+    .dash-search-text { font-size: 0.84rem; font-weight: 500; color: var(--text); }
+    .dash-search-meta {
+      font-size: 0.71rem; color: var(--text-muted); margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .dash-search-kind {
+      font-size: 0.68rem; color: var(--primary); background: var(--primary-light);
+      border: 1px solid var(--primary-border); border-radius: 999px; padding: 2px 7px;
+      line-height: 1.2; flex-shrink: 0; margin-top: 1px;
+    }
 
     /* ── CALENDAR ── */
     .cal-wrap {
@@ -1203,6 +1236,35 @@
     }
     .katalog-chip:hover .katalog-chip-del { color: var(--danger); }
     .katalog-chip-del:hover { background: #fee2e2 !important; color: var(--danger) !important; }
+    .katalog-chip-remember,
+    .einkauf-remember-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .katalog-chip-remember {
+      width: 18px; height: 18px; border-radius: 999px; font-size: 0.72rem; padding: 0; flex-shrink: 0;
+    }
+    .katalog-chip-remember.active,
+    .einkauf-remember-btn.active {
+      color: #b45309; background: #fef3c7; border-color: #f59e0b;
+    }
+    .katalog-chip-remember:hover,
+    .einkauf-remember-btn:hover { border-color: #f59e0b; color: #b45309; }
+    .remember-wrap { margin-bottom: 8px; }
+    .remember-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .remember-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+      border-radius: 16px; border: 1px solid var(--primary-border); background: var(--primary-light);
+      color: var(--primary); font-size: 0.8rem; cursor: pointer;
+    }
+    .remember-chip:hover { filter: brightness(0.98); }
+    .remember-chip-name { font-weight: 600; }
+    .remember-chip-remove {
+      width: 18px; height: 18px; border-radius: 999px; border: 1px solid transparent;
+      background: transparent; color: inherit; cursor: pointer; padding: 0; line-height: 1;
+    }
+    .remember-chip-remove:hover { background: rgba(255,255,255,0.7); border-color: var(--primary-border); }
 
     /* ── PDF / PRINT ── */
     .btn-pdf {
@@ -1259,6 +1321,10 @@
       flex: 1; font-size: 0.92rem; color: var(--text);
       transition: text-decoration 0.1s;
     }
+    .einkauf-actions { display: inline-flex; align-items: center; gap: 6px; }
+    .einkauf-remember-btn {
+      width: 28px; height: 28px; border-radius: 999px; font-size: 0.85rem; flex-shrink: 0;
+    }
     .einkauf-item.checked .einkauf-name {
       text-decoration: line-through; color: var(--text-muted);
     }
@@ -1282,7 +1348,8 @@
     @media (max-width: 900px) {
       .dash-overview  { grid-template-columns: 1fr; }
       .dash-stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .dash-lower     { grid-template-columns: 1fr; }
+      .dash-lower,
+      .dash-secondary { grid-template-columns: 1fr; }
       .cal-wrap       { max-width: 300px; justify-self: start; }
     }
     @media (max-width: 600px) {
@@ -1439,11 +1506,29 @@
       </div>
     </div>
 
-    <!-- Untere zwei Panels -->
+    <!-- Arbeitsbereiche -->
     <div class="dash-lower">
       <div class="dash-panel">
-        <div class="dash-panel-title">Demnächst fällig</div>
+        <div class="dash-panel-title">Heute</div>
+        <div id="dash-today"></div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-title">Überfällig</div>
+        <div id="dash-overdue-list"></div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-title">Nächste Schritte</div>
         <div id="dash-upcoming"></div>
+      </div>
+    </div>
+
+    <div class="dash-secondary">
+      <div class="dash-panel">
+        <div class="dash-panel-title">Globale Suche</div>
+        <input id="dash-global-search" class="dash-search-field" type="text" placeholder="Suche in Todos, Notizen und Einkauf …" />
+        <div id="dash-search-results" class="dash-search-results">
+          <div class="dash-empty">Suchbegriff eingeben</div>
+        </div>
       </div>
       <div class="dash-panel">
         <div class="dash-panel-title">Letzte Notizen</div>
@@ -1628,6 +1713,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Hinzufügen
         </button>
+      </div>
+      <div class="remember-wrap" id="remember-wrap" style="display:none;">
+        <div class="katalog-title">Für den nächsten Einkauf merken</div>
+        <div class="remember-chips" id="remember-chips"></div>
       </div>
       <!-- Frühere Artikel: ausklappbar, horizontal scrollbar auf Mobile -->
       <div class="katalog-wrap" id="katalog-wrap" style="display:none;">
@@ -1834,6 +1923,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.firestore();
+let currentUserId = null;
 const FCM_PUBLIC_VAPID_KEY = "BJPqTARuMPMqvobI4AISAfsKj1-JtxeEIsGWxC_9-zD8rF9NmDNm8BPuWZob5WHKKd1AtikX2vLIQ5G5CNPQJQI";
 const pushState = {
   messaging: null,
@@ -1842,6 +1932,14 @@ const pushState = {
 };
 
 function $(id) { return document.getElementById(id); }
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function getPushTokenDocId(token) {
   return encodeURIComponent(token);
@@ -2315,6 +2413,7 @@ auth.getRedirectResult().catch(err => {
 
 auth.onAuthStateChanged(user => {
   if (user) {
+    currentUserId = user.uid;
     $("login-screen").style.display = "none";
     $("app").style.display = "flex";
     const wrap = $("user-avatar-wrap");
@@ -2339,6 +2438,7 @@ auth.onAuthStateChanged(user => {
     initEinkauf(user.uid);
     initFab(user.uid);
   } else {
+    currentUserId = null;
     $("login-screen").style.display = "flex";
     $("app").style.display = "none";
     cleanupAll();
@@ -2375,6 +2475,15 @@ function initDashboard() {
   const now = new Date();
   calYear  = now.getFullYear();
   calMonth = now.getMonth();
+
+  if (!$("dash-global-search").dataset.bound) {
+    $("dash-global-search").dataset.bound = "1";
+    $("dash-global-search").addEventListener("input", renderDashboardSearch);
+    $("dash-search-results").addEventListener("click", e => {
+      const row = e.target.closest(".dash-search-row");
+      if (row) handleDashboardSearchClick(row);
+    });
+  }
 
   $("cal-prev").addEventListener("click", () => {
     if (--calMonth < 0) { calMonth = 11; calYear--; }
@@ -2513,10 +2622,179 @@ function formatReminderDateTime(reminderAt) {
   return `${formatDueDate(m[1])} ${formatDueTime(m[2])}`;
 }
 
+function getAllTodosFlat() {
+  const all = [];
+  ordnerCache.forEach(({name, todos}, ordnerId) =>
+    todos.forEach(t => all.push({ ...t, _ordnerName: name, _ordnerId: ordnerId })));
+  return all;
+}
+
+function getAllNotesFlat() {
+  const all = [];
+  notizenOrdnerCache.forEach(({name, notizen}, ordnerId) =>
+    notizen.forEach(n => all.push({ ...n, _ordnerName: name, _ordnerId: ordnerId })));
+  return all;
+}
+
+function renderDashTodoCollection(targetId, items, emptyText, today) {
+  const el = $(targetId);
+  if (!el) return;
+  el.innerHTML = "";
+  if (!items.length) {
+    el.innerHTML = `<div class="dash-empty">${emptyText}</div>`;
+    return;
+  }
+  items.forEach(t => {
+    const row = document.createElement("div");
+    row.className = "dash-todo-row";
+    const isOverdue = t.faellig && t.faellig < today;
+    const isToday = t.faellig === today;
+    const dateLabel = t.faellig
+      ? formatDueDate(t.faellig) + (t.faelligZeit ? ` ${formatDueTime(t.faelligZeit)}` : "")
+      : "Ohne Termin";
+    row.innerHTML = `
+      <div class="dash-row-main">
+        <div class="dash-todo-row-text">${escapeHtml(t.text)}</div>
+        <div class="dash-row-meta">${escapeHtml(t._ordnerName || "Ohne Ordner")}</div>
+      </div>
+      <div class="dash-due ${isOverdue ? "overdue" : isToday ? "today" : ""}">${isOverdue ? "⚠️ " : ""}${escapeHtml(dateLabel)}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function getDashboardSearchGroups(query) {
+  const q = (query || "").trim().toLowerCase();
+  if (!q) return [];
+
+  const todoResults = getAllTodosFlat()
+    .filter(t =>
+      (t.text || "").toLowerCase().includes(q) ||
+      (t._ordnerName || "").toLowerCase().includes(q) ||
+      (t.notiz || "").toLowerCase().includes(q))
+    .slice(0, 5)
+    .map(t => ({
+      type: "todo",
+      label: t.text,
+      meta: `${t._ordnerName || "Ohne Ordner"}${t.faellig ? ` · ${formatDueDate(t.faellig)}` : ""}`,
+      ordnerId: t._ordnerId,
+      itemId: t.id
+    }));
+
+  const noteResults = getAllNotesFlat()
+    .filter(n =>
+      (n.titel || "").toLowerCase().includes(q) ||
+      (n.text || "").toLowerCase().includes(q) ||
+      (n._ordnerName || "").toLowerCase().includes(q))
+    .slice(0, 5)
+    .map(n => ({
+      type: "note",
+      label: n.titel || "Ohne Titel",
+      meta: n._ordnerName || "Notizen",
+      ordnerId: n._ordnerId,
+      itemId: n.id
+    }));
+
+  const shoppingResults = [
+    ...einkaufItems
+      .filter(i => (i.name || "").toLowerCase().includes(q))
+      .slice(0, 4)
+      .map(i => ({
+        type: "shopping-active",
+        label: i.name,
+        meta: i.checked ? "Aktuelle Einkaufsliste · erledigt" : "Aktuelle Einkaufsliste",
+        itemId: i.id
+      })),
+    ...einkaufKatalog
+      .filter(k => k.rememberNext && (k.name || "").toLowerCase().includes(q))
+      .slice(0, 4)
+      .map(k => ({
+        type: "shopping-remembered",
+        label: k.name,
+        meta: "Für den nächsten Einkauf gemerkt",
+        itemId: k.id
+      }))
+  ];
+
+  return [
+    { label: "Todos", items: todoResults },
+    { label: "Notizen", items: noteResults },
+    { label: "Einkauf", items: shoppingResults }
+  ].filter(group => group.items.length);
+}
+
+function renderDashboardSearch() {
+  const wrap = $("dash-search-results");
+  const input = $("dash-global-search");
+  if (!wrap || !input) return;
+  wrap.innerHTML = "";
+  const query = input.value || "";
+  if (!query.trim()) {
+    wrap.innerHTML = '<div class="dash-empty">Suchbegriff eingeben</div>';
+    return;
+  }
+  const groups = getDashboardSearchGroups(query);
+  if (!groups.length) {
+    wrap.innerHTML = '<div class="dash-empty">Keine Treffer gefunden</div>';
+    return;
+  }
+  groups.forEach(group => {
+    const section = document.createElement("div");
+    section.className = "dash-search-group";
+    section.innerHTML = `<div class="dash-search-label">${escapeHtml(group.label)}</div>`;
+    group.items.forEach(item => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "dash-search-row";
+      row.dataset.type = item.type;
+      row.dataset.itemId = item.itemId || "";
+      row.dataset.ordnerId = item.ordnerId || "";
+      row.innerHTML = `
+        <div class="dash-row-main">
+          <div class="dash-search-text">${escapeHtml(item.label)}</div>
+          <div class="dash-search-meta">${escapeHtml(item.meta)}</div>
+        </div>
+        <span class="dash-search-kind">${item.type === "todo" ? "Todo" : item.type === "note" ? "Notiz" : "Einkauf"}</span>`;
+      section.appendChild(row);
+    });
+    wrap.appendChild(section);
+  });
+}
+
+function handleDashboardSearchClick(target) {
+  const type = target?.dataset?.type;
+  const itemId = target?.dataset?.itemId;
+  const ordnerId = target?.dataset?.ordnerId;
+  if (!type || !currentUserId) return;
+  if (type === "todo") {
+    switchTab("todos");
+    if (ordnerId) selectOrdner(ordnerId, currentUserId);
+    const todo = getAllTodosFlat().find(t => t.id === itemId);
+    if (todo) {
+      $("todo-search").value = todo.text || "";
+      renderCurrentTodoView(currentUserId);
+    }
+    return;
+  }
+  if (type === "note") {
+    const note = getAllNotesFlat().find(n => n.id === itemId);
+    if (!note) return;
+    switchTab("notizen");
+    if (ordnerId) selectNotizenOrdner(ordnerId, currentUserId);
+    openNotizModal(note.id, note.titel, note.text);
+    return;
+  }
+  switchTab("einkauf");
+  requestAnimationFrame(() => {
+    const el = type === "shopping-active"
+      ? document.getElementById(`einkauf-item-${itemId}`)
+      : document.getElementById("remember-wrap");
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+
 function renderDashboard() {
   const today = new Date().toISOString().slice(0,10);
-  let all = [];
-  ordnerCache.forEach(({name, todos}) => todos.forEach(t => all.push({...t, _ordnerName: name})));
+  const all = getAllTodosFlat();
 
   // Stats
   const nOffen    = all.filter(t => t.status === "offen").length;
@@ -2531,38 +2809,37 @@ function renderDashboard() {
   // Calendar
   renderCalendar();
 
-  // Upcoming (nächste 14 Tage, nicht erledigt, mit faellig)
+  const sortByDue = (a,b) => {
+    const adt = `${a.faellig || ""}T${normalizeDueTimeInput(a.faelligZeit || "") || "23:59"}`;
+    const bdt = `${b.faellig || ""}T${normalizeDueTimeInput(b.faelligZeit || "") || "23:59"}`;
+    return adt.localeCompare(bdt);
+  };
+  const todayItems = all
+    .filter(t => t.faellig === today && t.status !== "erledigt")
+    .sort(sortByDue)
+    .slice(0, 5);
+  const overdueItems = all
+    .filter(t => t.faellig && t.faellig < today && t.status !== "erledigt")
+    .sort(sortByDue)
+    .slice(0, 5);
   const upcoming = all
     .filter(t => t.faellig && t.status !== "erledigt")
-    .sort((a,b) => {
-      const adt = `${a.faellig || ""}T${normalizeDueTimeInput(a.faelligZeit || "") || "23:59"}`;
-      const bdt = `${b.faellig || ""}T${normalizeDueTimeInput(b.faelligZeit || "") || "23:59"}`;
-      return adt.localeCompare(bdt);
-    })
-    .slice(0, 8);
-
-  const upEl = $("dash-upcoming");
-  upEl.innerHTML = "";
-  if (upcoming.length === 0) {
-    upEl.innerHTML = '<div class="dash-empty">Keine offenen Fälligkeiten</div>';
-  } else {
-    upcoming.forEach(t => {
-      const row = document.createElement("div");
-      row.className = "dash-todo-row";
-      const isOverdue = t.faellig < today;
-      const isToday   = t.faellig === today;
-      const dateLabel = formatDueDate(t.faellig) + (t.faelligZeit ? ` ${formatDueTime(t.faelligZeit)}` : "");
-      row.innerHTML = `
-        <div class="dash-todo-row-text">${t.text}</div>
-        <div class="dash-due ${isOverdue?"overdue":isToday?"today":""}">${isOverdue?"⚠️ ":""}${dateLabel}</div>`;
-      upEl.appendChild(row);
-    });
+    .filter(t => t.faellig > today)
+    .sort(sortByDue)
+    .slice(0, 6);
+  if (upcoming.length < 6) {
+    const noDate = all
+      .filter(t => !t.faellig && t.status !== "erledigt")
+      .slice(0, 6 - upcoming.length);
+    upcoming.push(...noDate);
   }
 
+  renderDashTodoCollection("dash-today", todayItems, "Heute ist nichts fällig", today);
+  renderDashTodoCollection("dash-overdue-list", overdueItems, "Nichts überfällig", today);
+  renderDashTodoCollection("dash-upcoming", upcoming, "Keine nächsten Schritte geplant", today);
+
   // Letzte Notizen
-  let notes = [];
-  notizenOrdnerCache.forEach(({name, notizen}) =>
-    notizen.forEach(n => notes.push({...n, _ordnerName: name})));
+  let notes = getAllNotesFlat();
   notes.sort((a,b) => {
     const ta = a.updatedAt?.toMillis?.() ?? 0;
     const tb = b.updatedAt?.toMillis?.() ?? 0;
@@ -2583,6 +2860,7 @@ function renderDashboard() {
       notesEl.appendChild(row);
     });
   }
+  renderDashboardSearch();
 }
 
 function renderCalendar() {
@@ -4758,6 +5036,75 @@ let unsubscribeKatalogFunc   = null;
 let einkaufItems             = [];   // aktuelle Liste
 let einkaufKatalog           = [];   // alle je hinzugefügten Artikel
 
+function getKatalogIdFromName(name) {
+  return (name || "").toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
+}
+
+function addShoppingItem(userId, name, countAsUsage = true) {
+  const trimmed = (name || "").trim();
+  if (!trimmed) return;
+  const exists = einkaufItems.some(i => (i.name || "").toLowerCase() === trimmed.toLowerCase() && !i.checked);
+  if (exists) {
+    showToast(`"${trimmed}" ist schon auf der Liste.`);
+    return;
+  }
+  db.collection(`users/${userId}/einkaufsliste`).add({
+    name: trimmed, checked: false, createdAt: Date.now()
+  }).catch(err => showToast("Fehler beim Speichern: " + err.message, "error"));
+
+  const katalogId = getKatalogIdFromName(trimmed);
+  const payload = {
+    name: trimmed,
+    lastUsed: Date.now()
+  };
+  if (countAsUsage) payload.count = firebase.firestore.FieldValue.increment(1);
+  db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId).set(payload, { merge: true });
+}
+
+function toggleRememberedShoppingItem(userId, name, rememberNext) {
+  const trimmed = (name || "").trim();
+  if (!trimmed) return;
+  const katalogId = getKatalogIdFromName(trimmed);
+  db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId).set({
+    name: trimmed,
+    rememberNext,
+    lastUsed: Date.now()
+  }, { merge: true });
+}
+
+function renderRememberedChips(userId) {
+  const remembered = einkaufKatalog
+    .filter(k => k.rememberNext)
+    .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
+  const wrap = $("remember-wrap");
+  const chips = $("remember-chips");
+  if (!wrap || !chips) return;
+  chips.innerHTML = "";
+  if (!remembered.length) {
+    wrap.style.display = "none";
+    return;
+  }
+  wrap.style.display = "";
+  remembered.forEach(item => {
+    const chip = document.createElement("div");
+    chip.className = "remember-chip";
+    chip.innerHTML = `<span class="remember-chip-name">${escapeHtml(item.name)}</span>`;
+    chip.addEventListener("click", () => addShoppingItem(userId, item.name, true));
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "remember-chip-remove";
+    removeBtn.title = "Nicht mehr für den nächsten Einkauf merken";
+    removeBtn.textContent = "×";
+    removeBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      toggleRememberedShoppingItem(userId, item.name, false);
+    });
+    chip.appendChild(removeBtn);
+    chips.appendChild(chip);
+  });
+}
+
 function initEinkauf(userId) {
   // Kein orderBy → kein Firestore-Index nötig, sort client-seitig
   // (vermeidet Mixed-Type-Fehler zwischen alten Timestamps und neuen Date.now()-Zahlen)
@@ -4776,7 +5123,9 @@ function initEinkauf(userId) {
       return ta - tb;
     });
     renderEinkaufList(userId);
+    renderRememberedChips(userId);
     renderKatalogChips(userId);
+    renderDashboardSearch();
   }, err => console.error("Einkauf-Fehler:", err));
 
   // Katalog live
@@ -4785,8 +5134,10 @@ function initEinkauf(userId) {
     einkaufKatalog = [];
     snap.forEach(d => einkaufKatalog.push({ id: d.id, ...d.data() }));
     einkaufKatalog.sort((a,b) => (b.count||0) - (a.count||0));
+    renderRememberedChips(userId);
     renderKatalogChips(userId);
     updateEinkaufSuggestions();
+    renderDashboardSearch();
   }, err => console.error("Katalog-Fehler:", err));
 
   // Artikel hinzufügen
@@ -4794,19 +5145,7 @@ function initEinkauf(userId) {
     const name = $("einkauf-input").value.trim();
     if (!name) return;
     $("einkauf-input").value = "";
-
-    // Zur aktiven Liste (createdAt als Zahl für zuverlässige cross-device-Sortierung)
-    db.collection(`users/${userId}/einkaufsliste`).add({
-      name, checked: false,
-      createdAt: Date.now()
-    }).catch(err => showToast("Fehler beim Speichern: " + err.message, "error"));
-
-    // In Katalog speichern / Zähler erhöhen
-    const katalogId = name.toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
-    db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId).set({
-      name, count: firebase.firestore.FieldValue.increment(1),
-      lastUsed: Date.now()
-    }, { merge: true });
+    addShoppingItem(userId, name, true);
   }
 
   $("btn-einkauf-add").addEventListener("click", addArtikel);
@@ -4854,6 +5193,7 @@ function renderEinkaufList(userId) {
 
   sorted.forEach(item => {
     const row = document.createElement("div");
+    row.id = `einkauf-item-${item.id}`;
     row.className = "einkauf-item" + (item.checked ? " checked" : "");
 
     const checkbox = document.createElement("div");
@@ -4863,6 +5203,18 @@ function renderEinkaufList(userId) {
     nameEl.className = "einkauf-name";
     nameEl.textContent = item.name;
 
+    const rememberBtn = document.createElement("button");
+    rememberBtn.type = "button";
+    rememberBtn.className = "einkauf-remember-btn";
+    rememberBtn.title = "Für den nächsten Einkauf merken";
+    rememberBtn.textContent = "★";
+    const remembered = einkaufKatalog.some(k => (k.name || "").toLowerCase() === (item.name || "").toLowerCase() && k.rememberNext);
+    rememberBtn.classList.toggle("active", remembered);
+    rememberBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      toggleRememberedShoppingItem(userId, item.name, !remembered);
+    });
+
     const delBtn = document.createElement("button");
     delBtn.className = "btn-delete";
     delBtn.title = "Entfernen";
@@ -4870,7 +5222,7 @@ function renderEinkaufList(userId) {
 
     // Toggle checked
     row.addEventListener("click", e => {
-      if (e.target.closest(".btn-delete")) return;
+      if (e.target.closest(".btn-delete") || e.target.closest(".einkauf-remember-btn")) return;
       db.doc(`users/${userId}/einkaufsliste/${item.id}`)
         .update({ checked: !item.checked });
     });
@@ -4882,7 +5234,12 @@ function renderEinkaufList(userId) {
 
     row.appendChild(checkbox);
     row.appendChild(nameEl);
-    row.appendChild(delBtn);
+    const actions = document.createElement("div");
+    actions.className = "einkauf-actions";
+    actions.appendChild(rememberBtn);
+    actions.appendChild(delBtn);
+
+    row.appendChild(actions);
     list.appendChild(row);
   });
 
@@ -4912,6 +5269,17 @@ function renderKatalogChips(userId) {
     nameSpan.textContent = k.name;
     chip.appendChild(nameSpan);
 
+    const rememberBtn = document.createElement("button");
+    rememberBtn.type = "button";
+    rememberBtn.className = "katalog-chip-remember" + (k.rememberNext ? " active" : "");
+    rememberBtn.title = k.rememberNext ? "Nicht mehr für den nächsten Einkauf merken" : "Für den nächsten Einkauf merken";
+    rememberBtn.textContent = "★";
+    rememberBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      toggleRememberedShoppingItem(userId, k.name, !k.rememberNext);
+    });
+    chip.appendChild(rememberBtn);
+
     // × Löschen-Button
     const delBtn = document.createElement("button");
     delBtn.className = "katalog-chip-del";
@@ -4928,13 +5296,7 @@ function renderKatalogChips(userId) {
 
     if (!already) {
       chip.addEventListener("click", () => {
-        db.collection(`users/${userId}/einkaufsliste`).add({
-          name: k.name, checked: false, createdAt: Date.now()
-        });
-        const katalogId = k.name.toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
-        db.collection(`users/${userId}/einkaufsKatalog`).doc(katalogId)
-          .set({ count: firebase.firestore.FieldValue.increment(1),
-                 lastUsed: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        addShoppingItem(userId, k.name, true);
       });
     }
     chips.appendChild(chip);
