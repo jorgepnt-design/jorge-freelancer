@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de" data-theme="light">
 <head>
   <meta charset="UTF-8" />
@@ -687,6 +687,7 @@
     .notiz-card-preview { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .notiz-card-preview ul { margin: 2px 0 2px 14px; padding: 0; }
     .notiz-card-preview li { list-style: disc; }
+    .notiz-card-preview s { text-decoration: line-through; }
     .notiz-card-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; }
     /* Markdown toolbar */
     .notiz-toolbar {
@@ -708,6 +709,7 @@
     }
     .notiz-md-preview strong { font-weight: 700; }
     .notiz-md-preview em { font-style: italic; }
+    .notiz-md-preview s { text-decoration: line-through; }
     .notiz-md-preview ul { margin: 4px 0 4px 18px; padding: 0; }
     .notiz-md-preview li { list-style: disc; margin-bottom: 2px; }
     .notiz-add-btn {
@@ -1770,10 +1772,11 @@
     <div class="notiz-toolbar">
       <button type="button" class="notiz-fmt-btn" id="nfmt-bold" title="Fett (Ctrl+B)"><strong>B</strong></button>
       <button type="button" class="notiz-fmt-btn" id="nfmt-italic" title="Kursiv (Ctrl+I)"><em>I</em></button>
+      <button type="button" class="notiz-fmt-btn" id="nfmt-strike" title="Durchstreichen"><s>S</s></button>
       <button type="button" class="notiz-fmt-btn" id="nfmt-bullet" title="Aufzählung">• Liste</button>
       <button type="button" class="notiz-fmt-btn" id="nfmt-preview" title="Vorschau" style="margin-left:auto;">👁 Vorschau</button>
     </div>
-    <textarea id="notiz-modal-text" placeholder="Notiz schreiben … (**fett**, *kursiv*, - Liste)"></textarea>
+    <textarea id="notiz-modal-text" placeholder="Notiz schreiben … (**fett**, *kursiv*, ~~durchgestrichen~~, - Liste)"></textarea>
     <div class="notiz-md-preview hidden" id="notiz-md-preview"></div>
     <div class="modal-footer">
       <span class="modal-save-hint" id="notiz-save-hint"></span>
@@ -2873,7 +2876,7 @@ function handleDashboardSearchClick(target) {
     if (!note) return;
     switchTab("notizen");
     if (ordnerId) selectNotizenOrdner(ordnerId, currentUserId);
-    openNotizModal(note.id, note.titel, note.text);
+    openNotizModal(note.id, note.titel, note.text, ordnerId);
     return;
   }
   switchTab("einkauf");
@@ -4660,10 +4663,12 @@ function exportTodosExcel(userId) {
 // TAB 3: NOTIZEN
 // ════════════════════════════════════════════════════════════
 let unsubscribeNotizenOrdnerFunc = null;
-let currentNotizenOrdnerId       = null;
+let currentNotizenOrdnerId       = "alle";
+let lastRealNotizenOrdnerId      = null;
 let notizenOrdnerCache           = new Map(); // id → {name, notizen[]}
 let notizenListeners             = new Map();
 let currentNotizId               = null;
+let currentNotizOrdnerId         = null;
 let notizDebounce                = null;
 
 function initNotizen(userId) {
@@ -4680,20 +4685,20 @@ function initNotizen(userId) {
   $("notiz-modal-close").addEventListener("click", closeNotizModal);
   $("notiz-modal").addEventListener("click", e => { if (e.target===$("notiz-modal")) closeNotizModal(); });
   $("notiz-modal-delete").addEventListener("click", () => {
-    if (!currentNotizId||!currentNotizenOrdnerId) return;
+    if (!currentNotizId||!currentNotizOrdnerId) return;
     safeConfirm("Notiz löschen?").then(ok => {
       if (!ok) return;
-      db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).doc(currentNotizId).delete();
+      db.collection(`users/${userId}/notizenOrdner/${currentNotizOrdnerId}/notizen`).doc(currentNotizId).delete();
       closeNotizModal();
     });
   });
 
   function autoSaveNotiz() {
-    if (!currentNotizId||!currentNotizenOrdnerId) return;
+    if (!currentNotizId||!currentNotizOrdnerId) return;
     clearTimeout(notizDebounce);
     $("notiz-save-hint").textContent = "Speichert …";
     notizDebounce = setTimeout(() => {
-      db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).doc(currentNotizId).update({
+      db.collection(`users/${userId}/notizenOrdner/${currentNotizOrdnerId}/notizen`).doc(currentNotizId).update({
         titel: $("notiz-modal-title").value.trim() || "Ohne Titel",
         text:  $("notiz-modal-text").value,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -4737,13 +4742,18 @@ function initNotizen(userId) {
     });
 
     renderNotizenOrdnerBar(ordner, userId);
-    if (!currentNotizenOrdnerId||!ordner.find(o=>o.id===currentNotizenOrdnerId))
-      selectNotizenOrdner(ordner[0].id, userId);
+    if (!lastRealNotizenOrdnerId || !ordner.find(o=>o.id===lastRealNotizenOrdnerId)) {
+      lastRealNotizenOrdnerId = ordner[0].id;
+    }
+    if (!currentNotizenOrdnerId || (currentNotizenOrdnerId !== "alle" && !ordner.find(o=>o.id===currentNotizenOrdnerId))) {
+      selectNotizenOrdner("alle", userId);
+    }
   });
 }
 
 function selectNotizenOrdner(id, userId) {
   currentNotizenOrdnerId = id;
+  if (id !== "alle") lastRealNotizenOrdnerId = id;
   document.querySelectorAll("#notiz-ordner-bar .tabelle-tab").forEach(t =>
     t.classList.toggle("active", t.dataset.id===id));
   renderNotizenList(userId);
@@ -4752,6 +4762,14 @@ function selectNotizenOrdner(id, userId) {
 function renderNotizenOrdnerBar(ordner, userId) {
   const bar = $("notiz-ordner-bar"), newBtn = $("btn-new-notiz-ordner");
   Array.from(bar.children).forEach(c => { if (c!==newBtn) bar.removeChild(c); });
+
+  const alleTab = document.createElement("div");
+  alleTab.className = "tabelle-tab" + (currentNotizenOrdnerId === "alle" ? " active" : "");
+  alleTab.dataset.id = "alle";
+  alleTab.textContent = "Alle";
+  alleTab.addEventListener("click", () => selectNotizenOrdner("alle", userId));
+  bar.insertBefore(alleTab, newBtn);
+
   ordner.forEach(o => {
     const tab = makeFolderTab(o.id, o.name, o.id===currentNotizenOrdnerId,
       () => { safePrompt("Neuer Name:",o.name).then(n => { if(n&&n.trim()) db.collection(`users/${userId}/notizenOrdner`).doc(o.id).update({name:n.trim()}); }); },
@@ -4767,19 +4785,32 @@ function renderNotizenOrdnerBar(ordner, userId) {
 function renderNotizenList(userId) {
   const list = $("notiz-list"), empty = $("notiz-empty");
   Array.from(list.children).forEach(c => { if (c!==empty) list.removeChild(c); });
-  const cached = notizenOrdnerCache.get(currentNotizenOrdnerId);
-  const notizen = cached ? cached.notizen : [];
+  const showingAll = currentNotizenOrdnerId === "alle";
+  let notizen = [];
+  if (showingAll) {
+    notizenOrdnerCache.forEach(({ name, notizen: folderNotes }, ordnerId) => {
+      folderNotes.forEach(n => notizen.push({ ...n, _ordnerId: ordnerId, _ordnerName: name }));
+    });
+  } else {
+    const cached = notizenOrdnerCache.get(currentNotizenOrdnerId);
+    notizen = cached ? cached.notizen.map(n => ({ ...n, _ordnerId: currentNotizenOrdnerId, _ordnerName: cached.name })) : [];
+  }
 
   // "+ Neue Notiz" Karte
   const addCard = document.createElement("button");
   addCard.className = "notiz-add-btn";
   addCard.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Neue Notiz`;
   addCard.addEventListener("click", () => {
-    db.collection(`users/${userId}/notizenOrdner/${currentNotizenOrdnerId}/notizen`).add({
+    const targetOrdnerId = showingAll ? lastRealNotizenOrdnerId : currentNotizenOrdnerId;
+    if (!targetOrdnerId) {
+      showToast("Bitte zuerst einen Notiz-Ordner anlegen.", "error");
+      return;
+    }
+    db.collection(`users/${userId}/notizenOrdner/${targetOrdnerId}/notizen`).add({
       titel:"Neue Notiz", text:"",
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(ref => openNotizModal(ref.id, "Neue Notiz", ""));
+    }).then(ref => openNotizModal(ref.id, "Neue Notiz", "", targetOrdnerId));
   });
   list.appendChild(addCard);
 
@@ -4807,7 +4838,7 @@ function renderNotizenList(userId) {
     pinBtn.textContent = "📌";
     pinBtn.addEventListener("click", e => {
       e.stopPropagation();
-      db.collection(`users/${auth.currentUser.uid}/notizenOrdner/${currentNotizenOrdnerId}/notizen`)
+      db.collection(`users/${auth.currentUser.uid}/notizenOrdner/${n._ordnerId}/notizen`)
         .doc(n.id).update({ pinned: !n.pinned });
     });
 
@@ -4822,9 +4853,9 @@ function renderNotizenList(userId) {
     card.appendChild(top);
     card.insertAdjacentHTML("beforeend", `
       <div class="notiz-card-preview">${n.text ? mdToHtml(n.text) : "<em style='color:var(--text-muted)'>Leer</em>"}</div>
-      <div class="notiz-card-meta">${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""}</div>
+      <div class="notiz-card-meta">${showingAll ? escapeHtml(n._ordnerName || "") + " · " : ""}${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""}</div>
     `);
-    card.addEventListener("click", () => openNotizModal(n.id, n.titel, n.text));
+    card.addEventListener("click", () => openNotizModal(n.id, n.titel, n.text, n._ordnerId));
     list.appendChild(card);
   });
 }
@@ -4833,6 +4864,7 @@ function renderNotizenList(userId) {
 function mdInline(text) {
   return text
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/~~(.+?)~~/g,     "<s>$1</s>")
     .replace(/\*(.+?)\*/g,     "<em>$1</em>");
 }
 function mdToHtml(raw) {
@@ -4891,6 +4923,7 @@ function insertFmt(wrap, prefix) {
   }
   fmtBtn("nfmt-bold",   () => insertFmt("**", null));
   fmtBtn("nfmt-italic", () => insertFmt("*",  null));
+  fmtBtn("nfmt-strike", () => insertFmt("~~", null));
   fmtBtn("nfmt-bullet", () => insertFmt(null, "-"));
 
   let previewing = false;
@@ -4913,11 +4946,16 @@ function insertFmt(wrap, prefix) {
   $("notiz-modal-text").addEventListener("keydown", e => {
     if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); insertFmt("**", null); }
     if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); insertFmt("*",  null); }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "x") { e.preventDefault(); insertFmt("~~", null); }
   });
 })();
 
-function openNotizModal(id, titel, text) {
+function openNotizModal(id, titel, text, ordnerId = currentNotizenOrdnerId) {
   currentNotizId = id;
+  currentNotizOrdnerId = ordnerId;
+  if (ordnerId && ordnerId !== "alle") {
+    lastRealNotizenOrdnerId = ordnerId;
+  }
   $("notiz-modal-title").value = titel||"";
   $("notiz-modal-text").value  = text||"";
   $("notiz-save-hint").textContent = "";
@@ -4932,6 +4970,7 @@ function openNotizModal(id, titel, text) {
 function closeNotizModal() {
   $("notiz-modal").classList.add("hidden");
   currentNotizId = null;
+  currentNotizOrdnerId = null;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -5437,7 +5476,7 @@ function cleanupAll() {
     $("notif-status").className = "notif-status is-off";
     $("notif-status").title = "Glocke aus (klicken zum Aktivieren)";
   }
-  currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId=null;
+  currentTabelleId=null; currentOrdnerId="alle"; currentNotizenOrdnerId="alle"; lastRealNotizenOrdnerId=null; currentNotizOrdnerId=null;
 }
 
 function initFab(userId) {
@@ -5505,7 +5544,7 @@ async function openFabNotizQuick(userId) {
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   });
-  openNotizModal(ref.id, "Neue Notiz", "");
+  openNotizModal(ref.id, "Neue Notiz", "", ordnerId);
 }
 </script>
 
