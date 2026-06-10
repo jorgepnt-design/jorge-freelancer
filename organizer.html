@@ -784,6 +784,20 @@
     .subtask-cb { width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
     .subtask-text { flex: 1; line-height: 1.35; word-break: break-word; }
     .subtask-text.done { text-decoration: line-through; color: var(--text-muted); }
+    .subtask-edit-input {
+      flex: 1; min-width: 0; font-size: 0.8rem; padding: 4px 8px; border-radius: 6px;
+      border: 1.5px solid var(--primary); background: var(--surface); color: var(--text); outline: none;
+    }
+    .subtask-actions { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
+    .subtask-action-btn {
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      font-size: 0.9rem; padding: 0 2px; line-height: 1; opacity: 0.65; flex-shrink: 0;
+      transition: opacity 0.15s, color 0.15s;
+    }
+    .subtask-action-btn:hover { opacity: 1; color: var(--primary); }
+    .subtask-action-btn.del:hover { color: #ef4444; }
+    .subtask-action-btn.ok:hover { color: #16a34a; }
+    .subtask-action-btn.cancel:hover { color: #ef4444; }
     .subtask-del {
       background: none; border: none; cursor: pointer; color: var(--text-muted);
       font-size: 1rem; padding: 0 2px; line-height: 1; opacity: 0.5; flex-shrink: 0;
@@ -4564,9 +4578,83 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
         txt.className = "subtask-text" + (sub.done ? " done" : "");
         txt.textContent = sub.text;
 
+        function openSubtaskEditor() {
+          row.innerHTML = "";
+          row.appendChild(cb);
+
+          const input = document.createElement("input");
+          input.type = "text";
+          input.className = "subtask-edit-input";
+          input.value = sub.text || "";
+          input.maxLength = 200;
+
+          const actions = document.createElement("span");
+          actions.className = "subtask-actions";
+
+          const okBtn = document.createElement("button");
+          okBtn.type = "button";
+          okBtn.className = "subtask-action-btn ok";
+          okBtn.title = "Speichern";
+          okBtn.textContent = "✓";
+
+          const cancelBtn = document.createElement("button");
+          cancelBtn.type = "button";
+          cancelBtn.className = "subtask-action-btn cancel";
+          cancelBtn.title = "Abbrechen";
+          cancelBtn.textContent = "×";
+
+          function cancelEdit() {
+            renderSubtaskItems(getSubtasksFromCache());
+          }
+
+          function saveEdit() {
+            const value = input.value.trim();
+            if (!value) return cancelEdit();
+            const list = getSubtasksFromCache();
+            const i = list.findIndex(s => s.id === sub.id);
+            if (i !== -1) {
+              list[i].text = value;
+              saveSubtasks(list);
+            } else {
+              cancelEdit();
+            }
+          }
+
+          okBtn.addEventListener("click", saveEdit);
+          cancelBtn.addEventListener("click", cancelEdit);
+          input.addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              saveEdit();
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              cancelEdit();
+            }
+          });
+          input.addEventListener("blur", () => {
+            setTimeout(() => {
+              if (row.contains(input)) saveEdit();
+            }, 120);
+          });
+
+          actions.appendChild(okBtn);
+          actions.appendChild(cancelBtn);
+          row.appendChild(input);
+          row.appendChild(actions);
+          setTimeout(() => { input.focus(); input.select(); }, 0);
+        }
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "subtask-action-btn";
+        editBtn.title = "Bearbeiten";
+        editBtn.textContent = "✎";
+        editBtn.addEventListener("click", openSubtaskEditor);
+
         const del = document.createElement("button");
         del.type = "button";
-        del.className = "subtask-del";
+        del.className = "subtask-action-btn del";
         del.title = "Löschen";
         del.textContent = "×";
         del.addEventListener("click", () => {
@@ -4574,7 +4662,12 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
           saveSubtasks(list);
         });
 
-        row.appendChild(cb); row.appendChild(txt); row.appendChild(del);
+        const actions = document.createElement("span");
+        actions.className = "subtask-actions";
+        actions.appendChild(editBtn);
+        actions.appendChild(del);
+
+        row.appendChild(cb); row.appendChild(txt); row.appendChild(actions);
         subtaskListEl.appendChild(row);
       });
 
