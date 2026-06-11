@@ -1045,7 +1045,11 @@
     #fab-wrap {
       position: fixed; bottom: 24px; right: 18px; z-index: 30;
       display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+      /* Container ist klick-durchlässig – sonst verdeckt der (unsichtbare)
+         Menü-Bereich darunterliegende Buttons, z. B. in der Ergebnistabelle */
+      pointer-events: none;
     }
+    #fab-main { pointer-events: auto; }
     @media (max-width: 600px) {
       #fab-wrap { bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 28px); }
     }
