@@ -4078,6 +4078,9 @@ function saveTodoOrder(ordnerId, userId, todos) {
 
 function renderTodos(todos, userId, ordnerId, zeigeBadge) {
   const list = $("todo-list"), empty = $("todo-empty");
+  // Sicherung: hängengebliebene Drag-Ghosts entfernen (z. B. wenn die Liste
+  // mitten in einem Touch-Drag durch ein Firestore-Update neu gerendert wird)
+  document.querySelectorAll(".touch-drag-ghost").forEach(el => el.remove());
   Array.from(list.children).forEach(c => { if (c !== empty) list.removeChild(c); });
   if (todos.length === 0) { empty.style.display="block"; return; }
   empty.style.display = "none";
@@ -4145,34 +4148,34 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       let touchClone = null;
       let touchOffsetY = 0;
       let touchScrollInterval = null;
+      let touchStartTimer = null;
+      let touchDown = false;
 
       handle.addEventListener("touchstart", e => {
         if (e.touches.length !== 1) return;
         touchDragActive = false;
+        touchDown = true;
         const touch = e.touches[0];
         const rect = item.getBoundingClientRect();
         touchOffsetY = touch.clientY - rect.top;
 
-        // Kurz warten ob es ein Scroll ist
-        const startY = touch.clientY;
-        let moved = false;
-
-        const onTouchMoveStart = (ev) => {
-          if (Math.abs(ev.touches[0].clientY - startY) > 6 || Math.abs(ev.touches[0].clientX - touch.clientX) > 6) {
-            moved = true;
-          }
-        };
-        handle.addEventListener("touchmove", onTouchMoveStart, { once: true });
-
-        setTimeout(() => {
-          handle.removeEventListener("touchmove", onTouchMoveStart);
+        clearTimeout(touchStartTimer);
+        touchStartTimer = setTimeout(() => {
+          // Finger schon wieder weg (kurzer Tap)? Dann keinen Drag starten –
+          // sonst bleibt der Ghost-Clone für immer eingefroren stehen.
+          if (!touchDown) return;
           touchDragActive = true;
           dragSrcId = todo.id;
           dragSrcOrdnerId = todoOrdnerId;
           item.classList.add("is-dragging");
 
+          // Eventuelle Alt-Clones entfernen (duplizierte IDs stören sonst die App)
+          document.querySelectorAll(".touch-drag-ghost").forEach(el => el.remove());
+
           // Ghost-Clone erstellen
           touchClone = item.cloneNode(true);
+          touchClone.classList.add("touch-drag-ghost");
+          touchClone.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
           touchClone.style.cssText = `
             position: fixed; left: ${rect.left}px; top: ${rect.top}px;
             width: ${rect.width}px; opacity: 0.85; z-index: 9999;
@@ -4211,6 +4214,8 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       }, { passive: false });
 
       const endTouchDrag = (e) => {
+        touchDown = false;
+        clearTimeout(touchStartTimer);
         clearInterval(touchScrollInterval);
         if (!touchDragActive) { touchDragActive = false; return; }
         touchDragActive = false;
