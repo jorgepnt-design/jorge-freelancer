@@ -701,10 +701,20 @@
 
     .btn-delete, .btn-edit {
       border: none; background: transparent; cursor: pointer; padding: 4px;
-      border-radius: 4px; transition: color 0.15s, background 0.15s;
-      flex-shrink: 0; line-height: 0; color: #d1d5db;
+      border-radius: 6px; transition: color 0.15s, background 0.15s;
+      flex-shrink: 0; line-height: 0; color: var(--text-muted);
+      touch-action: manipulation;
     }
     .btn-delete:hover { color: var(--danger); background: #fee2e2; }
+    .btn-delete:active { color: var(--danger); }
+    /* Ergebnis-Tabelle: Mülleimer klar als löschbar erkennbar + große Touch-Fläche */
+    .ergebnis-table-wrap .btn-delete {
+      color: var(--danger);
+      background: #fee2e2;
+      padding: 8px;
+      min-width: 36px; min-height: 36px;
+    }
+    [data-theme="dark"] .ergebnis-table-wrap .btn-delete { background: #7f1d1d; color: #fca5a5; }
     .btn-edit:hover   { color: var(--primary); background: #dbeafe; }
     .todo-edit-input {
       flex: 1; border: 1.5px solid var(--primary); border-radius: 6px;
@@ -3511,8 +3521,13 @@ function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
     const delBtn = document.createElement("button");
     delBtn.className = "btn-delete"; delBtn.title = "Löschen";
     delBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
-    delBtn.addEventListener("click", () =>
-      db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id).delete());
+    delBtn.addEventListener("click", async () => {
+      const ok = await safeConfirm("Dieses Ergebnis löschen?");
+      if (!ok) return;
+      db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id).delete()
+        .then(() => showToast("Ergebnis gelöscht", "success"))
+        .catch(err => { console.error(err); showToast("Löschen fehlgeschlagen: " + (err.message || err.code || "unbekannt"), "error"); });
+    });
     tr.lastElementChild.appendChild(delBtn);
     tbody.appendChild(tr);
   });
