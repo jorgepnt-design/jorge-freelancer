@@ -355,6 +355,23 @@
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: var(--surface2); }
     td.dichte-val { font-weight: 600; color: var(--primary); }
+    td.dichte-nr { color: var(--text-muted); font-size: 0.76rem; font-variant-numeric: tabular-nums; text-align: left; }
+    td.editable-cell {
+      cursor: pointer;
+      text-decoration: underline dotted var(--primary-border);
+      text-underline-offset: 3px;
+      transition: background 0.12s;
+    }
+    td.editable-cell:hover { background: var(--primary-light); color: var(--primary); }
+    .dichte-edit-input {
+      width: 74px; max-width: 80px; padding: 3px 6px;
+      font-size: 0.83rem; text-align: right;
+      border: 1.5px solid var(--primary); border-radius: 5px;
+      background: var(--surface); color: var(--text); outline: none;
+    }
+    @media (max-width: 600px) {
+      .dichte-edit-input { font-size: 16px; width: 84px; }
+    }
     td.notiz-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; text-align: left; color: var(--text-muted); font-size: 0.78rem; }
     .avg-row {
       padding: 9px 14px; border-top: 2px solid var(--border);
@@ -1738,11 +1755,11 @@
         <div class="ergebnis-table-wrap">
           <table>
             <thead><tr>
-              <th>Datum</th><th>L (mm)</th><th>B (mm)</th><th>D (mm)</th>
+              <th>Nr.</th><th>Datum</th><th>L (mm)</th><th>B (mm)</th><th>D (mm)</th>
               <th>Masse (g)</th><th>Dichte (kg/m³)</th><th>Notiz</th><th></th>
             </tr></thead>
             <tbody id="ergebnis-tbody">
-              <tr id="ergebnis-empty-row"><td colspan="8" class="table-empty">Noch keine Ergebnisse – gib links Maße und Masse ein und tippe auf „Berechnen &amp; Speichern“.</td></tr>
+              <tr id="ergebnis-empty-row"><td colspan="9" class="table-empty">Noch keine Ergebnisse – gib links Maße und Masse ein und tippe auf „Berechnen &amp; Speichern“.</td></tr>
             </tbody>
           </table>
         </div>
@@ -3505,6 +3522,90 @@ function fmt(n) {
     ? n.toLocaleString("de-DE",{minimumFractionDigits:1,maximumFractionDigits:2}) : "—";
 }
 
+// Zahl aus Nutzereingabe lesen – akzeptiert Komma oder Punkt als Dezimaltrenner
+function parseGermanNumber(str) {
+  str = (str || "").trim();
+  if (!str) return NaN;
+  const hasComma = str.includes(",");
+  const hasDot = str.includes(".");
+  if (hasComma && hasDot) {
+    // z. B. "1.050,45" → Punkt = Tausender, Komma = Dezimal
+    str = str.replace(/\./g, "").replace(",", ".");
+  } else if (hasComma) {
+    str = str.replace(",", ".");
+  }
+  return parseFloat(str);
+}
+
+// Berechnet Dichte (kg/m³) aus L, B, D (mm) und Masse (g)
+function computeDichte(L, B, D, M) {
+  return (M / ((L * B * D) / 1000)) * 1000;
+}
+
+// Eine bearbeitbare Mess-Zelle (L, B, D oder Masse)
+function makeDichteEditCell(field, row, userId, tabelleId) {
+  const td = document.createElement("td");
+  td.className = "editable-cell";
+  td.title = "Tippen zum Bearbeiten";
+  td.textContent = fmt(row[field]);
+  td.addEventListener("click", () => startDichteEdit(td, field, row, userId, tabelleId));
+  return td;
+}
+
+function startDichteEdit(td, field, row, userId, tabelleId) {
+  if (td.querySelector("input")) return;
+  const current = row[field];
+  const input = document.createElement("input");
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.className = "dichte-edit-input";
+  input.value = (current != null ? String(current).replace(".", ",") : "");
+  td.textContent = "";
+  td.appendChild(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+  const finish = (save) => {
+    if (done) return;
+    done = true;
+    if (!save) { td.textContent = fmt(current); return; }
+
+    const val = parseGermanNumber(input.value);
+    if (isNaN(val) || val <= 0) {
+      showToast("Bitte eine positive Zahl eingeben.", "error");
+      td.textContent = fmt(current);
+      return;
+    }
+    if (val === current) { td.textContent = fmt(current); return; }
+
+    // Neue Dichte mit dem geänderten Wert berechnen
+    const vals = { laenge: row.laenge, breite: row.breite, dicke: row.dicke, masse: row.masse };
+    vals[field] = val;
+    const dichte = computeDichte(vals.laenge, vals.breite, vals.dicke, vals.masse);
+
+    // Optimistisch anzeigen (Snapshot-Listener rendert gleich endgültig)
+    td.textContent = fmt(val);
+    const dichteCell = td.parentElement?.querySelector(".dichte-val");
+    if (dichteCell) dichteCell.textContent = fmt(dichte);
+
+    db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id)
+      .update({ [field]: val, dichte })
+      .then(() => showToast("Wert aktualisiert", "success"))
+      .catch(err => {
+        console.error(err);
+        showToast("Speichern fehlgeschlagen: " + (err.message || err.code || "unbekannt"), "error");
+        td.textContent = fmt(current);
+      });
+  };
+
+  input.addEventListener("blur", () => finish(true));
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+  });
+}
+
 function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
   const tbody = $("ergebnis-tbody"), emptyRow = $("ergebnis-empty-row"), avgRow = $("avg-row");
   Array.from(tbody.children).forEach(c => { if (c !== emptyRow) tbody.removeChild(c); });
@@ -3517,11 +3618,37 @@ function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
     return;
   }
   emptyRow.style.display = "none";
-  rows.forEach(row => {
+  rows.forEach((row, idx) => {
     const d = row.createdAt ? (row.createdAt.toDate ? row.createdAt.toDate() : new Date(row.createdAt)) : null;
     const datum = d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"}) : "—";
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${datum}</td><td>${fmt(row.laenge)}</td><td>${fmt(row.breite)}</td><td>${fmt(row.dicke)}</td><td>${fmt(row.masse)}</td><td class="dichte-val">${fmt(row.dichte)}</td><td class="notiz-cell" title="${row.notiz||''}">${row.notiz||''}</td><td></td>`;
+
+    const nrTd = document.createElement("td");
+    nrTd.className = "dichte-nr";
+    nrTd.textContent = `${idx + 1}.`;
+    tr.appendChild(nrTd);
+
+    const datumTd = document.createElement("td");
+    datumTd.textContent = datum;
+    tr.appendChild(datumTd);
+
+    // Editierbare Mess-Zellen: L, B, D, Masse
+    [["laenge"], ["breite"], ["dicke"], ["masse"]].forEach(([field]) => {
+      tr.appendChild(makeDichteEditCell(field, row, userId, tabelleId));
+    });
+
+    const dichteTd = document.createElement("td");
+    dichteTd.className = "dichte-val";
+    dichteTd.textContent = fmt(row.dichte);
+    tr.appendChild(dichteTd);
+
+    const notizTd = document.createElement("td");
+    notizTd.className = "notiz-cell";
+    notizTd.title = row.notiz || "";
+    notizTd.textContent = row.notiz || "";
+    tr.appendChild(notizTd);
+
+    const actionTd = document.createElement("td");
     const delBtn = document.createElement("button");
     delBtn.className = "btn-delete"; delBtn.title = "Löschen";
     delBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
@@ -3532,7 +3659,9 @@ function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
         .then(() => showToast("Ergebnis gelöscht", "success"))
         .catch(err => { console.error(err); showToast("Löschen fehlgeschlagen: " + (err.message || err.code || "unbekannt"), "error"); });
     });
-    tr.lastElementChild.appendChild(delBtn);
+    actionTd.appendChild(delBtn);
+    tr.appendChild(actionTd);
+
     tbody.appendChild(tr);
   });
   const avg = rows.reduce((s,r)=>s+(r.dichte||0),0)/rows.length;
