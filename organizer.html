@@ -3542,17 +3542,26 @@ function computeDichte(L, B, D, M) {
   return (M / ((L * B * D) / 1000)) * 1000;
 }
 
+// Durchschnitt aus allen Zeilen neu berechnen und anzeigen
+function updateDichteAvg(rows) {
+  const valid = rows.map(r => r.dichte).filter(n => typeof n === "number" && !isNaN(n));
+  const avgEl = $("avg-wert");
+  if (!avgEl) return;
+  if (valid.length === 0) { avgEl.textContent = "—"; return; }
+  avgEl.textContent = fmt(valid.reduce((s, n) => s + n, 0) / valid.length);
+}
+
 // Eine bearbeitbare Mess-Zelle (L, B, D oder Masse)
-function makeDichteEditCell(field, row, userId, tabelleId) {
+function makeDichteEditCell(field, row, rows, userId, tabelleId) {
   const td = document.createElement("td");
   td.className = "editable-cell";
   td.title = "Tippen zum Bearbeiten";
   td.textContent = fmt(row[field]);
-  td.addEventListener("click", () => startDichteEdit(td, field, row, userId, tabelleId));
+  td.addEventListener("click", () => startDichteEdit(td, field, row, rows, userId, tabelleId));
   return td;
 }
 
-function startDichteEdit(td, field, row, userId, tabelleId) {
+function startDichteEdit(td, field, row, rows, userId, tabelleId) {
   if (td.querySelector("input")) return;
   const current = row[field];
   const input = document.createElement("input");
@@ -3588,6 +3597,10 @@ function startDichteEdit(td, field, row, userId, tabelleId) {
     td.textContent = fmt(val);
     const dichteCell = td.parentElement?.querySelector(".dichte-val");
     if (dichteCell) dichteCell.textContent = fmt(dichte);
+    // Zeilenwerte aktualisieren und Durchschnitt sofort neu berechnen
+    row[field] = val;
+    row.dichte = dichte;
+    updateDichteAvg(rows);
 
     db.collection(`users/${userId}/dichteTabellen/${tabelleId}/ergebnisse`).doc(row.id)
       .update({ [field]: val, dichte })
@@ -3634,7 +3647,7 @@ function renderErgebnisse(rows, userId, tabelleId, tabelleName) {
 
     // Editierbare Mess-Zellen: L, B, D, Masse
     [["laenge"], ["breite"], ["dicke"], ["masse"]].forEach(([field]) => {
-      tr.appendChild(makeDichteEditCell(field, row, userId, tabelleId));
+      tr.appendChild(makeDichteEditCell(field, row, rows, userId, tabelleId));
     });
 
     const dichteTd = document.createElement("td");
