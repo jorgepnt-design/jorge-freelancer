@@ -1052,6 +1052,12 @@
       .tabelle-tab, .btn-new-tabelle, .katalog-chip { min-height: 38px; }
       .tabelle-tab-btn { padding: 6px; }
       .einkauf-item { min-height: 52px; }
+      .einkauf-drag-handle {
+        padding: 6px 5px;
+        min-width: 28px; min-height: 28px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--text-muted);
+      }
       .einkauf-checkbox { width: 24px; height: 24px; }
       .einkauf-remember-btn { width: 36px; height: 36px; }
       .katalog-chip-del { width: 24px; height: 24px; }
@@ -1460,6 +1466,18 @@
     }
     .einkauf-item:hover { background: var(--surface2); }
     .einkauf-item.checked { opacity: 0.55; }
+    .einkauf-item.is-dragging { opacity: 0.35; }
+    .einkauf-item.drag-target {
+      outline: 2px dashed var(--primary); outline-offset: 1px;
+      background: var(--primary-light);
+    }
+    .einkauf-drag-handle {
+      cursor: grab; color: var(--border); flex-shrink: 0;
+      line-height: 0; padding: 2px 3px; border-radius: 3px;
+      transition: color 0.12s; user-select: none; touch-action: none;
+    }
+    .einkauf-drag-handle:hover,
+    .einkauf-drag-handle:active { color: var(--text-muted); cursor: grabbing; }
 
     .einkauf-checkbox {
       width: 20px; height: 20px; border-radius: 50%;
@@ -5554,6 +5572,7 @@ let unsubscribeEinkaufFunc   = null;
 let unsubscribeKatalogFunc   = null;
 let einkaufItems             = [];   // aktuelle Liste
 let einkaufKatalog           = [];   // alle je hinzugefügten Artikel
+let einkaufDragSrcId         = null;
 
 function getKatalogIdFromName(name) {
   return (name || "").toLowerCase().replace(/[^a-z0-9äöüß]/g, "_");
@@ -5568,7 +5587,7 @@ function addShoppingItem(userId, name, countAsUsage = true) {
     return;
   }
   db.collection(`users/${userId}/einkaufsliste`).add({
-    name: trimmed, checked: false, createdAt: Date.now()
+    name: trimmed, checked: false, createdAt: Date.now(), order: Date.now()
   }).catch(err => showToast("Fehler beim Speichern: " + err.message, "error"));
 
   const katalogId = getKatalogIdFromName(trimmed);
@@ -5624,6 +5643,30 @@ function renderRememberedChips(userId) {
   });
 }
 
+function getEinkaufOrderValue(item, fallbackIndex = 0) {
+  if (typeof item.order === "number") return item.order;
+  if (typeof item.createdAt === "number") return item.createdAt;
+  return item.createdAt?.toMillis?.() ?? fallbackIndex;
+}
+
+function sortEinkaufItems(items) {
+  return [...items].sort((a, b) => {
+    if (!!a.checked !== !!b.checked) return a.checked ? 1 : -1;
+    return getEinkaufOrderValue(a) - getEinkaufOrderValue(b);
+  });
+}
+
+function saveEinkaufOrder(userId, orderedItems) {
+  const batch = db.batch();
+  orderedItems.forEach((item, index) => {
+    batch.update(db.doc(`users/${userId}/einkaufsliste/${item.id}`), { order: index });
+  });
+  batch.commit().catch(err => {
+    console.warn("saveEinkaufOrder:", err);
+    showToast("Reihenfolge konnte nicht gespeichert werden.", "error");
+  });
+}
+
 function initEinkauf(userId) {
   // Kein orderBy → kein Firestore-Index nötig, sort client-seitig
   // (vermeidet Mixed-Type-Fehler zwischen alten Timestamps und neuen Date.now()-Zahlen)
@@ -5636,11 +5679,14 @@ function initEinkauf(userId) {
     einkaufItems = [];
     snap.forEach(d => einkaufItems.push({ id: d.id, ...d.data() }));
     // Client-seitig sortieren (unterstützt Timestamp und Zahl)
+    einkaufItems = sortEinkaufItems(einkaufItems);
+    /*
     einkaufItems.sort((a,b) => {
       const ta = typeof a.createdAt === "number" ? a.createdAt : (a.createdAt?.toMillis?.() ?? 0);
       const tb = typeof b.createdAt === "number" ? b.createdAt : (b.createdAt?.toMillis?.() ?? 0);
       return ta - tb;
     });
+    */
     renderEinkaufList(userId);
     renderRememberedChips(userId);
     renderKatalogChips(userId);
@@ -5709,16 +5755,102 @@ function renderEinkaufList(userId) {
   }
   empty.style.display = "none";
 
-  // Unerledigte zuerst, dann erledigte
-  const sorted = [
-    ...einkaufItems.filter(i => !i.checked),
-    ...einkaufItems.filter(i =>  i.checked)
-  ];
+  const sorted = sortEinkaufItems(einkaufItems);
 
   sorted.forEach(item => {
     const row = document.createElement("div");
     row.id = `einkauf-item-${item.id}`;
     row.className = "einkauf-item" + (item.checked ? " checked" : "");
+    row.dataset.itemId = item.id;
+
+    row.draggable = true;
+    const handle = document.createElement("span");
+    handle.className = "einkauf-drag-handle";
+    handle.title = "Ziehen zum Sortieren";
+    handle.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>`;
+
+    row.addEventListener("dragstart", e => {
+      if (!e.target.closest(".einkauf-drag-handle")) {
+        e.preventDefault();
+        return;
+      }
+      einkaufDragSrcId = item.id;
+      e.dataTransfer.effectAllowed = "move";
+      setTimeout(() => row.classList.add("is-dragging"), 0);
+    });
+    row.addEventListener("dragend", () => {
+      row.classList.remove("is-dragging");
+      document.querySelectorAll(".einkauf-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+      einkaufDragSrcId = null;
+    });
+    row.addEventListener("dragover", e => {
+      e.preventDefault();
+      if (!einkaufDragSrcId || einkaufDragSrcId === item.id) return;
+      document.querySelectorAll(".einkauf-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+      row.classList.add("drag-target");
+    });
+    row.addEventListener("dragleave", () => row.classList.remove("drag-target"));
+    row.addEventListener("drop", e => {
+      e.preventDefault();
+      row.classList.remove("drag-target");
+      if (!einkaufDragSrcId || einkaufDragSrcId === item.id) return;
+      const ordered = sortEinkaufItems(einkaufItems);
+      const fromIdx = ordered.findIndex(i => i.id === einkaufDragSrcId);
+      const toIdx = ordered.findIndex(i => i.id === item.id);
+      if (fromIdx === -1 || toIdx === -1) return;
+      const [moved] = ordered.splice(fromIdx, 1);
+      ordered.splice(toIdx, 0, moved);
+      einkaufItems = ordered.map((entry, index) => ({ ...entry, order: index }));
+      saveEinkaufOrder(userId, einkaufItems);
+      renderEinkaufList(userId);
+      einkaufDragSrcId = null;
+    });
+
+    let touchDragging = false;
+    let touchTargetId = null;
+    handle.addEventListener("touchstart", e => {
+      if (e.touches.length !== 1) return;
+      einkaufDragSrcId = item.id;
+      touchDragging = true;
+      touchTargetId = null;
+      row.classList.add("is-dragging");
+    }, { passive: true });
+    handle.addEventListener("touchmove", e => {
+      if (!touchDragging || !einkaufDragSrcId) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      document.querySelectorAll(".einkauf-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+      const target = document.elementsFromPoint(touch.clientX, touch.clientY)
+        .find(el => el.classList?.contains("einkauf-item") && el.dataset.itemId !== einkaufDragSrcId);
+      if (target) {
+        touchTargetId = target.dataset.itemId;
+        target.classList.add("drag-target");
+      } else {
+        touchTargetId = null;
+      }
+    }, { passive: false });
+    const finishTouchDrag = () => {
+      if (!touchDragging) return;
+      touchDragging = false;
+      row.classList.remove("is-dragging");
+      document.querySelectorAll(".einkauf-item.drag-target").forEach(el => el.classList.remove("drag-target"));
+      if (einkaufDragSrcId && touchTargetId && einkaufDragSrcId !== touchTargetId) {
+        const ordered = sortEinkaufItems(einkaufItems);
+        const fromIdx = ordered.findIndex(i => i.id === einkaufDragSrcId);
+        const toIdx = ordered.findIndex(i => i.id === touchTargetId);
+        if (fromIdx !== -1 && toIdx !== -1) {
+          const [moved] = ordered.splice(fromIdx, 1);
+          ordered.splice(toIdx, 0, moved);
+          einkaufItems = ordered.map((entry, index) => ({ ...entry, order: index }));
+          saveEinkaufOrder(userId, einkaufItems);
+          renderEinkaufList(userId);
+        }
+      }
+      einkaufDragSrcId = null;
+      touchTargetId = null;
+    };
+    handle.addEventListener("touchend", finishTouchDrag);
+    handle.addEventListener("touchcancel", finishTouchDrag);
 
     const checkbox = document.createElement("div");
     checkbox.className = "einkauf-checkbox";
@@ -5746,7 +5878,7 @@ function renderEinkaufList(userId) {
 
     // Toggle checked
     row.addEventListener("click", e => {
-      if (e.target.closest(".btn-delete") || e.target.closest(".einkauf-remember-btn")) return;
+      if (e.target.closest(".btn-delete") || e.target.closest(".einkauf-remember-btn") || e.target.closest(".einkauf-drag-handle")) return;
       db.doc(`users/${userId}/einkaufsliste/${item.id}`)
         .update({ checked: !item.checked });
     });
@@ -5756,6 +5888,7 @@ function renderEinkaufList(userId) {
       db.doc(`users/${userId}/einkaufsliste/${item.id}`).delete();
     });
 
+    row.appendChild(handle);
     row.appendChild(checkbox);
     row.appendChild(nameEl);
     const actions = document.createElement("div");
