@@ -1499,6 +1499,14 @@
       transition: text-decoration 0.1s;
     }
     .einkauf-actions { display: inline-flex; align-items: center; gap: 6px; }
+    .einkauf-move-btn {
+      width: 28px; height: 28px; border-radius: 999px;
+      border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; line-height: 1; transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .einkauf-move-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .einkauf-move-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .einkauf-remember-btn {
       width: 28px; height: 28px; border-radius: 999px; font-size: 0.85rem; flex-shrink: 0;
     }
@@ -5667,6 +5675,18 @@ function saveEinkaufOrder(userId, orderedItems) {
   });
 }
 
+function moveEinkaufItem(userId, itemId, direction) {
+  const ordered = sortEinkaufItems(einkaufItems);
+  const idx = ordered.findIndex(i => i.id === itemId);
+  const targetIdx = idx + direction;
+  if (idx < 0 || targetIdx < 0 || targetIdx >= ordered.length) return;
+  const [moved] = ordered.splice(idx, 1);
+  ordered.splice(targetIdx, 0, moved);
+  einkaufItems = ordered.map((entry, index) => ({ ...entry, order: index }));
+  saveEinkaufOrder(userId, einkaufItems);
+  renderEinkaufList(userId);
+}
+
 function initEinkauf(userId) {
   // Kein orderBy → kein Firestore-Index nötig, sort client-seitig
   // (vermeidet Mixed-Type-Fehler zwischen alten Timestamps und neuen Date.now()-Zahlen)
@@ -5758,27 +5778,25 @@ function renderEinkaufList(userId) {
   const sorted = sortEinkaufItems(einkaufItems);
 
   sorted.forEach(item => {
+    const itemIndex = sorted.findIndex(i => i.id === item.id);
     const row = document.createElement("div");
     row.id = `einkauf-item-${item.id}`;
     row.className = "einkauf-item" + (item.checked ? " checked" : "");
     row.dataset.itemId = item.id;
 
-    row.draggable = true;
     const handle = document.createElement("span");
     handle.className = "einkauf-drag-handle";
     handle.title = "Ziehen zum Sortieren";
+    handle.draggable = true;
     handle.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/></svg>`;
 
-    row.addEventListener("dragstart", e => {
-      if (!e.target.closest(".einkauf-drag-handle")) {
-        e.preventDefault();
-        return;
-      }
+    handle.addEventListener("dragstart", e => {
       einkaufDragSrcId = item.id;
       e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", item.id);
       setTimeout(() => row.classList.add("is-dragging"), 0);
     });
-    row.addEventListener("dragend", () => {
+    handle.addEventListener("dragend", () => {
       row.classList.remove("is-dragging");
       document.querySelectorAll(".einkauf-item.drag-target").forEach(el => el.classList.remove("drag-target"));
       einkaufDragSrcId = null;
@@ -5871,6 +5889,28 @@ function renderEinkaufList(userId) {
       toggleRememberedShoppingItem(userId, item.name, !remembered);
     });
 
+    const upBtn = document.createElement("button");
+    upBtn.type = "button";
+    upBtn.className = "einkauf-move-btn";
+    upBtn.title = "Nach oben verschieben";
+    upBtn.textContent = "↑";
+    upBtn.disabled = itemIndex === 0;
+    upBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      moveEinkaufItem(userId, item.id, -1);
+    });
+
+    const downBtn = document.createElement("button");
+    downBtn.type = "button";
+    downBtn.className = "einkauf-move-btn";
+    downBtn.title = "Nach unten verschieben";
+    downBtn.textContent = "↓";
+    downBtn.disabled = itemIndex === sorted.length - 1;
+    downBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      moveEinkaufItem(userId, item.id, 1);
+    });
+
     const delBtn = document.createElement("button");
     delBtn.className = "btn-delete";
     delBtn.title = "Entfernen";
@@ -5878,7 +5918,7 @@ function renderEinkaufList(userId) {
 
     // Toggle checked
     row.addEventListener("click", e => {
-      if (e.target.closest(".btn-delete") || e.target.closest(".einkauf-remember-btn") || e.target.closest(".einkauf-drag-handle")) return;
+      if (e.target.closest(".btn-delete") || e.target.closest(".einkauf-remember-btn") || e.target.closest(".einkauf-move-btn") || e.target.closest(".einkauf-drag-handle")) return;
       db.doc(`users/${userId}/einkaufsliste/${item.id}`)
         .update({ checked: !item.checked });
     });
@@ -5893,6 +5933,8 @@ function renderEinkaufList(userId) {
     row.appendChild(nameEl);
     const actions = document.createElement("div");
     actions.className = "einkauf-actions";
+    actions.appendChild(upBtn);
+    actions.appendChild(downBtn);
     actions.appendChild(rememberBtn);
     actions.appendChild(delBtn);
 
