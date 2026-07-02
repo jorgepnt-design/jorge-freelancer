@@ -744,23 +744,42 @@
     .empty-hint  { font-size: 0.8rem; color: var(--text-muted); max-width: 320px; margin: 0 auto; line-height: 1.5; }
 
     /* ── NOTIZEN ── */
-    .notiz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .notiz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
     .notiz-card {
-      background: var(--surface); border: 1.5px solid var(--border);
-      border-radius: var(--radius); padding: 14px; cursor: pointer;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 16px 16px 12px; cursor: pointer;
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column; min-height: 132px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
     }
-    .notiz-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-    .notiz-card { transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+    /* Akzentstreifen oben: unsichtbar, erscheint bei Hover / dauerhaft bei angepinnt */
+    .notiz-card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--primary); opacity: 0; transition: opacity 0.15s;
+    }
     .notiz-card-title {
-      font-size: 0.92rem; font-weight: 600; margin-bottom: 6px;
+      font-size: 0.98rem; font-weight: 650; margin-bottom: 6px; line-height: 1.3;
       color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .notiz-card-preview { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .notiz-card-preview {
+      flex: 1; font-size: 0.82rem; color: var(--text-muted); line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+    }
     .notiz-card-preview ul { margin: 2px 0 2px 14px; padding: 0; }
     .notiz-card-preview li { list-style: disc; }
     .notiz-card-preview s { text-decoration: line-through; }
-    .notiz-card-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; }
+    .notiz-card-meta {
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 0.7rem; color: var(--text-muted);
+    }
+    .notiz-card-folder {
+      background: var(--primary-light); color: var(--primary);
+      border: 1px solid var(--primary-border);
+      padding: 2px 9px; border-radius: 10px; font-weight: 600; font-size: 0.68rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;
+    }
     /* Markdown toolbar */
     .notiz-toolbar {
       display: flex; gap: 4px; padding: 6px 0 4px;
@@ -786,11 +805,12 @@
     .notiz-md-preview li { list-style: disc; margin-bottom: 2px; }
     .notiz-add-btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 14px; border: 2px dashed var(--border); border-radius: var(--radius);
-      background: transparent; font-size: 0.88rem; color: var(--text-muted);
-      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+      padding: 14px; border: 2px dashed var(--border); border-radius: var(--radius-lg);
+      background: transparent; font-size: 0.88rem; font-weight: 600; color: var(--text-muted);
+      min-height: 132px;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
     }
-    .notiz-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .notiz-add-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 
     /* ── TODO-NOTIZ ── */
     .todo-notiz-section {
@@ -1298,21 +1318,18 @@
     .notiz-card-top {
       display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 6px;
     }
-    .notiz-card.is-pinned {
-      border-color: #f59e0b;
-      background: linear-gradient(160deg, var(--surface) 70%, #fffbeb 100%);
-    }
-    [data-theme="dark"] .notiz-card.is-pinned {
-      border-color: #92400e;
-      background: linear-gradient(160deg, var(--surface) 70%, #1c1207 100%);
-    }
+    .notiz-card.is-pinned { border-color: #f59e0b; }
+    .notiz-card.is-pinned::before { background: #f59e0b; opacity: 1; }
+    [data-theme="dark"] .notiz-card.is-pinned { border-color: #92400e; }
+    [data-theme="dark"] .notiz-card.is-pinned::before { background: #b45309; }
     .btn-pin {
       border: none; background: transparent; cursor: pointer;
-      font-size: 0.85rem; line-height: 1; padding: 1px 3px;
-      color: #d1d5db; flex-shrink: 0; transition: color 0.12s;
+      font-size: 0.9rem; line-height: 1; padding: 1px 3px;
+      color: var(--text-muted); opacity: 0.45; flex-shrink: 0;
+      transition: color 0.12s, opacity 0.12s;
     }
-    .btn-pin:hover  { color: #f59e0b; }
-    .btn-pin.active { color: #f59e0b; }
+    .btn-pin:hover  { color: #f59e0b; opacity: 1; }
+    .btn-pin.active { color: #f59e0b; opacity: 1; }
 
     /* ── SHARE MODAL ── */
     .share-code {
@@ -1575,8 +1592,8 @@
     /* ── Feinschliff: dezente Hover-Effekte (nur Geräte mit Maus) ── */
     @media (hover: hover) {
       .todo-item:hover   { box-shadow: var(--shadow); }
-      .notiz-card:hover  { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-      .notiz-card        { transition: box-shadow 0.15s, transform 0.15s, border-color 0.2s; }
+      .notiz-card:hover  { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--primary-border); }
+      .notiz-card:hover::before { opacity: 1; }
     }
 
     /* ── MOBILE (iPhone): Zoom-Fix + Touch-Ziele ── */
@@ -5398,9 +5415,13 @@ function renderNotizenList(userId) {
     top.appendChild(pinBtn);
 
     card.appendChild(top);
+    const dateLabel = d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : "";
     card.insertAdjacentHTML("beforeend", `
       <div class="notiz-card-preview">${n.text ? mdToHtml(n.text) : "<em style='color:var(--text-muted)'>Leer</em>"}</div>
-      <div class="notiz-card-meta">${showingAll ? escapeHtml(n._ordnerName || "") + " · " : ""}${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""}</div>
+      <div class="notiz-card-meta">
+        ${showingAll && n._ordnerName ? `<span class="notiz-card-folder">${escapeHtml(n._ordnerName)}</span>` : "<span></span>"}
+        <span>${dateLabel}</span>
+      </div>
     `);
     card.addEventListener("click", () => openNotizModal(n.id, n.titel, n.text, n._ordnerId));
     frag.appendChild(card);
