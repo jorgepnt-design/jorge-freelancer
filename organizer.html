@@ -2005,7 +2005,7 @@
 </div>
 
 <!-- Notizen-Modal -->
-<div class="modal-overlay hidden" id="notiz-modal">
+<div class="modal-overlay hidden" id="notiz-modal" role="dialog" aria-modal="true" aria-label="Notiz bearbeiten">
   <div class="modal">
     <div class="modal-header">
       <input type="text" id="notiz-modal-title" placeholder="Titel …" style="flex:1; font-size:1rem; font-weight:600; border:none; border-bottom:2px solid var(--border); border-radius:0; padding:4px 0; background:transparent; color:var(--text);" />
@@ -2032,7 +2032,7 @@
 </div>
 
 <!-- Color-Labels-Modal -->
-<div class="modal-overlay hidden" id="color-labels-modal">
+<div class="modal-overlay hidden" id="color-labels-modal" role="dialog" aria-modal="true" aria-label="Farb-Labels bearbeiten">
   <div class="modal" style="max-width:360px;">
     <div class="modal-header">
       <h3>Farb-Labels benennen</h3>
@@ -2077,7 +2077,7 @@
 <datalist id="todo-suggestions"></datalist>
 
 <!-- Share-Modal -->
-<div class="modal-overlay hidden" id="share-modal">
+<div class="modal-overlay hidden" id="share-modal" role="dialog" aria-modal="true" aria-label="Ordner teilen">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
       <h3 id="share-modal-title">Ordner teilen</h3>
@@ -2139,7 +2139,7 @@ service cloud.firestore {
 </div>
 
 <!-- Join-Modal -->
-<div class="modal-overlay hidden" id="join-modal">
+<div class="modal-overlay hidden" id="join-modal" role="dialog" aria-modal="true" aria-label="Geteilten Ordner beitreten">
   <div class="modal" style="max-width:400px;">
     <div class="modal-header">
       <h3>Ordner beitreten</h3>
@@ -2817,6 +2817,33 @@ document.addEventListener("click", e => {
 // (vorher: Memory-Leak, da jeder renderTodos-Durchlauf neue document-Listener anhängte)
 document.addEventListener("click", () => {
   document.querySelectorAll(".color-popup").forEach(p => { p.style.display = "none"; });
+});
+
+// ── A11Y: Icon-Buttons bekommen aria-label aus ihrem title ──
+// Screenreader lesen sonst nur "×" oder gar nichts vor. Der Observer deckt
+// auch alle dynamisch gerenderten Buttons ab (Todo-Liste, Notizen, Einkauf).
+function syncAriaLabel(btn) {
+  if (btn.title && !btn.hasAttribute("aria-label")) btn.setAttribute("aria-label", btn.title);
+}
+document.querySelectorAll("button[title]").forEach(syncAriaLabel);
+new MutationObserver(muts => {
+  muts.forEach(m => m.addedNodes.forEach(n => {
+    if (n.nodeType !== 1) return;
+    if (n.matches("button[title]")) syncAriaLabel(n);
+    if (n.querySelectorAll) n.querySelectorAll("button[title]").forEach(syncAriaLabel);
+  }));
+}).observe(document.body, { childList: true, subtree: true });
+
+// ── A11Y: Escape schließt das offene Modal ──
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  const notiz = $("notiz-modal");
+  if (notiz && !notiz.classList.contains("hidden")) { closeNotizModal(); return; }
+  ["fab-todo-modal", "color-labels-modal", "share-modal", "join-modal"].some(id => {
+    const m = $(id);
+    if (m && !m.classList.contains("hidden")) { m.classList.add("hidden"); return true; }
+    return false;
+  });
 });
 
 // ── PWA SERVICE WORKER ───────────────────────────────────────
@@ -6252,7 +6279,7 @@ async function openFabNotizQuick(userId) {
 </nav>
 
 <!-- FAB Quick-Todo Modal -->
-<div id="fab-todo-modal" class="modal-overlay hidden">
+<div id="fab-todo-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Neues Todo anlegen">
   <div class="modal" style="max-width:400px">
     <h3 style="margin:0;font-size:1.05rem">Neues Todo</h3>
     <div style="display:flex;flex-direction:column;gap:10px">
