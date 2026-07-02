@@ -1579,6 +1579,32 @@
       .notiz-card        { transition: box-shadow 0.15s, transform 0.15s, border-color 0.2s; }
     }
 
+    /* ── MOBILE (iPhone): Zoom-Fix + Touch-Ziele ── */
+    @media (max-width: 600px) {
+      /* iOS Safari zoomt automatisch in Inputs mit Schrift < 16px.
+         !important nötig, um auch Inline-Styles (FAB-Modal) zu übersteuern. */
+      input[type="text"], input[type="number"], input[type="date"], input[type="time"],
+      input[type="datetime-local"], input[type="email"], input[type="password"],
+      select, textarea {
+        font-size: 16px !important;
+      }
+
+      /* Touch-Ziele: Apple-Richtlinie min. 44x44px, hier min. 40px für dichte Listen */
+      .btn-delete, .btn-edit {
+        min-width: 40px; min-height: 40px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .subtask-cb { width: 22px; height: 22px; }
+      .subtask-del { padding: 9px 12px; font-size: 1.15rem; }
+      .subtask-action-btn { padding: 9px 10px; font-size: 1rem; }
+      .subtask-add-btn { min-height: 42px; padding: 8px 18px; font-size: 1rem; }
+      .subtask-toggle { padding: 8px 0; }
+      .btn-pin { padding: 8px 10px; font-size: 1rem; }
+      .todo-notiz-btn { padding: 8px 10px; }
+      .katalog-toggle { padding: 10px 0; }
+      .katalog-chip { padding: 8px 14px; }
+    }
+
     /* ── CUSTOM DIALOGS (iOS PWA compat) ── */
     #safe-confirm-overlay, #safe-prompt-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9998;
