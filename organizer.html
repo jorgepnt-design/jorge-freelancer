@@ -2791,7 +2791,11 @@ function initDashboard() {
 
   if (!$("dash-global-search").dataset.bound) {
     $("dash-global-search").dataset.bound = "1";
-    $("dash-global-search").addEventListener("input", renderDashboardSearch);
+    let dashSearchDebounce = null;
+    $("dash-global-search").addEventListener("input", () => {
+      clearTimeout(dashSearchDebounce);
+      dashSearchDebounce = setTimeout(renderDashboardSearch, 150);
+    });
     $("dash-search-results").addEventListener("click", e => {
       const row = e.target.closest(".dash-search-row");
       if (row) handleDashboardSearchClick(row);
@@ -4015,7 +4019,11 @@ function initTodos(userId) {
     $("btn-hide-done").classList.toggle("active", hideDone);
     renderCurrentTodoView(userId);
   });
-  $("todo-search").addEventListener("input", () => renderCurrentTodoView(userId));
+  let todoSearchDebounce = null;
+  $("todo-search").addEventListener("input", () => {
+    clearTimeout(todoSearchDebounce);
+    todoSearchDebounce = setTimeout(() => renderCurrentTodoView(userId), 150);
+  });
   function addTodo() {
     const text = $("todo-input").value.trim(); if (!text) return;
     const zielId = currentOrdnerId === "alle" ? $("todo-ordner-select").value : currentOrdnerId;
@@ -4112,13 +4120,26 @@ function selectOrdner(id, userId) {
   renderCurrentTodoView(userId);
 }
 
+// Koalesziert mehrere Render-Anforderungen im selben Frame zu EINEM Durchlauf.
+// Beim App-Start feuert jeder Ordner-Listener einzeln → ohne Koaleszierung
+// N komplette Neuaufbauten von Liste + Dashboard + Kalender.
+let todoRenderScheduled = false;
 function renderCurrentTodoView(userId) {
+  if (todoRenderScheduled) return;
+  todoRenderScheduled = true;
+  requestAnimationFrame(() => {
+    todoRenderScheduled = false;
+    renderCurrentTodoViewNow(userId);
+  });
+}
+
+function renderCurrentTodoViewNow(userId) {
   const search   = ($("todo-search").value||"").toLowerCase().trim();
 
   let allTodos = [];
   if (currentOrdnerId === "alle") {
-    ordnerCache.forEach(({ name, todos }) =>
-      todos.forEach(t => allTodos.push({ ...t, _ordnerName: name })));
+    ordnerCache.forEach(({ name, todos }, oid) =>
+      todos.forEach(t => allTodos.push({ ...t, _ordnerName: name, _ordnerId: oid })));
   } else {
     const cached = ordnerCache.get(currentOrdnerId);
     allTodos = cached ? cached.todos.map(t => ({ ...t, _ordnerName: cached.name })) : [];
@@ -4273,8 +4294,10 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
   if (todos.length === 0) { empty.style.display="block"; return; }
   empty.style.display = "none";
 
+  // Alle Items erst im Fragment bauen, dann in EINEM Schritt einfügen (weniger Reflows)
+  const frag = document.createDocumentFragment();
   todos.forEach(todo => {
-    const todoOrdnerId = ordnerId || findOrdnerIdForTodo(todo.id);
+    const todoOrdnerId = ordnerId || todo._ordnerId || findOrdnerIdForTodo(todo.id);
     const item = document.createElement("div");
     item.className = `todo-item status-${todo.status}`;
     if (todo.farbe) item.dataset.color = todo.farbe;
@@ -5063,8 +5086,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     subtaskSection.appendChild(subtaskListEl);
     item.appendChild(subtaskSection);
 
-    list.appendChild(item);
+    frag.appendChild(item);
   });
+  list.appendChild(frag);
 }
 
 function findOrdnerIdForTodo(todoId) {
@@ -5261,6 +5285,7 @@ function renderNotizenList(userId) {
     return tb - ta;
   });
 
+  const frag = document.createDocumentFragment();
   sorted.forEach(n => {
     const card = document.createElement("div");
     card.className = "notiz-card" + (n.pinned ? " is-pinned" : "");
@@ -5292,8 +5317,9 @@ function renderNotizenList(userId) {
       <div class="notiz-card-meta">${showingAll ? escapeHtml(n._ordnerName || "") + " · " : ""}${d ? d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"}) : ""}</div>
     `);
     card.addEventListener("click", () => openNotizModal(n.id, n.titel, n.text, n._ordnerId));
-    list.appendChild(card);
+    frag.appendChild(card);
   });
+  list.appendChild(frag);
 }
 
 // ── Markdown helpers ──────────────────────────────────────────
@@ -5800,8 +5826,8 @@ function renderEinkaufList(userId) {
 
   const sorted = sortEinkaufItems(einkaufItems);
 
-  sorted.forEach(item => {
-    const itemIndex = sorted.findIndex(i => i.id === item.id);
+  const frag = document.createDocumentFragment();
+  sorted.forEach((item, itemIndex) => {
     const row = document.createElement("div");
     row.id = `einkauf-item-${item.id}`;
     row.className = "einkauf-item" + (item.checked ? " checked" : "");
@@ -5962,8 +5988,9 @@ function renderEinkaufList(userId) {
     actions.appendChild(delBtn);
 
     row.appendChild(actions);
-    list.appendChild(row);
+    frag.appendChild(row);
   });
+  list.appendChild(frag);
 
   const done  = einkaufItems.filter(i =>  i.checked).length;
   const total = einkaufItems.length;
