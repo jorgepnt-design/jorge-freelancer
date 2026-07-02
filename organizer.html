@@ -1558,6 +1558,27 @@
     .toast.toast-error  { background: #dc2626; }
     .toast.toast-success{ background: #16a34a; }
 
+    /* ── DARK MODE: fehlende Overrides (hartkodierte Hell-Farben) ── */
+    [data-theme="dark"] .todo-inline-edit-btn.ok     { border-color: #166534; background: #14532d; color: #86efac; }
+    [data-theme="dark"] .todo-inline-edit-btn.cancel { border-color: #991b1b; background: #7f1d1d; color: #fca5a5; }
+    [data-theme="dark"] .btn-delete:hover            { background: #7f1d1d; color: #fca5a5; }
+    [data-theme="dark"] .btn-edit:hover              { background: #1e3a5f; }
+    [data-theme="dark"] .cal-day.has-overdue:not(.is-today) { background: #7f1d1d; color: #fca5a5; }
+    [data-theme="dark"] .katalog-chip-del:hover      { background: #7f1d1d !important; color: #fca5a5 !important; }
+    [data-theme="dark"] .katalog-chip-remember.active,
+    [data-theme="dark"] .einkauf-remember-btn.active { color: #fcd34d; background: #78350f; border-color: #b45309; }
+    [data-theme="dark"] .katalog-chip-remember:hover,
+    [data-theme="dark"] .einkauf-remember-btn:hover  { border-color: #b45309; color: #fcd34d; }
+    [data-theme="dark"] .btn-clear-checked:hover     { background: #7f1d1d; }
+    [data-theme="dark"] #auth-error-box              { background: #7f1d1d !important; border-color: #991b1b !important; }
+
+    /* ── Feinschliff: dezente Hover-Effekte (nur Geräte mit Maus) ── */
+    @media (hover: hover) {
+      .todo-item:hover   { box-shadow: var(--shadow); }
+      .notiz-card:hover  { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+      .notiz-card        { transition: box-shadow 0.15s, transform 0.15s, border-color 0.2s; }
+    }
+
     /* ── CUSTOM DIALOGS (iOS PWA compat) ── */
     #safe-confirm-overlay, #safe-prompt-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9998;
