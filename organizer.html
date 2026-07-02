@@ -2415,6 +2415,12 @@ function showToast(msg, type = "") {
   }, 3200);
 }
 
+// Zentraler Firestore-Fehlerhandler: loggt + zeigt Toast
+function fsError(err) {
+  console.error("Firestore:", err);
+  showToast("Speichern fehlgeschlagen", "error");
+}
+
 // ── SAFE DIALOGS (iOS Safari PWA: confirm/alert/prompt blockiert) ──
 function safeConfirm(msg, okLabel = "Löschen") {
   return new Promise(resolve => {
@@ -2704,8 +2710,14 @@ auth.getRedirectResult().catch(err => {
   if (_isIOSPWA) showSafariFallback();
 });
 
+let appUiInitialized = false; // verhindert doppelte DOM-Listener bei Logout→Login
 auth.onAuthStateChanged(user => {
   if (user) {
+    // Zweiter Login in derselben Sitzung: init*-Funktionen würden alle
+    // Button-Listener erneut binden (doppelte Todos, doppelte Toasts).
+    // Frischer Seiten-Load ist der sauberste Zustand.
+    if (appUiInitialized) { location.reload(); return; }
+    appUiInitialized = true;
     currentUserId = user.uid;
     document.body.classList.add("signed-in");
     $("login-screen").style.display = "none";
@@ -2752,6 +2764,12 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 document.addEventListener("click", e => {
   const btn = e.target.closest(".bottom-nav-btn");
   if (btn && btn.dataset.tab) switchTab(btn.dataset.tab);
+});
+
+// Farb-Popups global schließen — EIN delegierter Listener statt einem pro Todo-Render
+// (vorher: Memory-Leak, da jeder renderTodos-Durchlauf neue document-Listener anhängte)
+document.addEventListener("click", () => {
+  document.querySelectorAll(".color-popup").forEach(p => { p.style.display = "none"; });
 });
 
 // ── PWA SERVICE WORKER ───────────────────────────────────────
@@ -3463,13 +3481,13 @@ function initDichte(userId) {
   });
 
   $("btn-berechnen").addEventListener("click", () => {
-    if (!currentTabelleId) { alert("Bitte zuerst eine Tabelle auswählen."); return; }
+    if (!currentTabelleId) { showToast("Bitte zuerst eine Tabelle auswählen.", "error"); return; }
     const L = parseFloat($("d-laenge").value);
     const B = parseFloat($("d-breite").value);
     const D = parseFloat($("d-dicke").value);
     const M = parseFloat($("d-masse").value);
     const N = $("d-notiz").value.trim();
-    if ([L,B,D,M].some(v => isNaN(v)||v<=0)) { alert("Bitte alle Felder mit positiven Zahlen ausfüllen."); return; }
+    if ([L,B,D,M].some(v => isNaN(v)||v<=0)) { showToast("Bitte alle Felder mit positiven Zahlen ausfüllen.", "error"); return; }
     const dichte = (M / ((L*B*D)/1000)) * 1000;
     zeigeDichte(dichte);
     $("dichte-save-hint").textContent = "Wird gespeichert …";
@@ -3521,12 +3539,12 @@ function renderTabellenBar(tabellen, userId) {
   tabellen.forEach(t => {
     const tab = makeFolderTab(t.id, t.name, currentTabelleId === t.id,
       // rename
-      () => { safePrompt("Neuer Name:", t.name).then(n => { if (n&&n.trim()) db.collection(`users/${userId}/dichteTabellen`).doc(t.id).update({name:n.trim()}).then(()=>{ if(currentTabelleId===t.id) $("ergebnis-tabelle-name").textContent=n.trim(); }); }); },
+      () => { safePrompt("Neuer Name:", t.name).then(n => { if (n&&n.trim()) db.collection(`users/${userId}/dichteTabellen`).doc(t.id).update({name:n.trim()}).then(()=>{ if(currentTabelleId===t.id) $("ergebnis-tabelle-name").textContent=n.trim(); }).catch(fsError); }); },
       // delete
       () => { safeConfirm(`Tabelle "${t.name}" löschen?`).then(ok => { if (!ok) return;
         db.collection(`users/${userId}/dichteTabellen/${t.id}/ergebnisse`).get().then(snap => {
           const b = db.batch(); snap.forEach(d => b.delete(d.ref));
-          b.delete(db.doc(`users/${userId}/dichteTabellen/${t.id}`)); return b.commit(); }); }); },
+          b.delete(db.doc(`users/${userId}/dichteTabellen/${t.id}`)); return b.commit(); }).catch(fsError); }); },
       () => selectTabelle(t.id, t.name, userId));
     const shareBtn = document.createElement("button");
     shareBtn.className = "tabelle-tab-btn";
@@ -3828,8 +3846,10 @@ let colorLabels = {
   gruen:"OK", blau:"Info", lila:"Idee"
 };
 
+let unsubscribeColorLabelsFunc = null;
 function initColorLabels(userId) {
-  db.doc(`users/${userId}/settings/colorLabels`).onSnapshot(snap => {
+  if (unsubscribeColorLabelsFunc) unsubscribeColorLabelsFunc();
+  unsubscribeColorLabelsFunc = db.doc(`users/${userId}/settings/colorLabels`).onSnapshot(snap => {
     if (snap.exists) Object.assign(colorLabels, snap.data());
   });
   $("btn-color-labels").addEventListener("click", () => openColorLabelsModal(userId));
@@ -3867,7 +3887,7 @@ function saveColorLabels(userId) {
       renderCurrentTodoView(userId);
     })
     .catch(err => {
-      alert("Fehler beim Speichern: " + err.message);
+      showToast("Fehler beim Speichern: " + err.message, "error");
       saveBtn.textContent = "Speichern";
       saveBtn.disabled = false;
     });
@@ -3999,7 +4019,7 @@ function initTodos(userId) {
   function addTodo() {
     const text = $("todo-input").value.trim(); if (!text) return;
     const zielId = currentOrdnerId === "alle" ? $("todo-ordner-select").value : currentOrdnerId;
-    if (!zielId) { alert("Bitte einen Ordner auswählen."); return; }
+    if (!zielId) { showToast("Bitte einen Ordner auswählen.", "error"); return; }
     const faelligRaw = $("todo-faellig-input").value;
     const faellig = normalizeDueDateInput(faelligRaw);
     if (faelligRaw && faellig === null) {
@@ -4027,7 +4047,7 @@ function initTodos(userId) {
       reminderAt: reminderResult.value || "",
       farbe: "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }).catch(fsError);
     saveAutocomplete(text);
     $("todo-input").value=""; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
     $("todo-reminder-date-input").value=""; $("todo-reminder-time-input").value="";
@@ -4155,11 +4175,11 @@ function renderOrdnerBar(ordner, userId) {
   // Eigene Ordner
   ordner.filter(o => !o.id.startsWith("shared::")).forEach(o => {
     const tab = makeFolderTab(o.id, o.name, o.id === currentOrdnerId,
-      () => { safePrompt("Neuer Name:",o.name).then(n => { if(n&&n.trim()) db.collection(`users/${userId}/todoOrdner`).doc(o.id).update({name:n.trim()}); }); },
+      () => { safePrompt("Neuer Name:",o.name).then(n => { if(n&&n.trim()) db.collection(`users/${userId}/todoOrdner`).doc(o.id).update({name:n.trim()}).catch(fsError); }); },
       () => { safeConfirm(`Ordner "${o.name}" löschen?`).then(ok => { if(!ok) return;
         db.collection(`users/${userId}/todoOrdner/${o.id}/todos`).get().then(snap => {
           const b=db.batch(); snap.forEach(d=>b.delete(d.ref));
-          b.delete(db.doc(`users/${userId}/todoOrdner/${o.id}`)); return b.commit(); }); }); },
+          b.delete(db.doc(`users/${userId}/todoOrdner/${o.id}`)); return b.commit(); }).catch(fsError); }); },
       () => selectOrdner(o.id, userId));
     // Share-Button anhängen
     const shareBtn = document.createElement("button");
@@ -4645,8 +4665,8 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       if (val===todo.status) opt.selected=true; sel.appendChild(opt);
     });
     sel.addEventListener("change", () => {
-      if (todoOrdnerId)
-        db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({status:sel.value});
+      if (todoOrdnerId && todo.id)
+        db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({status:sel.value}).catch(fsError);
     });
     statusWrap.appendChild(sel);
     controls.appendChild(statusWrap);
@@ -4688,9 +4708,9 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
 
       btn.addEventListener("click", e => {
         e.stopPropagation();
-        if (todoOrdnerId)
+        if (todoOrdnerId && todo.id)
           db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`)
-            .doc(todo.id).update({farbe: f.id === "none" ? "" : f.id});
+            .doc(todo.id).update({farbe: f.id === "none" ? "" : f.id}).catch(fsError);
         popup.style.display = "none";
       });
 
@@ -4712,7 +4732,7 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
             // In Firestore speichern
             if (auth.currentUser) {
               db.doc(`users/${auth.currentUser.uid}/settings/colorLabels`)
-                .set(colorLabels, { merge: true });
+                .set(colorLabels, { merge: true }).catch(fsError);
             }
             // Label-Span wiederherstellen
             const newLbl = document.createElement("span");
@@ -4738,9 +4758,11 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     });
     colorDot.addEventListener("click", e => {
       e.stopPropagation();
-      popup.style.display = popup.style.display==="none" ? "flex" : "none";
+      const isOpen = popup.style.display !== "none";
+      // Erst alle anderen Popups schließen, dann dieses togglen
+      document.querySelectorAll(".color-popup").forEach(p => { p.style.display = "none"; });
+      popup.style.display = isOpen ? "none" : "flex";
     });
-    document.addEventListener("click", () => { popup.style.display="none"; }, {once:false});
     colorWrap.appendChild(colorDot);
     colorWrap.appendChild(popup);
     controls.appendChild(colorWrap);
@@ -4755,8 +4777,8 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
       textEl.replaceWith(input); editBtn.style.display="none"; input.focus(); input.select();
       function save() {
         const n=input.value.trim();
-        if (n&&n!==todo.text&&todoOrdnerId)
-          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({text:n});
+        if (n&&n!==todo.text&&todoOrdnerId&&todo.id)
+          db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).update({text:n}).catch(fsError);
         else { input.replaceWith(textEl); editBtn.style.display=""; }
       }
       input.addEventListener("keydown", e => { if(e.key==="Enter"){e.preventDefault();save();} if(e.key==="Escape"){input.replaceWith(textEl);editBtn.style.display="";} });
@@ -5185,11 +5207,11 @@ function renderNotizenOrdnerBar(ordner, userId) {
 
   ordner.forEach(o => {
     const tab = makeFolderTab(o.id, o.name, o.id===currentNotizenOrdnerId,
-      () => { safePrompt("Neuer Name:",o.name).then(n => { if(n&&n.trim()) db.collection(`users/${userId}/notizenOrdner`).doc(o.id).update({name:n.trim()}); }); },
+      () => { safePrompt("Neuer Name:",o.name).then(n => { if(n&&n.trim()) db.collection(`users/${userId}/notizenOrdner`).doc(o.id).update({name:n.trim()}).catch(fsError); }); },
       () => { safeConfirm(`Ordner "${o.name}" löschen?`).then(ok => { if(!ok) return;
         db.collection(`users/${userId}/notizenOrdner/${o.id}/notizen`).get().then(snap=>{
           const b=db.batch(); snap.forEach(d=>b.delete(d.ref));
-          b.delete(db.doc(`users/${userId}/notizenOrdner/${o.id}`)); return b.commit(); }); }); },
+          b.delete(db.doc(`users/${userId}/notizenOrdner/${o.id}`)); return b.commit(); }).catch(fsError); }); },
       () => selectNotizenOrdner(o.id, userId));
     bar.insertBefore(tab, newBtn);
   });
@@ -5251,8 +5273,9 @@ function renderNotizenList(userId) {
     pinBtn.textContent = "📌";
     pinBtn.addEventListener("click", e => {
       e.stopPropagation();
+      if (!n._ordnerId || !n.id) return;
       db.collection(`users/${auth.currentUser.uid}/notizenOrdner/${n._ordnerId}/notizen`)
-        .doc(n.id).update({ pinned: !n.pinned });
+        .doc(n.id).update({ pinned: !n.pinned }).catch(fsError);
     });
 
     const top = document.createElement("div");
@@ -5445,7 +5468,7 @@ function initSharing(userId) {
       .then(() => {
         $("share-email-input").value = "";
         loadSharedEmails(userId);
-      }).catch(() => alert("Fehler beim Speichern – bitte Firestore-Regeln aktualisieren (siehe unten)."));
+      }).catch(() => showToast("Fehler beim Speichern – bitte Firestore-Regeln aktualisieren.", "error"));
   });
 
   $("btn-join-confirm").addEventListener("click", () => joinFolder($("join-code-input").value.trim(), userId));
@@ -5758,7 +5781,7 @@ function initEinkauf(userId) {
       if (!ok) return;
       const batch = db.batch();
       checked.forEach(i => batch.delete(db.doc(`users/${userId}/einkaufsliste/${i.id}`)));
-      batch.commit();
+      batch.commit().catch(fsError);
     });
   });
 }
@@ -5920,12 +5943,12 @@ function renderEinkaufList(userId) {
     row.addEventListener("click", e => {
       if (e.target.closest(".btn-delete") || e.target.closest(".einkauf-remember-btn") || e.target.closest(".einkauf-move-btn") || e.target.closest(".einkauf-drag-handle")) return;
       db.doc(`users/${userId}/einkaufsliste/${item.id}`)
-        .update({ checked: !item.checked });
+        .update({ checked: !item.checked }).catch(fsError);
     });
 
     delBtn.addEventListener("click", e => {
       e.stopPropagation();
-      db.doc(`users/${userId}/einkaufsliste/${item.id}`).delete();
+      db.doc(`users/${userId}/einkaufsliste/${item.id}`).delete().catch(fsError);
     });
 
     row.appendChild(handle);
@@ -6018,6 +6041,7 @@ function cleanupAll() {
   if (unsubscribeOrdnerFunc)         { unsubscribeOrdnerFunc(); unsubscribeOrdnerFunc = null; }
   if (unsubscribeNotizenOrdnerFunc)  { unsubscribeNotizenOrdnerFunc(); unsubscribeNotizenOrdnerFunc = null; }
   if (unsubscribeNotifSettingsFunc)  { unsubscribeNotifSettingsFunc(); unsubscribeNotifSettingsFunc = null; }
+  if (unsubscribeColorLabelsFunc)    { unsubscribeColorLabelsFunc(); unsubscribeColorLabelsFunc = null; }
   if (notifCheckInterval)            { clearInterval(notifCheckInterval); notifCheckInterval = null; }
   ordnerListeners.forEach(u=>u()); ordnerListeners.clear(); ordnerCache.clear();
   notizenListeners.forEach(u=>u()); notizenListeners.clear(); notizenOrdnerCache.clear();
