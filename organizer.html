@@ -2846,6 +2846,16 @@ document.addEventListener("keydown", e => {
   });
 });
 
+// ── Desktop-Shortcut: Strg+K / Cmd+K öffnet die globale Suche ──
+document.addEventListener("keydown", e => {
+  if (e.key.toLowerCase() !== "k" || !(e.ctrlKey || e.metaKey)) return;
+  if (!auth.currentUser) return;
+  e.preventDefault();
+  switchTab("dashboard");
+  const inp = $("dash-global-search");
+  if (inp) { inp.focus(); inp.select(); }
+});
+
 // ── PWA SERVICE WORKER ───────────────────────────────────────
 if ("serviceWorker" in navigator) {
   pushState.swRegPromise = navigator.serviceWorker.register("organizer-sw.js").catch(() => null);
@@ -4129,7 +4139,7 @@ function initTodos(userId) {
       reminderAt: reminderResult.value || "",
       farbe: "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(fsError);
+    }).then(() => showToast("Aufgabe hinzugefügt", "success")).catch(fsError);
     saveAutocomplete(text);
     $("todo-input").value=""; $("todo-faellig-input").value=""; $("todo-uhrzeit-input").value="";
     $("todo-reminder-date-input").value=""; $("todo-reminder-time-input").value="";
@@ -4890,7 +4900,8 @@ function renderTodos(todos, userId, ordnerId, zeigeBadge) {
     delBtn.addEventListener("click", () => {
       if (!todoOrdnerId) return;
       safeConfirm("Aufgabe löschen?").then(ok => {
-        if (ok) db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).delete();
+        if (ok) db.collection(`users/${auth.currentUser.uid}/todoOrdner/${todoOrdnerId}/todos`).doc(todo.id).delete()
+          .then(() => showToast("Aufgabe gelöscht", "success")).catch(fsError);
       });
     });
     controls.appendChild(delBtn);
@@ -5221,7 +5232,8 @@ function initNotizen(userId) {
     if (!currentNotizId||!currentNotizOrdnerId) return;
     safeConfirm("Notiz löschen?").then(ok => {
       if (!ok) return;
-      db.collection(`users/${userId}/notizenOrdner/${currentNotizOrdnerId}/notizen`).doc(currentNotizId).delete();
+      db.collection(`users/${userId}/notizenOrdner/${currentNotizOrdnerId}/notizen`).doc(currentNotizId).delete()
+        .then(() => showToast("Notiz gelöscht", "success")).catch(fsError);
       closeNotizModal();
     });
   });
@@ -6112,7 +6124,7 @@ function renderKatalogChips(userId) {
       e.stopPropagation();
       safeConfirm(`Artikel "${k.name}" wirklich aus "Frühere Artikel" löschen?`).then(ok => {
         if (!ok) return;
-        db.collection(`users/${userId}/einkaufsKatalog`).doc(k.id).delete();
+        db.collection(`users/${userId}/einkaufsKatalog`).doc(k.id).delete().catch(fsError);
       });
     });
     chip.appendChild(delBtn);
