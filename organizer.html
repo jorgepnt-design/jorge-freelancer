@@ -2382,7 +2382,7 @@ service cloud.firestore {
     </div>
     <div class="radar-footer">
       <span class="radar-legend"><i></i> leicht &rarr; stark</span>
-      <span class="radar-src">Radar: RainViewer &middot; Karte: &copy; OpenStreetMap</span>
+      <span class="radar-src">Radar: RainViewer &middot; Karte: &copy; OpenStreetMap &middot; &copy; CARTO</span>
     </div>
   </div>
 </div>
@@ -6861,7 +6861,8 @@ function openRadar() {
   const ort = aktiverOrt() || { lat: 51.16, lon: 10.45 };
   if (!radarMap) {
     radarMap = L.map("radar-map", { attributionControl: false, zoomSnap: 0.5, maxZoom: 22 });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 22, maxNativeZoom: 19 })
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+      { maxZoom: 22, maxNativeZoom: 20, subdomains: "abcd" })
       .addTo(radarMap);
     L.circleMarker([ort.lat, ort.lon], {
       radius: 7, color: "#2563eb", weight: 2.5,
