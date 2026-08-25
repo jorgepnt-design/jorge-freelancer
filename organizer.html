@@ -1236,6 +1236,37 @@
     .ws-regen.regen { color: #2563eb; }
     [data-theme="dark"] .ws-regen.regen { color: #93c5fd; }
 
+    /* 14-Tage-Trend */
+    .wetter-trend-toggle { margin-top: 10px; }
+    .wetter-trend-chevron { display: inline-block; width: 10px; }
+    .wetter-tage { display: none; flex-direction: column; gap: 2px; margin-top: 8px; }
+    .wetter-tage.open { display: flex; }
+    .wetter-tag-row {
+      display: grid; grid-template-columns: 76px 30px 54px minmax(70px, 1fr) 92px;
+      align-items: center; gap: 8px;
+      padding: 4px 8px; border-radius: 7px; font-size: 0.82rem;
+    }
+    .wetter-tag-row:nth-child(even) { background: var(--surface2); }
+    .wt-tag { font-weight: 600; color: var(--text); line-height: 1.2; white-space: nowrap; }
+    .wt-tag small { display: block; font-size: 0.64rem; color: var(--text-muted); font-weight: 500; letter-spacing: 0.03em; }
+    .wt-icon { text-align: center; font-size: 1.05rem; line-height: 1; }
+    .wt-regen { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; display: inline-flex; align-items: center; gap: 2px; }
+    .wt-regen.regen { color: #2563eb; font-weight: 600; }
+    [data-theme="dark"] .wt-regen.regen { color: #93c5fd; }
+    .wt-bar {
+      height: 6px; border-radius: 3px; background: var(--border);
+      position: relative; overflow: hidden; min-width: 60px;
+    }
+    .wt-bar-fill {
+      position: absolute; top: 0; bottom: 0; border-radius: 3px;
+      background: linear-gradient(90deg, #38bdf8, #fbbf24, #f97316);
+    }
+    .wt-temp {
+      text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums;
+      color: var(--text-muted); font-size: 0.78rem;
+    }
+    .wt-temp b { color: var(--text); }
+
     /* Stadt-Chips */
     .wetter-cities { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
     .wetter-chip {
@@ -1686,6 +1717,8 @@
       .wetter-add-input { width: 110px; }
       .wetter-add-input:focus { width: 150px; }
       .wetter-stunde { width: 56px; padding: 7px 3px 6px; }
+      .wetter-tag-row { grid-template-columns: 60px 24px 46px minmax(50px, 1fr) 78px; gap: 6px; font-size: 0.76rem; padding: 4px 6px; }
+      .wt-temp { font-size: 0.72rem; }
       .radar-map-wrap { height: 46vh; min-height: 220px; }
       .radar-time-label { min-width: 84px; font-size: 0.76rem; }
     }
@@ -6473,6 +6506,7 @@ function wmoInfo(code, isDay) {
   if (!isDay && code <= 2) return [e[0], "🌙"];
   return e;
 }
+const WETTER_TAGE = ["So","Mo","Di","Mi","Do","Fr","Sa"]; // Index = getDay()
 
 let wetterSettingsRef   = null;
 let wetterCities        = [];   // [{name, lat, lon}]
@@ -6575,8 +6609,8 @@ async function ladeAktivesWetter() {
       `https://api.open-meteo.com/v1/forecast?latitude=${ort.lat}&longitude=${ort.lon}` +
       `&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m` +
       `&hourly=temperature_2m,precipitation_probability,weather_code` +
-      `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
-      `&timezone=auto&forecast_days=2`;
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+      `&timezone=auto&forecast_days=14`;
     const r = await fetch(url);
     if (!r.ok) throw new Error("HTTP " + r.status);
     const data = await r.json();
@@ -6633,6 +6667,38 @@ function renderWetter(ort, data) {
     </div>`;
   }).join("");
 
+  // ── 14-Tage-Trend mit Min/Max-Balken ──
+  const dCodes = daily.weather_code || [];
+  const dMaxT  = daily.temperature_2m_max || [];
+  const dMinT  = daily.temperature_2m_min || [];
+  const dRainP = daily.precipitation_probability_max || [];
+  const nTage  = Math.min(14, dMaxT.length);
+  let gMin = Infinity, gMax = -Infinity;
+  for (let i = 0; i < nTage; i++) {
+    if (typeof dMinT[i] === "number" && dMinT[i] < gMin) gMin = dMinT[i];
+    if (typeof dMaxT[i] === "number" && dMaxT[i] > gMax) gMax = dMaxT[i];
+  }
+  const tempSpanne = Math.max(1, gMax - gMin);
+  let tageRows = "";
+  for (let i = 0; i < nTage; i++) {
+    const teile = String((daily.time || [])[i] || "").split("-");
+    const wd = teile.length === 3
+      ? WETTER_TAGE[new Date(+teile[0], +teile[1] - 1, +teile[2]).getDay()] : "";
+    const datum = teile.length === 3 ? `${teile[2]}.${teile[1]}.` : "";
+    const [, di] = wmoInfo(dCodes[i], 1);
+    const regen = dRainP[i];
+    const hatRegen = regen !== null && regen !== undefined;
+    const links  = Math.max(0, ((dMinT[i] - gMin) / tempSpanne) * 100);
+    const breite = Math.min(100 - links, Math.max(4, (((dMaxT[i] - dMinT[i]) / tempSpanne) * 100)));
+    tageRows += `<div class="wetter-tag-row">
+      <span class="wt-tag">${i === 0 ? "Heute" : escapeHtml(wd)}<small>${datum}</small></span>
+      <span class="wt-icon">${di}</span>
+      <span class="wt-regen${hatRegen && regen > 0 ? " regen" : ""}">💧 ${hatRegen ? regen : "–"}%</span>
+      <span class="wt-bar"><span class="wt-bar-fill" style="left:${links.toFixed(1)}%;width:${breite.toFixed(1)}%"></span></span>
+      <span class="wt-temp">${Math.round(dMinT[i])}° … <b>${Math.round(dMaxT[i])}°</b></span>
+    </div>`;
+  }
+
   $("wetter-content").innerHTML = `
     <div class="wetter-aktiv">
       <div class="wetter-icon">${icon}</div>
@@ -6652,7 +6718,23 @@ function renderWetter(ort, data) {
       ${regenText}
     </div>
     <div class="wetter-stunden">${stundenHtml}</div>
+    <div class="wetter-trend-toggle">
+      <button type="button" class="wetter-chip active" id="btn-wetter-trend">📅 14-Tage-Vorhersage <span class="wetter-trend-chevron">▾</span></button>
+    </div>
+    <div class="wetter-tage open" id="wetter-tage">${tageRows}</div>
   `;
+
+  const trendBtn = $("btn-wetter-trend");
+  if (trendBtn) {
+    trendBtn.addEventListener("click", () => {
+      const box = $("wetter-tage");
+      const offnen = !box.classList.contains("open");
+      box.classList.toggle("open", offnen);
+      trendBtn.classList.toggle("active", offnen);
+      const chev = trendBtn.querySelector(".wetter-trend-chevron");
+      if (chev) chev.textContent = offnen ? "▾" : "▸";
+    });
+  }
 }
 
 function baueWetterChip(label, idx, deletable) {
