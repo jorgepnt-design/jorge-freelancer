@@ -2382,7 +2382,7 @@ service cloud.firestore {
     </div>
     <div class="radar-footer">
       <span class="radar-legend"><i></i> leicht &rarr; stark</span>
-      <span class="radar-src">Radar: RainViewer &middot; Karte: &copy; OpenStreetMap &middot; &copy; CARTO</span>
+      <span class="radar-src">Radar: RainViewer &middot; Karte: &copy; OpenStreetMap &middot; &copy; CARTO &middot; Zoom bis Stufe 20</span>
     </div>
   </div>
 </div>
@@ -6844,6 +6844,9 @@ function zeigeWetterSuchErgebnisse(results) {
 }
 
 // ── REGENRADAR ───────────────────────────────────────────────
+// Transparente 1x1-Fallback-Kachel: falls eine Kachel je fehlschlaegt,
+// erscheint garantiert kein graues "Zoom Level Not Supported"-Feld.
+const RADAR_KACHEL_FALLBACK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 let radarMap         = null;
 let radarFrameLayers = [];
 let radarFramesMeta  = [];   // [{time (unix s), path}]
@@ -6860,9 +6863,9 @@ function openRadar() {
 
   const ort = aktiverOrt() || { lat: 51.16, lon: 10.45 };
   if (!radarMap) {
-    radarMap = L.map("radar-map", { attributionControl: false, zoomSnap: 0.5, maxZoom: 22 });
+    radarMap = L.map("radar-map", { attributionControl: false, zoomSnap: 0.5, maxZoom: 20 });
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
-      { maxZoom: 22, maxNativeZoom: 20, subdomains: "abcd" })
+      { maxZoom: 20, maxNativeZoom: 20, subdomains: "abcd", errorTileUrl: RADAR_KACHEL_FALLBACK })
       .addTo(radarMap);
     L.circleMarker([ort.lat, ort.lon], {
       radius: 7, color: "#2563eb", weight: 2.5,
@@ -6898,7 +6901,7 @@ async function ladeRadarFrames() {
     radarFramesMeta.forEach(f => {
       radarFrameLayers.push(L.tileLayer(
         `https://tilecache.rainviewer.com${f.path}/256/{z}/{x}/{y}/2/1_1.png`,
-        { opacity: 0, maxZoom: 22, maxNativeZoom: 12, zIndex: 400 }
+        { opacity: 0, maxZoom: 20, maxNativeZoom: 12, zIndex: 400, errorTileUrl: RADAR_KACHEL_FALLBACK }
       ));
     });
     radarFrameLayers.forEach(l => { if (radarMap) l.addTo(radarMap); }); // vorladen
