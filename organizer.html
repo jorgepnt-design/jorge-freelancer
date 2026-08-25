@@ -1325,6 +1325,21 @@
     }
     .radar-loading.hidden { display: none; }
     .radar-controls { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+    /* 5-Stunden-Regenprognose im Radar-Modal */
+    .radar-regen-prognose { display: flex; gap: 6px; margin-top: 10px; }
+    .radar-regen-prognose:empty { display: none; }
+    .radar-regen-stunde {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 7px 4px 6px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface2); text-align: center; min-width: 0;
+    }
+    .radar-regen-stunde.regen { border-color: #93c5fd; background: #eff6ff; }
+    [data-theme="dark"] .radar-regen-stunde.regen { border-color: #1e3a5f; background: #1e3a5f; }
+    .rr-zeit { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+    .rr-wert { font-size: 0.84rem; font-weight: 700; color: var(--text); }
+    .radar-regen-stunde.regen .rr-wert { color: #2563eb; }
+    [data-theme="dark"] .radar-regen-stunde.regen .rr-wert { color: #93c5fd; }
+    .rr-mm { font-size: 0.66rem; color: var(--text-muted); white-space: nowrap; }
     .radar-play-btn {
       width: 38px; height: 38px; border-radius: 50%; border: none; flex-shrink: 0;
       background: var(--primary); color: #fff; font-size: 0.95rem; cursor: pointer;
@@ -2375,6 +2390,7 @@ service cloud.firestore {
       <div id="radar-map"></div>
       <div id="radar-loading" class="radar-loading">Radar wird geladen …</div>
     </div>
+    <div id="radar-regen-prognose" class="radar-regen-prognose" title="Regenprognose für die nächsten 5 Stunden"></div>
     <div class="radar-controls">
       <button class="radar-play-btn" id="radar-play" title="Animation abspielen/pausieren">&#9654;</button>
       <input type="range" id="radar-slider" min="0" max="0" value="0" step="1" />
@@ -6847,6 +6863,10 @@ function zeigeWetterSuchErgebnisse(results) {
 // Transparente 1x1-Fallback-Kachel: falls eine Kachel je fehlschlaegt,
 // erscheint garantiert kein graues "Zoom Level Not Supported"-Feld.
 const RADAR_KACHEL_FALLBACK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+// Eindeutige URL pro Seitenladung: besiegt Browser-/Proxy-Caches, die
+// veraltete Fehlerbilder unter gleichen Kachel-URLs ausliefern.
+const RADAR_CACHE_BUST = Date.now();
+let radarFramesGeladenAm = 0;
 let radarMap         = null;
 let radarFrameLayers = [];
 let radarFramesMeta  = [];   // [{time (unix s), path}]
@@ -6861,21 +6881,23 @@ function openRadar() {
   $("radar-play").onclick = toggleRadarPlayback;
   $("radar-slider").oninput = e => zeigeRadarFrame(+e.target.value, true);
 
+  ladeRadarRegenPrognose();
   const ort = aktiverOrt() || { lat: 51.16, lon: 10.45 };
   if (!radarMap) {
     radarMap = L.map("radar-map", { attributionControl: false, zoomSnap: 0.5, maxZoom: 20 });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?cb=${RADAR_CACHE_BUST}`,
       { maxZoom: 20, maxNativeZoom: 20, subdomains: "abcd", errorTileUrl: RADAR_KACHEL_FALLBACK })
       .addTo(radarMap);
     L.circleMarker([ort.lat, ort.lon], {
       radius: 7, color: "#2563eb", weight: 2.5,
       fillColor: "#3b82f6", fillOpacity: 0.5
     }).addTo(radarMap).bindTooltip(aktiverOrt() ? aktiverOrt().name : "Standort");
-    radarMap.setView([ort.lat, ort.lon], 7);
+    radarMap.setView([ort.lat, ort.lon], 8);
     ladeRadarFrames();
   } else {
     radarMap.setView([ort.lat, ort.lon], radarMap.getZoom(), { animate: false });
-    if (!radarFramesMeta.length) ladeRadarFrames();
+    // Radar-Frames bei jedem Oeffnen aktualisieren (max. 1x pro Minute)
+    if (Date.now() - radarFramesGeladenAm > 60000) ladeRadarFrames();
   }
   // Karte korrekt vermessen, nachdem das Modal sichtbar ist
   setTimeout(() => { if (radarMap) radarMap.invalidateSize(); }, 250);
@@ -6900,11 +6922,12 @@ async function ladeRadarFrames() {
 
     radarFramesMeta.forEach(f => {
       radarFrameLayers.push(L.tileLayer(
-        `https://tilecache.rainviewer.com${f.path}/256/{z}/{x}/{y}/2/1_1.png`,
+        `https://tilecache.rainviewer.com${f.path}/256/{z}/{x}/{y}/2/1_1.png?cb=${RADAR_CACHE_BUST}`,
         { opacity: 0, maxZoom: 20, maxNativeZoom: 12, zIndex: 400, errorTileUrl: RADAR_KACHEL_FALLBACK }
       ));
     });
     radarFrameLayers.forEach(l => { if (radarMap) l.addTo(radarMap); }); // vorladen
+    radarFramesGeladenAm = Date.now();
 
     $("radar-slider").max = Math.max(0, radarFramesMeta.length - 1);
     zeigeRadarFrame(Math.max(0, radarErsterForecast - 1), true); // letzte Messung
@@ -6932,6 +6955,44 @@ function zeigeRadarFrame(idx, setSlider) {
 
 function toggleRadarPlayback() {
   if (radarPlaying) stopRadarPlayback(); else startRadarPlayback();
+}
+
+// 5-Stunden-Regenprognose im Radar-Modal (Open-Meteo, Stundenschritte)
+async function ladeRadarRegenPrognose() {
+  const box = $("radar-regen-prognose");
+  const ort = aktiverOrt();
+  if (!box) return;
+  if (!ort) { box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="dash-empty" style="padding:2px 0;">Regenprognose wird geladen …</div>`;
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${ort.lat}&longitude=${ort.lon}` +
+      `&hourly=precipitation,precipitation_probability&current=precipitation` +
+      `&timezone=auto&forecast_days=2`;
+    const data = await fetch(url).then(r => r.json());
+    const hourly = (data && data.hourly) || {};
+    const cur    = (data && data.current) || {};
+    const times  = hourly.time || [];
+    const mm     = hourly.precipitation || [];
+    const prob   = hourly.precipitation_probability || [];
+    const nowKey = String(cur.time || "").slice(0, 13);
+    let start = times.findIndex(t => String(t).slice(0, 13) === nowKey);
+    if (start < 0) start = 0;
+    let html = "";
+    for (let i = start; i < Math.min(start + 5, times.length); i++) {
+      const p = prob[i];
+      const m = mm[i];
+      const hatRegen = (m !== null && m !== undefined && m > 0) ||
+                       (p !== null && p !== undefined && p >= 40);
+      html += `<div class="radar-regen-stunde${hatRegen ? " regen" : ""}" title="Regenprognose Open-Meteo">
+        <div class="rr-zeit">${i === start ? "Jetzt" : String(times[i]).slice(11, 13) + " Uhr"}</div>
+        <div class="rr-wert">💧 ${p !== null && p !== undefined ? p : "–"}%</div>
+        <div class="rr-mm">${m !== null && m !== undefined && m > 0 ? String(m).replace(".", ",") + " mm" : "&ndash;"}</div>
+      </div>`;
+    }
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = "";
+  }
 }
 function startRadarPlayback() {
   if (!radarFrameLayers.length) return;
